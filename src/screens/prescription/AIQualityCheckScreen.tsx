@@ -310,7 +310,11 @@ export const AIQualityCheckScreen = () => {
           <TouchableOpacity
             style={[s.primaryBtn, s.primaryBtnDanger]}
             activeOpacity={0.8}
-            onPress={() => navigation.navigate('UploadPrescription', { pharmacyId: targetPharmacyId, pharmacyName: targetPharmacyName })}
+            onPress={() => navigation.navigate('UploadPrescription', {
+              pharmacyId: targetPharmacyId,
+              pharmacyName: targetPharmacyName,
+              initialSelectedExtraItems: route.params?.selectedExtraItemsDict,
+            })}
           >
             <Text style={s.primaryBtnTxt}>Retake Photo</Text>
             <RefreshCw color={COLORS.white} size={18} strokeWidth={2.5} />

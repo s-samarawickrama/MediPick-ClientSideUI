@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Animated,
-  TouchableOpacity, StatusBar, Pressable,
+  TouchableOpacity, StatusBar, Pressable, Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +9,7 @@ import { MessageSquare, ChevronRight, ShieldCheck, Clock } from 'lucide-react-na
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { MOCK_PHARMACIES } from '../../mock/demoData';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -58,35 +59,44 @@ export const ChatListScreen = () => {
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {CHAT_CONVERSATIONS.map((chat) => (
-          <Pressable
-            key={chat.orderId}
-            style={({ pressed }) => [s.chatCard, pressed && { opacity: 0.92 }]}
-            onPress={() => navigation.navigate('PharmacyChat', { orderId: chat.orderId })}
-          >
-            <View style={s.avatarBox}>
-              <Text style={s.avatarInitial}>{chat.pharmacyName[0]}</Text>
-            </View>
+        {CHAT_CONVERSATIONS.map((chat) => {
+          const pharmData = MOCK_PHARMACIES.find(p => p.name === chat.pharmacyName);
+          const pharmImg = pharmData?.image;
 
-            <View style={{ flex: 1, gap: 2 }}>
-              <View style={s.cardTopRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Text style={s.pharmName}>{chat.pharmacyName}</Text>
-                  <ShieldCheck color={COLORS.midTeal} size={13} strokeWidth={2.5} />
+          return (
+            <Pressable
+              key={chat.orderId}
+              style={({ pressed }) => [s.chatCard, pressed && { opacity: 0.92 }]}
+              onPress={() => navigation.navigate('PharmacyChat', { orderId: chat.orderId })}
+            >
+              {pharmImg ? (
+                <Image source={pharmImg} style={s.avatarImg} />
+              ) : (
+                <View style={s.avatarBox}>
+                  <Text style={s.avatarInitial}>{chat.pharmacyName[0]}</Text>
                 </View>
-                <Text style={s.timeText}>{chat.time}</Text>
+              )}
+
+              <View style={{ flex: 1, gap: 2 }}>
+                <View style={s.cardTopRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, paddingRight: 4 }}>
+                    <Text style={s.pharmName} numberOfLines={1}>{chat.pharmacyName}</Text>
+                    <ShieldCheck color={COLORS.midTeal} size={13} strokeWidth={2.5} />
+                  </View>
+                  <Text style={s.timeText}>{chat.time}</Text>
+                </View>
+
+                <Text style={s.lastMsg} numberOfLines={1}>{chat.lastMessage}</Text>
               </View>
 
-              <Text style={s.lastMsg} numberOfLines={1}>{chat.lastMessage}</Text>
-            </View>
-
-            {chat.unread > 0 && (
-              <View style={s.unreadBadge}>
-                <Text style={s.unreadText}>{chat.unread}</Text>
-              </View>
-            )}
-          </Pressable>
-        ))}
+              {chat.unread > 0 && (
+                <View style={s.unreadBadge}>
+                  <Text style={s.unreadText}>{chat.unread}</Text>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
       </Animated.ScrollView>
     </View>
   );
@@ -111,6 +121,9 @@ const s = StyleSheet.create({
   avatarBox: {
     width: 44, height: 44, borderRadius: 14,
     backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center',
+  },
+  avatarImg: {
+    width: 44, height: 44, borderRadius: 14, resizeMode: 'cover',
   },
   avatarInitial: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.midTeal },
   cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

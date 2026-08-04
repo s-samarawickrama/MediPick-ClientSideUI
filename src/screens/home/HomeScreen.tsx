@@ -22,6 +22,7 @@ import {
   ChevronDown, ChevronRight, ShoppingBag, Bell, Store, ShoppingCart, Plus, Minus, X, Heart, Check, Tag, Pill
 } from 'lucide-react-native';
 import { PrescriptionHeroGraphic, CategoryTileGraphic } from '../../components/common/HeroIllustrations';
+import { useCart } from '../../context/CartContext';
 import { Button } from '../../components/common/Button';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
@@ -48,7 +49,7 @@ const LOCATIONS_LIST = [
 export const HomeScreen = () => {
   const navigation = useNavigation<Nav>();
   const [searchQuery, setSearchQuery]       = useState('');
-  const [cartItems, setCartItems]           = useState<Record<string, number>>({});
+  const { cartItems }                       = useCart();
   const [, setFavTick]                      = useState(0);
   const [currentLocation, setCurrentLocation] = useState('Colombo 03 · Nearby Pharmacies');
   const [locationModal, setLocationModal]   = useState(false);
@@ -70,23 +71,7 @@ export const HomeScreen = () => {
     setFavTick((t) => t + 1);
   };
 
-  const incrementQty = (id: string) => {
-    setCartItems((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-  };
-
-  const decrementQty = (id: string) => {
-    setCartItems((prev) => {
-      const current = prev[id] || 0;
-      if (current <= 1) {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      }
-      return { ...prev, [id]: current - 1 };
-    });
-  };
-
-  const totalCartCount = Object.values(cartItems).reduce((sum, count) => sum + count, 0);
+  const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const activeOrders = MOCK_ORDERS.filter((o) => o.state === 'PREPARING' || o.state === 'READY_FOR_PICKUP');
 
   const q = searchQuery.trim().toLowerCase();
@@ -120,12 +105,13 @@ export const HomeScreen = () => {
             onPress={() => setLocationModal(true)} 
             activeOpacity={0.75}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={{ flex: 1, paddingRight: 8 }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Text style={s.deliverLabel}>COUNTER PICKUP ONLY</Text>
               <ChevronDown color={COLORS.midTeal} size={14} strokeWidth={2.8} />
             </View>
-            <Text style={s.greetingTitle}>{currentLocation}</Text>
+            <Text style={s.greetingTitle} numberOfLines={1} ellipsizeMode="tail">{currentLocation}</Text>
           </TouchableOpacity>
         </View>
 
@@ -136,9 +122,11 @@ export const HomeScreen = () => {
             onPress={() => (navigation as any).navigate('MultiStoreCart')}
           >
             <ShoppingCart color={COLORS.textDark} size={19} strokeWidth={2} />
-            <View style={s.cartBadgeTop}>
-              <Text style={s.cartBadgeTopText}>3</Text>
-            </View>
+            {totalCartCount > 0 && (
+              <View style={s.cartBadgeTop}>
+                <Text style={s.cartBadgeTopText}>{totalCartCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -190,50 +178,50 @@ export const HomeScreen = () => {
           )}
         </View>
 
-        {/* Quick Links Icon Row */}
-        <View style={s.quickLinksIconRow}>
+        {/* Quick Actions (Premium 2x2 Grid) */}
+        <View style={s.quickActionsGrid}>
           <TouchableOpacity 
-            style={s.iconActionItem}
-            onPress={() => (navigation as any).navigate('Favorites')}
+            style={s.actionCard}
+            onPress={() => (navigation as any).navigate('Tabs', { screen: 'Favorites' })}
             activeOpacity={0.7}
           >
-            <View style={[s.iconActionCircle, { backgroundColor: '#FEF2F2' }]}>
-              <Heart color="#EF4444" size={24} strokeWidth={2} />
+            <View style={[s.actionIconBox, { backgroundColor: '#FEF2F2' }]}>
+              <Heart color="#EF4444" size={20} strokeWidth={2.5} />
             </View>
-            <Text style={s.iconActionText}>Favorites</Text>
+            <Text style={s.actionCardText}>Favorites</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={s.iconActionItem}
+            style={s.actionCard}
             onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: 'All' } })}
             activeOpacity={0.7}
           >
-            <View style={[s.iconActionCircle, { backgroundColor: '#FFF7ED' }]}>
-              <Tag color="#F97316" size={24} strokeWidth={2} />
+            <View style={[s.actionIconBox, { backgroundColor: '#FFF7ED' }]}>
+              <Tag color="#F97316" size={20} strokeWidth={2.5} />
             </View>
-            <Text style={s.iconActionText}>Offers</Text>
+            <Text style={s.actionCardText}>Offers</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={s.iconActionItem}
+            style={s.actionCard}
             onPress={() => Platform.OS === 'web' ? window.alert('Pill reminders will be available in the next update!') : Alert.alert('Coming Soon', 'Pill reminders will be available in the next update!')}
             activeOpacity={0.7}
           >
-            <View style={[s.iconActionCircle, { backgroundColor: COLORS.plumLight }]}>
-              <Pill color={COLORS.deepPlum} size={24} strokeWidth={2} />
+            <View style={[s.actionIconBox, { backgroundColor: COLORS.plumLight }]}>
+              <Pill color={COLORS.deepPlum} size={20} strokeWidth={2.5} />
             </View>
-            <Text style={s.iconActionText}>Reminders</Text>
+            <Text style={s.actionCardText}>Reminders</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={s.iconActionItem}
+            style={s.actionCard}
             onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds' } })}
             activeOpacity={0.7}
           >
-            <View style={[s.iconActionCircle, { backgroundColor: '#EFF6FF' }]}>
-              <Star color="#3B82F6" size={24} strokeWidth={2} />
+            <View style={[s.actionIconBox, { backgroundColor: '#EFF6FF' }]}>
+              <Star color="#3B82F6" size={20} strokeWidth={2.5} />
             </View>
-            <Text style={s.iconActionText}>Top Brands</Text>
+            <Text style={s.actionCardText}>Top Brands</Text>
           </TouchableOpacity>
         </View>
 
@@ -364,7 +352,7 @@ export const HomeScreen = () => {
         <View style={s.productGrid}>
           {filteredMedicines.map((med) => {
             const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
-            const qty = cartItems[med.id] || 0;
+            const qty = cartItems.find(c => c.medicine.id === med.id)?.quantity || 0;
 
             return (
               <Pressable
@@ -383,6 +371,11 @@ export const HomeScreen = () => {
                   {disc > 0 && (
                     <View style={s.discBadge}>
                       <Text style={s.discText}>{disc}% OFF</Text>
+                    </View>
+                  )}
+                  {med.isRxRequired && (
+                    <View style={s.rxBadge}>
+                      <Text style={s.rxBadgeText}>Prescription Needed</Text>
                     </View>
                   )}
                 </View>
@@ -503,7 +496,7 @@ const s = StyleSheet.create({
     paddingBottom: 14,
     paddingHorizontal: 20,
   },
-  userInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  userInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, paddingRight: 8 },
   avatarCircle: {
     width: 44, height: 44, borderRadius: 22,
     backgroundColor: COLORS.midTeal,
@@ -521,13 +514,14 @@ const s = StyleSheet.create({
     position: 'relative',
   },
   bellDot: {
-    position: 'absolute', top: 10, right: 11,
+    position: 'absolute', top: 9, right: 9,
     width: 7, height: 7, borderRadius: 3.5,
     backgroundColor: COLORS.midTeal,
   },
   cartBadgeTop: {
-    position: 'absolute', top: -3, right: -3,
-    backgroundColor: COLORS.midTeal, width: 18, height: 18, borderRadius: 9,
+    position: 'absolute', top: -4, right: -4,
+    backgroundColor: COLORS.midTeal, minWidth: 18, height: 18, borderRadius: 9,
+    paddingHorizontal: 4,
     justifyContent: 'center', alignItems: 'center',
     borderWidth: 1.5, borderColor: COLORS.surfaceWhite,
   },
@@ -560,16 +554,18 @@ const s = StyleSheet.create({
   },
   searchInputInline: { flex: 1, fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textDark },
 
-  quickLinksIconRow: {
-    flexDirection: 'row', justifyContent: 'space-between', 
-    paddingHorizontal: 6, paddingBottom: 16, paddingTop: 6,
+  quickActionsGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between',
+    paddingHorizontal: 0, paddingBottom: 16, rowGap: 12, marginTop: 6,
   },
-  iconActionItem: { alignItems: 'center', width: 76, gap: 8 },
-  iconActionCircle: {
-    width: 56, height: 56, borderRadius: 28,
-    justifyContent: 'center', alignItems: 'center',
+  actionCard: {
+    width: '48%', flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: COLORS.surfaceWhite, padding: 10, borderRadius: 16,
+    borderWidth: 1, borderColor: COLORS.borderSoft,
+    shadowColor: '#64748B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
-  iconActionText: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textDark, textAlign: 'center', letterSpacing: -0.2 },
+  actionIconBox: { width: 38, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  actionCardText: { flex: 1, fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark },
 
   heroBannerCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -646,6 +642,11 @@ const s = StyleSheet.create({
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
   },
   discText: { fontFamily: FONTS.extrabold, fontSize: 9, color: '#FFFFFF' },
+  rxBadge: {
+    position: 'absolute', bottom: 8, left: 8, backgroundColor: '#F5D7FF',
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
+  },
+  rxBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: COLORS.deepPlum },
   prodName: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
   prodGeneric: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
   prodFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 6 },

@@ -12,6 +12,7 @@ import { BrowseOTCScreen } from '../screens/otc/BrowseOTCScreen';
 import { OrdersScreen } from '../screens/orders/OrdersScreen';
 import { QuotationScreen } from '../screens/orders/QuotationScreen';
 import { ReadyForPickupScreen } from '../screens/orders/ReadyForPickupScreen';
+import { OrderDetailsScreen } from '../screens/orders/OrderDetailsScreen';
 import { ChatListScreen } from '../screens/chat/ChatListScreen';
 import { PharmacyChatScreen } from '../screens/chat/PharmacyChatScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
@@ -27,11 +28,12 @@ import { LegalDocScreen } from '../screens/legal/LegalDocScreen';
 export type MainStackParamList = {
   Tabs: { screen?: string; params?: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } } | undefined;
   Browse: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } | undefined;
-  UploadPrescription: { pharmacyId?: string; pharmacyName?: string } | undefined;
-  AIQualityCheck: { clarityScore?: number; pharmacyId?: string; pharmacyName?: string; selectedItems?: string[] } | undefined;
+  UploadPrescription: { pharmacyId?: string; pharmacyName?: string; initialSelectedExtraItems?: Record<string, number> } | undefined;
+  AIQualityCheck: { clarityScore?: number; pharmacyId?: string; pharmacyName?: string; selectedItems?: string[]; selectedExtraItemsDict?: Record<string, number> } | undefined;
   SelectPharmacies: { fromOtc?: boolean; selectedItems?: string[] };
   Quotation: { orderId: string; pharmacyId?: string };
   ReadyForPickup: { orderId: string; isPaidOnline?: boolean };
+  OrderDetails: { orderId: string };
   PharmacyChat: { orderId: string };
   Notifications: undefined;
   ReportIssue: { orderId: string };
@@ -59,11 +61,31 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         const isFocused = state.index === index;
         const { Icon, label } = tabs[index];
 
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (route.name === 'Browse') {
+            if (isFocused) {
+              navigation.navigate('Browse', { initialMode: 'meds', storeId: undefined, category: undefined });
+            } else if (!event.defaultPrevented) {
+              navigation.navigate('Browse', { initialMode: 'meds', storeId: undefined, category: undefined });
+            }
+          } else {
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          }
+        };
+
         return (
           <TouchableOpacity
             key={route.key}
             style={tabStyles.tab}
-            onPress={() => navigation.navigate(route.name)}
+            onPress={onPress}
             activeOpacity={0.7}
             accessibilityRole="tab"
             accessibilityLabel={label}
@@ -144,6 +166,7 @@ export const MainNavigator = () => (
     <Stack.Screen name="SelectPharmacies" component={SelectPharmaciesScreen} options={{ animation: 'slide_from_right' }} />
     <Stack.Screen name="Quotation" component={QuotationScreen} options={{ animation: 'slide_from_right' }} />
     <Stack.Screen name="ReadyForPickup" component={ReadyForPickupScreen} options={{ animation: 'slide_from_right' }} />
+    <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} options={{ animation: 'slide_from_right' }} />
     <Stack.Screen name="PharmacyChat" component={PharmacyChatScreen} options={{ animation: 'slide_from_right' }} />
     <Stack.Screen name="ReportIssue" component={ReportIssueScreen} options={{ animation: 'slide_from_bottom' }} />
     <Stack.Screen name="MultiStoreCart" component={MultiStoreCartScreen} options={{ animation: 'slide_from_bottom' }} />

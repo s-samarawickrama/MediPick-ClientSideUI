@@ -16,6 +16,8 @@ import {
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { COLORS } from './src/theme/colors';
 
+import { CartProvider } from './src/context/CartContext';
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     PlusJakartaSans_400Regular,
@@ -36,5 +38,9 @@ export default function App() {
     );
   }
 
-  return <AppNavigator />;
+  return (
+    <CartProvider>
+      <AppNavigator />
+    </CartProvider>
+  );
 }

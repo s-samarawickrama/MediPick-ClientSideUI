@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Animated, TextInput, StatusBar, Pressable, Modal,
   KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
-import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock } from 'lucide-react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, ChevronRight, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock } from 'lucide-react-native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
@@ -13,6 +13,7 @@ import { MOCK_MEDICINES, MOCK_PHARMACIES } from '../../mock/demoData';
 import { MedicineItem as Medicine, Pharmacy } from '../../types';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MapPreview } from '../../components/MapPreview';
+import { useCart } from '../../context/CartContext';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type BrowseRoute = RouteProp<MainStackParamList, 'Browse'>;
@@ -21,6 +22,7 @@ const MED_CATEGORIES = ['All', 'Vitamins', 'First Aid', 'Supplements', 'Skincare
 export const BrowseOTCScreen = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<BrowseRoute>();
+  const { cartItems: globalCart, addToCart, updateQuantity, subtotal } = useCart();
 
   const [mode,             setMode]             = useState<'meds' | 'pharmacies'>('meds');
   const [query,            setQuery]            = useState('');
@@ -28,34 +30,45 @@ export const BrowseOTCScreen = () => {
   const [pharmacySort,     setPharmacySort]     = useState<'distance' | 'rating'>('distance');
   const [activeStore,      setActiveStore]      = useState<Pharmacy | null>(null);
   const [storeQuery,       setStoreQuery]       = useState('');
-  const [cartItems,        setCartItems]        = useState<Record<string, number>>({});
   const [selectedMedModal, setSelectedMedModal] = useState<Medicine | null>(null);
   const [storeInfoModal,   setStoreInfoModal]   = useState(false);
   const [selectedMedForStores, setSelectedMedForStores] = useState<Medicine | null>(null);
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 4;
+
   const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [mode, query, medCategory, pharmacySort, storeQuery, activeStore]);
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
-  useEffect(() => {
-    if (route.params?.initialMode) {
-      setMode(route.params.initialMode);
-    }
-    if (route.params?.category) {
-      setMedCategory(route.params.category);
-      setMode('meds');
-    }
-    if (route.params?.storeId) {
-      const match = MOCK_PHARMACIES.find((p) => p.id === route.params?.storeId);
-      if (match) {
-        setActiveStore(match);
-        setMode('pharmacies');
+  useFocusEffect(
+    useCallback(() => {
+      const storeId = route.params?.storeId;
+      const category = route.params?.category;
+      const initialMode = route.params?.initialMode;
+
+      if (storeId) {
+        const match = MOCK_PHARMACIES.find((p) => p.id === storeId);
+        if (match) {
+          setActiveStore(match);
+          setMode('pharmacies');
+        }
+      } else if (category) {
+        setMedCategory(category);
+        setMode('meds');
+        setActiveStore(null);
+      } else if (initialMode) {
+        setMode(initialMode);
       }
-    }
-  }, [route.params]);
+    }, [route.params])
+  );
 
   const filteredMeds = MOCK_MEDICINES.filter((m) => {
     const matchQ = m.name.toLowerCase().includes(query.toLowerCase()) || m.genericName.toLowerCase().includes(query.toLowerCase());
@@ -78,42 +91,52 @@ export const BrowseOTCScreen = () => {
     return m.name.toLowerCase().includes(storeQuery.toLowerCase()) || m.genericName.toLowerCase().includes(storeQuery.toLowerCase());
   }).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
-  const incrementQty = (id: string) => {
-    setCartItems((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+  const totalMedPages = Math.max(1, Math.ceil(filteredMeds.length / ITEMS_PER_PAGE));
+  const medStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedMeds = filteredMeds.slice(medStartIndex, medStartIndex + ITEMS_PER_PAGE);
+
+  const totalPharmPages = Math.max(1, Math.ceil(sortedPharmacies.length / ITEMS_PER_PAGE));
+  const pharmStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedPharmacies = sortedPharmacies.slice(pharmStartIndex, pharmStartIndex + ITEMS_PER_PAGE);
+
+  const totalStoreMedPages = Math.max(1, Math.ceil(storeMeds.length / ITEMS_PER_PAGE));
+  const storeMedStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedStoreMeds = storeMeds.slice(storeMedStartIndex, storeMedStartIndex + ITEMS_PER_PAGE);
+
+  const cartItems = globalCart.reduce((acc, item) => {
+    acc[item.medicine.id] = item.quantity;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalCartCount = globalCart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const incrementQty = (med: Medicine) => {
+    if (cartItems[med.id]) {
+      updateQuantity(med.id, 1);
+    } else {
+      addToCart(med);
+    }
   };
 
-  const decrementQty = (id: string) => {
-    setCartItems((prev) => {
-      const current = prev[id] || 0;
-      if (current <= 1) {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      }
-      return { ...prev, [id]: current - 1 };
-    });
+  const decrementQty = (medId: string) => {
+    updateQuantity(medId, -1);
   };
 
-  const totalCartCount = Object.values(cartItems).reduce((sum, count) => sum + count, 0);
-
-  // Render Quantity Stepper Button (- 1 +) exactly like Uber Eats
-  const renderQtyStepper = (id: string) => {
-    const qty = cartItems[id] || 0;
-    const med = MOCK_MEDICINES.find(m => m.id === id);
+  // Render Quantity Stepper Button (- 1 +)
+  const renderQtyStepper = (med: Medicine) => {
+    const qty = cartItems[med.id] || 0;
     
-    if (med && (!med.inStock || med.isRxRequired)) {
+    if (!med.inStock || med.isRxRequired) {
       return <View style={{ width: 32, height: 32 }} />;
     }
 
     if (qty === 0) {
       return (
-          <TouchableOpacity
-            style={s.addBtnInitial}
-            onPress={(e) => {
-              incrementQty(id);
-            }}
-            activeOpacity={0.8}
-          >
+        <TouchableOpacity
+          style={s.addBtnInitial}
+          onPress={(e) => { e.stopPropagation(); incrementQty(med); }}
+          activeOpacity={0.8}
+        >
           <Plus color="#FFFFFF" size={16} strokeWidth={2.8} />
         </TouchableOpacity>
       );
@@ -123,9 +146,7 @@ export const BrowseOTCScreen = () => {
       <View style={s.stepperBox}>
         <TouchableOpacity
           style={s.stepperBtn}
-          onPress={() => {
-            decrementQty(id);
-          }}
+          onPress={(e) => { e.stopPropagation(); decrementQty(med.id); }}
           activeOpacity={0.8}
         >
           <Minus color={COLORS.midTeal} size={14} strokeWidth={3} />
@@ -135,13 +156,55 @@ export const BrowseOTCScreen = () => {
 
         <TouchableOpacity
           style={s.stepperBtn}
-          onPress={(e) => {
-            incrementQty(id);
-          }}
+          onPress={(e) => { e.stopPropagation(); incrementQty(med); }}
           activeOpacity={0.8}
         >
           <Plus color={COLORS.midTeal} size={14} strokeWidth={3} />
         </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Pagination UI Generator
+  const renderPagination = (totalItems: number, totalPages: number, startIndex: number) => {
+    if (totalItems === 0) return null;
+    return (
+      <View style={s.paginationContainer}>
+        <Text style={s.paginationInfoText}>
+          Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} of {totalItems} items
+        </Text>
+        <View style={s.paginationRow}>
+          <TouchableOpacity
+            style={[s.pageNavBtn, currentPage === 1 && s.pageNavBtnDisabled]}
+            disabled={currentPage === 1}
+            onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            activeOpacity={0.7}
+          >
+            <ChevronLeft color={currentPage === 1 ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+          </TouchableOpacity>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+            <TouchableOpacity
+              key={pageNum}
+              style={[s.pageNumberBtn, pageNum === currentPage && s.pageNumberBtnActive]}
+              onPress={() => setCurrentPage(pageNum)}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.pageNumberText, pageNum === currentPage && s.pageNumberTextActive]}>
+                {pageNum}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+          <TouchableOpacity
+            style={[s.pageNavBtn, currentPage === totalPages && s.pageNavBtnDisabled]}
+            disabled={currentPage === totalPages}
+            onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            activeOpacity={0.7}
+          >
+            <ChevronRight color={currentPage === totalPages ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -157,13 +220,9 @@ export const BrowseOTCScreen = () => {
           <TouchableOpacity 
             style={s.backBtn} 
             onPress={() => {
-              if (route.params?.storeId) {
-                // Clear the params so it doesn't get stuck on the store if they navigate to Browse later
-                navigation.setParams({ storeId: undefined });
-                navigation.goBack();
-              } else {
-                setActiveStore(null);
-              }
+              setActiveStore(null);
+              setStoreQuery('');
+              navigation.setParams({ storeId: undefined, category: undefined, initialMode: undefined });
             }} 
             activeOpacity={0.75}
           >
@@ -283,7 +342,7 @@ export const BrowseOTCScreen = () => {
           {/* Store Available Medicines Grid */}
           <Text style={s.sectionTitleText}>Available In Store ({storeMeds.length})</Text>
           <View style={s.productGrid}>
-            {storeMeds.map((med) => {
+            {paginatedStoreMeds.map((med) => {
               const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
 
               return (
@@ -326,12 +385,13 @@ export const BrowseOTCScreen = () => {
                       <Text style={s.prodMrp}>LKR {med.mrpPrice}</Text>
                     </View>
 
-                    {renderQtyStepper(med.id)}
+                    {renderQtyStepper(med)}
                   </View>
                 </Pressable>
               );
             })}
           </View>
+          {renderPagination(storeMeds.length, totalStoreMedPages, storeMedStartIndex)}
         </ScrollView>
 
         {/* Uber Eats Bottom Floating Cart Bar */}
@@ -346,10 +406,7 @@ export const BrowseOTCScreen = () => {
                 <Text style={s.cartCountText}>{totalCartCount}</Text>
               </View>
               <Text style={s.floatingCartText}>View Order Cart</Text>
-              <Text style={s.floatingCartTotal}>LKR {Object.entries(cartItems).reduce((sum, [id, qty]) => {
-                const med = MOCK_MEDICINES.find(m => m.id === id);
-                return sum + (med ? med.pharmacyPrice * qty : 0);
-              }, 0)}</Text>
+              <Text style={s.floatingCartTotal}>LKR {subtotal}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -395,7 +452,7 @@ export const BrowseOTCScreen = () => {
                   <TouchableOpacity
                     style={s.modalAddBtn}
                     onPress={() => {
-                      incrementQty(selectedMedModal.id);
+                      incrementQty(selectedMedModal);
                       setSelectedMedModal(null);
                     }}
                     activeOpacity={0.88}
@@ -576,8 +633,9 @@ export const BrowseOTCScreen = () => {
       >
         {mode === 'meds' ? (
           /* Medicines 2-Column Product Grid */
-          <View style={s.productGrid}>
-            {filteredMeds.map((med) => {
+          <View>
+            <View style={s.productGrid}>
+              {paginatedMeds.map((med) => {
               const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
 
               return (
@@ -639,11 +697,14 @@ export const BrowseOTCScreen = () => {
                 </Pressable>
               );
             })}
+            </View>
+            {renderPagination(filteredMeds.length, totalMedPages, medStartIndex)}
           </View>
         ) : (
           /* Partner Pharmacies List */
-          <View style={s.pharmacyList}>
-            {sortedPharmacies.map((p) => (
+          <View>
+            <View style={s.pharmacyList}>
+              {paginatedPharmacies.map((p) => (
               <Pressable
                 key={p.id}
                 style={({ pressed }) => [s.pharmacyCard, pressed && { opacity: 0.92 }]}
@@ -675,6 +736,8 @@ export const BrowseOTCScreen = () => {
                 </View>
               </Pressable>
             ))}
+            </View>
+            {renderPagination(sortedPharmacies.length, totalPharmPages, pharmStartIndex)}
           </View>
         )}
       </Animated.ScrollView>
@@ -690,11 +753,8 @@ export const BrowseOTCScreen = () => {
             <View style={s.cartCountPill}>
               <Text style={s.cartCountText}>{totalCartCount}</Text>
             </View>
-            <Text style={s.floatingCartText}>View Cart · {totalCartCount} item{totalCartCount > 1 ? 's' : ''}</Text>
-            <Text style={s.floatingCartTotal}>LKR {Object.entries(cartItems).reduce((sum, [id, qty]) => {
-              const med = MOCK_MEDICINES.find(m => m.id === id);
-              return sum + (med ? med.pharmacyPrice * qty : 0);
-            }, 0)}</Text>
+            <Text style={s.floatingCartText}>View Order Cart</Text>
+            <Text style={s.floatingCartTotal}>LKR {subtotal}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -753,7 +813,7 @@ export const BrowseOTCScreen = () => {
                 <TouchableOpacity
                   style={s.modalAddBtn}
                   onPress={() => {
-                    incrementQty(selectedMedModal.id);
+                    incrementQty(selectedMedModal);
                     setSelectedMedModal(null);
                   }}
                   activeOpacity={0.88}
@@ -1082,4 +1142,57 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: '#D6EDA0',
   },
   selectStoreBadgeText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+
+  paginationContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+    gap: 8,
+  },
+  paginationInfoText: {
+    fontFamily: FONTS.medium,
+    fontSize: 12,
+    color: COLORS.textMuted,
+  },
+  paginationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pageNavBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: COLORS.limeWhisper,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D6EDA0',
+  },
+  pageNavBtnDisabled: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+  },
+  pageNumberBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: COLORS.surfaceWhite,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  pageNumberBtnActive: {
+    backgroundColor: COLORS.midTeal,
+    borderColor: COLORS.midTeal,
+  },
+  pageNumberText: {
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: COLORS.textDark,
+  },
+  pageNumberTextActive: {
+    color: '#FFFFFF',
+  },
 });

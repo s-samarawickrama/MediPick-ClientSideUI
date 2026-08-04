@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +17,7 @@ import { ChevronLeft, Send, ShieldCheck } from 'lucide-react-native';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { MOCK_PHARMACIES } from '../../mock/demoData';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -52,6 +54,8 @@ export const PharmacyChatScreen = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const scrollRef = useRef<ScrollView>(null);
+
+  const pharmacy = MOCK_PHARMACIES[0]; // MediCare Central Pharmacy
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
@@ -94,9 +98,13 @@ export const PharmacyChatScreen = () => {
           <ChevronLeft color={COLORS.peacockBlue} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <View style={s.headerCenter}>
-          <View style={s.pharmacyAvatar}>
-            <Text style={s.avatarInitial}>M</Text>
-          </View>
+          {pharmacy?.image ? (
+            <Image source={pharmacy.image} style={s.pharmacyAvatarImg} />
+          ) : (
+            <View style={s.pharmacyAvatar}>
+              <Text style={s.avatarInitial}>M</Text>
+            </View>
+          )}
           <View>
             <View style={s.pharmacyTitleRow}>
               <Text style={s.pharmacyName}>MediCare Central</Text>
@@ -180,6 +188,9 @@ const s = StyleSheet.create({
     width: 40, height: 40, borderRadius: 12,
     backgroundColor: COLORS.limeWhisper,
     justifyContent: 'center', alignItems: 'center',
+  },
+  pharmacyAvatarImg: {
+    width: 40, height: 40, borderRadius: 12, resizeMode: 'cover',
   },
   avatarInitial: { fontFamily: FONTS.bold, fontSize: 16, color: COLORS.deepTeal },
   pharmacyTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },

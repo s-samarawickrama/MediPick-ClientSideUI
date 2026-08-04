@@ -2,13 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Animated,
   TouchableOpacity, StatusBar, TextInput, Image, Platform, Pressable, Alert,
-  KeyboardAvoidingView,
+  KeyboardAvoidingView, Modal,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
-  ChevronLeft, Camera, ImagePlus, CheckCircle2,
-  Trash2, MessageSquare, AlertCircle, ShoppingBag, Plus, Check, Store, Search, X
+  ChevronLeft, ChevronRight, Camera, ImagePlus, CheckCircle2,
+  Trash2, MessageSquare, AlertCircle, ShoppingBag, Plus, Minus, Check, Store, Search, X, Info
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../components/common/Button';
@@ -28,28 +28,49 @@ export const UploadPrescriptionScreen = () => {
 
   const [note, setNote]                   = useState('');
   const [image, setImage]                 = useState<string | null>(null);
-  const [selectedExtraItems, setSelectedExtraItems] = useState<string[]>([]);
+  
+  // Track extra items quantity dictionary: { [itemId]: quantity }
+  const [selectedItemQtys, setSelectedItemQtys] = useState<Record<string, number>>(
+    route.params?.initialSelectedExtraItems || {}
+  );
+
   const [itemSearchQuery, setItemSearchQuery] = useState('');
-  const [customItems, setCustomItems]       = useState<{ id: string; name: string; price: string }[]>([]);
+  const [customItems, setCustomItems]       = useState<{ id: string; name: string; price: string; image?: any; dosage?: string; description?: string }[]>([]);
+  const [detailModalItem, setDetailModalItem] = useState<any | null>(null);
+  const [currentPage, setCurrentPage]         = useState(1);
+  const ITEMS_PER_PAGE = 4;
 
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY  = useRef(new Animated.Value(14)).current;
 
-  // OTC Catalog items for extra requested items (Filtering out Rx prescription-only meds)
+  // OTC Catalog items for extra requested items
   const catalogList = [
     ...customItems,
     ...MOCK_MEDICINES
-      .filter((m) => !m.isRxRequired) // Prescription meds CANNOT be directly added to cart
+      .filter((m) => !m.isRxRequired)
       .map((m) => ({
         id: m.id,
-        name: `${m.name} (${m.dosage})`,
-        price: `Starting from LKR ${m.pharmacyPrice}`,
+        name: m.name,
+        dosage: m.dosage,
+        category: m.category,
+        description: m.description || 'Quality health & wellness supply.',
+        price: `Estimated LKR ${m.pharmacyPrice}`,
+        image: m.image,
       })),
   ];
 
   const filteredCatalog = catalogList.filter((item) =>
-    item.name.toLowerCase().includes(itemSearchQuery.trim().toLowerCase())
+    item.name.toLowerCase().includes(itemSearchQuery.trim().toLowerCase()) ||
+    (item.dosage && item.dosage.toLowerCase().includes(itemSearchQuery.trim().toLowerCase()))
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredCatalog.length / ITEMS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedCatalog = filteredCatalog.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemSearchQuery]);
 
   const handleAddCustomItem = () => {
     if (!itemSearchQuery.trim()) return;
@@ -57,11 +78,26 @@ export const UploadPrescriptionScreen = () => {
     const newItem = {
       id: newId,
       name: itemSearchQuery.trim(),
-      price: 'Quote upon request',
+      dosage: 'Custom Request',
+      price: 'Quoted upon request',
+      description: 'Custom requested pharmacy item specified by patient.',
     };
     setCustomItems([newItem, ...customItems]);
-    setSelectedExtraItems([...selectedExtraItems, newId]);
+    setSelectedItemQtys((prev) => ({ ...prev, [newId]: 1 }));
     setItemSearchQuery('');
+  };
+
+  const setItemQty = (id: string, delta: number) => {
+    setSelectedItemQtys((prev) => {
+      const current = prev[id] || 0;
+      const next = current + delta;
+      if (next <= 0) {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      }
+      return { ...prev, [id]: next };
+    });
   };
 
   useEffect(() => {
@@ -86,7 +122,6 @@ export const UploadPrescriptionScreen = () => {
   const takePhoto = async () => {
     try {
       if (Platform.OS === 'web') {
-        // Instant high quality sample prescription image for web demonstration
         setImage('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80');
         return;
       }
@@ -141,13 +176,18 @@ export const UploadPrescriptionScreen = () => {
   const clearImage = () => setImage(null);
 
   const proceed = () => {
+    const selectedItemIds = Object.keys(selectedItemQtys);
+
     navigation.navigate('AIQualityCheck', {
       clarityScore: 94,
       pharmacyId: targetPharmacyId,
       pharmacyName: targetPharmacyName,
-      selectedItems: selectedExtraItems,
+      selectedItems: selectedItemIds,
+      selectedExtraItemsDict: selectedItemQtys,
     });
   };
+
+  const totalSelectedItemsCount = Object.values(selectedItemQtys).reduce((a, b) => a + b, 0);
 
   return (
     <KeyboardAvoidingView
@@ -181,7 +221,6 @@ export const UploadPrescriptionScreen = () => {
         {image ? (
           <View style={s.previewContainer}>
             <Image source={{ uri: image }} style={s.previewImage} resizeMode="cover" />
-            {/* Floating Glassmorphic Icon Overlay Bar */}
             <View style={s.floatingIconOverlay}>
               <TouchableOpacity style={s.iconActionBtn} onPress={takePhoto} activeOpacity={0.8}>
                 <Camera color="#FFFFFF" size={18} strokeWidth={2.2} />
@@ -196,13 +235,12 @@ export const UploadPrescriptionScreen = () => {
           </View>
         ) : (
           <>
-            {/* Take Photo Button */}
             <TouchableOpacity style={s.cameraZone} onPress={takePhoto} activeOpacity={0.88}>
               <View style={s.cameraCircle}>
-                <Camera color={COLORS.deepTeal} size={32} strokeWidth={2} />
+                <Camera color={COLORS.midTeal} size={32} strokeWidth={2.2} />
               </View>
-              <Text style={s.cameraTitle}>Take Photo</Text>
-              <Text style={s.cameraSub}>Position prescription in frame</Text>
+              <Text style={s.cameraTitle}>Take Prescription Photo</Text>
+              <Text style={s.cameraSub}>Hold camera steady under bright lighting</Text>
             </TouchableOpacity>
 
             <View style={s.orRow}>
@@ -211,42 +249,70 @@ export const UploadPrescriptionScreen = () => {
               <View style={s.orLine} />
             </View>
 
-            {/* Pick from Gallery */}
-            <TouchableOpacity style={s.fileBtn} onPress={pickFromGallery} activeOpacity={0.85}>
-              <ImagePlus color={COLORS.peacockBlue} size={18} strokeWidth={2} />
+            <TouchableOpacity style={s.fileBtn} onPress={pickFromGallery} activeOpacity={0.8}>
+              <ImagePlus color={COLORS.midTeal} size={20} strokeWidth={2.2} />
               <Text style={s.fileBtnText}>Upload from Gallery</Text>
             </TouchableOpacity>
           </>
         )}
 
-        {/* Interactive Extra Items Card */}
+        {/* Prescription Instructions / Notes Card */}
+        <View style={s.noteContainer}>
+          <View style={s.noteHeaderRow}>
+            <MessageSquare color={COLORS.midTeal} size={16} strokeWidth={2.2} />
+            <Text style={s.noteTitle}>Prescription Instructions for Pharmacist</Text>
+          </View>
+          <TextInput
+            style={s.noteInput}
+            placeholder="E.g. Only need the first 2 items listed, or 1-week supply..."
+            placeholderTextColor={COLORS.textMuted}
+            multiline
+            numberOfLines={2}
+            textAlignVertical="top"
+            value={note}
+            onChangeText={setNote}
+          />
+        </View>
+
+        {/* Extra OTC Items Card */}
         <View style={s.extraItemsContainer}>
-          <View style={s.extraItemsHeader}>
-            <ShoppingBag color={COLORS.midTeal} size={18} strokeWidth={2} />
-            <View style={{ flex: 1 }}>
-              <Text style={s.extraItemsTitle}>Add Pharmacy Items & Supplies</Text>
-              <Text style={s.extraItemsSub}>Your prescription will be processed from the photo. Add any everyday pharmacy items below.</Text>
+          <View style={s.extraHeaderBanner}>
+            <View style={s.catchyIconBox}>
+              <ShoppingBag color={COLORS.midTeal} size={22} strokeWidth={2.5} />
+            </View>
+            <View style={{ flex: 1, gap: 3 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={s.needMedsBadge}>
+                  <Text style={s.needMedsBadgeText}>ADD-ON REQUEST</Text>
+                </View>
+                {totalSelectedItemsCount > 0 && (
+                  <View style={s.selectedCountPill}>
+                    <Text style={s.selectedCountText}>{totalSelectedItemsCount} added</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={s.catchyTitle}>Need everyday wellness items?</Text>
+              <Text style={s.catchySub}>Add items below to get quotes for everything in one go!</Text>
             </View>
           </View>
 
-          {/* Search / Add Input Bar */}
+          {/* Search Bar */}
           <View style={s.extraSearchBar}>
-            <Search color={COLORS.textMuted} size={16} strokeWidth={2.5} />
+            <Search color={COLORS.textMuted} size={16} strokeWidth={2} />
             <TextInput
               style={s.extraSearchInput}
-              placeholder="Search pharmacy items (e.g. Panadol, Bandages)..."
+              placeholder="Search items (e.g. Panadol, Bandages)..."
               placeholderTextColor={COLORS.textMuted}
               value={itemSearchQuery}
               onChangeText={setItemSearchQuery}
             />
             {itemSearchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setItemSearchQuery('')} style={{ padding: 4 }}>
-                <X color={COLORS.textMuted} size={15} strokeWidth={2} />
+              <TouchableOpacity onPress={() => setItemSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <X color={COLORS.textMuted} size={16} strokeWidth={2} />
               </TouchableOpacity>
             )}
           </View>
 
-          {/* If search query doesn't match existing catalog, offer custom "Add Item" button */}
           {itemSearchQuery.trim().length > 0 && filteredCatalog.length === 0 && (
             <TouchableOpacity style={s.addCustomBtn} onPress={handleAddCustomItem} activeOpacity={0.8}>
               <Plus color="#FFF" size={16} strokeWidth={3} />
@@ -254,52 +320,119 @@ export const UploadPrescriptionScreen = () => {
             </TouchableOpacity>
           )}
 
-          {/* Items List */}
-          <View style={s.extraItemsList}>
-            {filteredCatalog.map((item) => {
-              const isSelected = selectedExtraItems.includes(item.id);
+          {/* Premium 2-Column Grid Items List (Paginated) */}
+          <View style={s.extraGrid}>
+            {paginatedCatalog.map((item) => {
+              const qty = selectedItemQtys[item.id] || 0;
+              const isSelected = qty > 0;
+
               return (
                 <TouchableOpacity
                   key={item.id}
-                  style={[s.extraChip, isSelected && s.extraChipSelected]}
-                  onPress={() => {
-                    if (isSelected) {
-                      setSelectedExtraItems(selectedExtraItems.filter((i) => i !== item.id));
-                    } else {
-                      setSelectedExtraItems([...selectedExtraItems, item.id]);
-                    }
-                  }}
-                  activeOpacity={0.8}
+                  style={[s.gridCard, isSelected && s.gridCardSelected]}
+                  onPress={() => setDetailModalItem(item)}
+                  activeOpacity={0.93}
                 >
-                  <View style={[s.chipCheck, isSelected && s.chipCheckActive]}>
-                    {isSelected && <Check color="#FFF" size={12} strokeWidth={3} />}
+                  {/* Image Box — same as Browse productImgBox */}
+                  <View style={[s.gridImgBox, isSelected && s.gridImgBoxSelected]}>
+                    {item.image ? (
+                      <Image source={item.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
+                    ) : (
+                      <ShoppingBag color={COLORS.midTeal} size={28} strokeWidth={2} />
+                    )}
+                    {/* Info overlay top-right */}
+                    <TouchableOpacity
+                      style={s.gridInfoBadge}
+                      onPress={() => setDetailModalItem(item)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Info color="rgba(255,255,255,0.9)" size={13} strokeWidth={2.5} />
+                    </TouchableOpacity>
                   </View>
-                  <Text style={[s.extraChipName, isSelected && s.extraChipNameActive]} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text style={s.extraChipPrice}>{item.price}</Text>
+
+                  {/* Name & Dosage */}
+                  <Text style={s.gridProdName} numberOfLines={2}>{item.name}</Text>
+                  <Text style={s.gridProdDosage} numberOfLines={1}>{item.dosage || 'Standard'}</Text>
+
+                  {/* Footer: Price + Stepper */}
+                  <View style={s.gridCardFooter}>
+                    <View style={{ gap: 1 }}>
+                      <Text style={s.gridProdPricePrefix}>Starting from</Text>
+                      <Text style={s.gridProdPrice}>{item.price?.replace('Estimated ', '')}</Text>
+                    </View>
+                    {isSelected ? (
+                      <View style={s.gridStepperBox}>
+                        <TouchableOpacity
+                          style={s.gridStepBtn}
+                          onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, -1); }}
+                          activeOpacity={0.7}
+                        >
+                          <Minus color={COLORS.midTeal} size={12} strokeWidth={3} />
+                        </TouchableOpacity>
+                        <Text style={s.gridStepQty}>{qty}</Text>
+                        <TouchableOpacity
+                          style={s.gridStepBtn}
+                          onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, 1); }}
+                          activeOpacity={0.7}
+                        >
+                          <Plus color={COLORS.midTeal} size={12} strokeWidth={3} />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={s.gridAddCircle}
+                        onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, 1); }}
+                        activeOpacity={0.85}
+                      >
+                        <Plus color="#FFF" size={14} strokeWidth={3} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </TouchableOpacity>
               );
             })}
           </View>
-        </View>
 
-        {/* Instruction Note for Pharmacist */}
-        <View style={s.noteContainer}>
-          <View style={s.noteHeaderRow}>
-            <MessageSquare color={COLORS.midTeal} size={16} strokeWidth={2} />
-            <Text style={s.noteTitle}>Additional Notes for Pharmacist</Text>
-          </View>
-          <TextInput
-            style={s.noteInput}
-            placeholder="E.g. Please specify brand preferences or special pharmacy instructions"
-            placeholderTextColor={COLORS.textMuted}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-            value={note}
-            onChangeText={setNote}
-          />
+          {/* Pagination Controls */}
+          {filteredCatalog.length > ITEMS_PER_PAGE && (
+            <View style={s.paginationContainer}>
+              <Text style={s.paginationInfoText}>
+                Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filteredCatalog.length)} of {filteredCatalog.length} items
+              </Text>
+              <View style={s.paginationRow}>
+                <TouchableOpacity
+                  style={[s.pageNavBtn, currentPage === 1 && s.pageNavBtnDisabled]}
+                  disabled={currentPage === 1}
+                  onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  activeOpacity={0.7}
+                >
+                  <ChevronLeft color={currentPage === 1 ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+                </TouchableOpacity>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <TouchableOpacity
+                    key={pageNum}
+                    style={[s.pageNumberBtn, pageNum === currentPage && s.pageNumberBtnActive]}
+                    onPress={() => setCurrentPage(pageNum)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[s.pageNumberText, pageNum === currentPage && s.pageNumberTextActive]}>
+                      {pageNum}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity
+                  style={[s.pageNavBtn, currentPage === totalPages && s.pageNavBtnDisabled]}
+                  disabled={currentPage === totalPages}
+                  onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  activeOpacity={0.7}
+                >
+                  <ChevronRight color={currentPage === totalPages ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
 
         <Button
@@ -309,6 +442,64 @@ export const UploadPrescriptionScreen = () => {
           style={{ marginTop: 4 }}
         />
       </Animated.ScrollView>
+
+      {/* Product Details Modal */}
+      <Modal visible={!!detailModalItem} animationType="slide" transparent onRequestClose={() => setDetailModalItem(null)}>
+        <View style={s.modalOverlay}>
+          <View style={s.modalCard}>
+            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDetailModalItem(null)}>
+              <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            {detailModalItem && (
+              <>
+                <View style={s.modalImgBox}>
+                  {detailModalItem.image ? (
+                    <Image source={detailModalItem.image} style={s.modalImg} resizeMode="contain" />
+                  ) : (
+                    <ShoppingBag color={COLORS.midTeal} size={48} strokeWidth={2} />
+                  )}
+                </View>
+
+                <Text style={s.modalTitle}>{detailModalItem.name}</Text>
+                {detailModalItem.dosage && <Text style={s.modalDosage}>{detailModalItem.dosage}</Text>}
+
+                <View style={s.modalPriceBadge}>
+                  <Text style={s.modalPriceText}>{detailModalItem.price}</Text>
+                </View>
+
+                <Text style={s.modalDesc}>{detailModalItem.description}</Text>
+
+                {/* Quantity Control in Modal */}
+                <View style={s.modalFooterRow}>
+                  <View style={s.modalQtyBox}>
+                    <TouchableOpacity
+                      style={s.modalQtyBtn}
+                      onPress={() => setItemQty(detailModalItem.id, -1)}
+                    >
+                      <Minus color={COLORS.midTeal} size={16} strokeWidth={3} />
+                    </TouchableOpacity>
+                    <Text style={s.modalQtyText}>{selectedItemQtys[detailModalItem.id] || 0}</Text>
+                    <TouchableOpacity
+                      style={s.modalQtyBtn}
+                      onPress={() => setItemQty(detailModalItem.id, 1)}
+                    >
+                      <Plus color={COLORS.midTeal} size={16} strokeWidth={3} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity
+                    style={s.modalAddDoneBtn}
+                    onPress={() => setDetailModalItem(null)}
+                  >
+                    <Text style={s.modalAddDoneText}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -328,7 +519,6 @@ const s = StyleSheet.create({
   navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.bold, fontSize: 16, color: COLORS.peacockBlue },
   scroll: { padding: 16, paddingBottom: 60, gap: 14 },
 
-  // Camera zone (empty state)
   cameraZone: {
     backgroundColor: COLORS.white, borderRadius: 18, padding: 32,
     alignItems: 'center', gap: 8,
@@ -353,7 +543,6 @@ const s = StyleSheet.create({
   },
   fileBtnText: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.peacockBlue },
 
-  // Photo preview (filled state)
   previewContainer: {
     backgroundColor: COLORS.white, borderRadius: 18,
     overflow: 'hidden', borderWidth: 1.5, borderColor: COLORS.deepTeal,
@@ -375,12 +564,27 @@ const s = StyleSheet.create({
 
   // Extra OTC Items Card
   extraItemsContainer: {
-    backgroundColor: COLORS.white, borderRadius: 18, padding: 14,
+    backgroundColor: COLORS.white, borderRadius: 18, padding: 16,
     borderWidth: 1.5, borderColor: '#E2E8F0', gap: 12,
   },
-  extraItemsHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  extraItemsTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.peacockBlue },
-  extraItemsSub: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+  extraHeaderBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  catchyIconBox: {
+    width: 42, height: 42, borderRadius: 12,
+    backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center',
+  },
+  needMedsBadge: {
+    backgroundColor: '#FFF7ED', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+    borderWidth: 1, borderColor: '#FED7AA',
+  },
+  needMedsBadgeText: { fontFamily: FONTS.extrabold, fontSize: 8, color: '#EA580C', letterSpacing: 0.5 },
+  catchyTitle: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.peacockBlue, letterSpacing: -0.3 },
+  catchySub: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, lineHeight: 16 },
+  selectedCountPill: {
+    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+    borderWidth: 1, borderColor: '#D6EDA0',
+  },
+  selectedCountText: { fontFamily: FONTS.bold, fontSize: 9, color: COLORS.midTeal },
+
   extraSearchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: '#F8FAF7', borderRadius: 12, paddingHorizontal: 12, height: 42,
@@ -392,27 +596,129 @@ const s = StyleSheet.create({
     backgroundColor: COLORS.midTeal, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14,
   },
   addCustomBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF' },
-  extraItemsList: { gap: 8 },
-  extraChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#F8FAF7', borderRadius: 12, padding: 10, paddingHorizontal: 12,
+  // 2-col grid — matches Browse productCard/productImgBox exactly
+  extraGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+  gridCard: {
+    width: '47.5%', backgroundColor: COLORS.white, borderRadius: 20, padding: 12,
+    borderWidth: 1, borderColor: '#E8EDF2', gap: 4,
+  },
+  gridCardSelected: { borderColor: '#D6EDA0', backgroundColor: COLORS.limeWhisper },
+  gridImgBox: {
+    height: 120, backgroundColor: COLORS.limeWhisper, borderRadius: 14,
+    justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: 6, padding: 6,
+    overflow: 'hidden',
+  },
+  gridImgBoxSelected: { backgroundColor: '#EDF9E6' },
+  gridInfoBadge: {
+    position: 'absolute', top: 7, right: 7,
+    backgroundColor: 'rgba(15,23,42,0.38)', borderRadius: 10, padding: 4,
+  },
+  gridProdName: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark, lineHeight: 17 },
+  gridProdDosage: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
+  gridCardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 6 },
+  gridProdPricePrefix: { fontFamily: FONTS.medium, fontSize: 10, color: COLORS.textMuted },
+  gridProdPrice: { fontFamily: FONTS.black, fontSize: 13, color: COLORS.textDark },
+  gridStepperBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: COLORS.limeWhisper, borderRadius: 10, paddingHorizontal: 6, height: 30,
+    borderWidth: 1, borderColor: '#D6EDA0',
+  },
+  gridStepBtn: { width: 18, height: 18, justifyContent: 'center', alignItems: 'center' },
+  gridStepQty: { fontFamily: FONTS.black, fontSize: 12, color: COLORS.midTeal },
+  gridAddCircle: {
+    width: 30, height: 30, borderRadius: 10, backgroundColor: COLORS.midTeal,
+    justifyContent: 'center', alignItems: 'center',
+  },
+
+  paginationContainer: {
+    alignItems: 'center',
+    marginTop: 14,
+    gap: 8,
+  },
+  paginationInfoText: {
+    fontFamily: FONTS.medium,
+    fontSize: 12,
+    color: COLORS.textMuted,
+  },
+  paginationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pageNavBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: COLORS.limeWhisper,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D6EDA0',
+  },
+  pageNavBtnDisabled: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+  },
+  pageNumberBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#F8FAF7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  pageNumberBtnActive: {
+    backgroundColor: COLORS.midTeal,
+    borderColor: COLORS.midTeal,
+  },
+  pageNumberText: {
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: COLORS.textDark,
+  },
+  pageNumberTextActive: {
+    color: '#FFFFFF',
+  },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.45)', justifyContent: 'flex-end' },
+  modalCard: {
+    backgroundColor: COLORS.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 20, paddingBottom: Platform.OS === 'ios' ? 36 : 24, gap: 10, position: 'relative',
+  },
+  modalCloseBtn: {
+    position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', zIndex: 10,
+  },
+  modalImgBox: {
+    height: 140, backgroundColor: COLORS.limeWhisper, borderRadius: 16,
+    justifyContent: 'center', alignItems: 'center', marginVertical: 6,
+  },
+  modalImg: { width: 120, height: 120 },
+  modalTitle: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark },
+  modalDosage: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textMuted },
+  modalPriceBadge: {
+    alignSelf: 'flex-start', backgroundColor: COLORS.limeWhisper,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
+    borderWidth: 1, borderColor: '#D6EDA0',
+  },
+  modalPriceText: { fontFamily: FONTS.black, fontSize: 13, color: COLORS.midTeal },
+  modalDesc: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textSecondary, lineHeight: 20, marginVertical: 4 },
+  modalFooterRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
+  modalQtyBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#F8FAF7', borderRadius: 12, paddingHorizontal: 12, height: 44,
     borderWidth: 1, borderColor: '#E2E8F0',
   },
-  extraChipSelected: {
-    backgroundColor: COLORS.limeWhisper, borderColor: '#D6EDA0',
+  modalQtyBtn: { width: 28, height: 28, justifyContent: 'center', alignItems: 'center' },
+  modalQtyText: { fontFamily: FONTS.black, fontSize: 15, color: COLORS.midTeal },
+  modalAddDoneBtn: {
+    flex: 1, backgroundColor: COLORS.midTeal, borderRadius: 12, height: 44,
+    justifyContent: 'center', alignItems: 'center',
   },
-  chipCheck: {
-    width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: '#CBD5E1',
-    justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF',
-  },
-  chipCheckActive: {
-    backgroundColor: COLORS.midTeal, borderColor: COLORS.midTeal,
-  },
-  extraChipName: { flex: 1, fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textDark },
-  extraChipNameActive: { fontFamily: FONTS.bold, color: COLORS.deepTeal },
-  extraChipPrice: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.midTeal },
+  modalAddDoneText: { fontFamily: FONTS.bold, fontSize: 14, color: '#FFF' },
 
-  // Note
   noteContainer: {
     backgroundColor: COLORS.white, borderRadius: 16, padding: 14,
     borderWidth: 1.5, borderColor: '#E2E8F0', gap: 8,
@@ -424,8 +730,6 @@ const s = StyleSheet.create({
     fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textDark,
     minHeight: 70, borderWidth: 1, borderColor: '#E2E8F0',
   },
-
-  requiredHint: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, textAlign: 'center' },
   targetBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: COLORS.limeWhisper, paddingHorizontal: 16, paddingVertical: 10,

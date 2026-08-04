@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Package, CheckCircle2, ChevronRight, Store, Clock } from 'lucide-react-native';
+import { Store, Clock, Package, Navigation2, FileText, Pill, Receipt, Camera, Star, ChevronRight } from 'lucide-react-native';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MOCK_ORDERS } from '../../mock/demoData';
@@ -46,9 +46,11 @@ const showAlert = (title: string, message: string) => {
 const ActiveOrderCard = ({
   order,
   onPress,
+  onAction,
 }: {
   order: typeof MOCK_ORDERS[0];
   onPress: () => void;
+  onAction: () => void;
 }) => {
   const isReady = order.state === 'READY_FOR_PICKUP';
   const isQuote = order.state === 'WAITING_CUSTOMER_CONFIRMATION';
@@ -56,8 +58,25 @@ const ActiveOrderCard = ({
   const isCancelled = ['CANCELLED', 'CLOSED', 'REJECTED'].includes(order.state);
   const isActive = !isCompleted && !isCancelled;
 
+  // Dynamic Card Styles
+  let cardBg = COLORS.surfaceWhite;
+  let cardBorder = '#E2E8F0'; // Default gray border
+  
+  if (isReady) {
+    cardBg = '#F8FAFC';
+    cardBorder = COLORS.softLime; // Dynamic lime pop for ready
+  } else if (isCompleted) {
+    cardBorder = '#D1FAE5';
+  } else if (isCancelled) {
+    cardBorder = '#FECACA';
+  }
+
   return (
-    <TouchableOpacity style={s.activeCard} onPress={onPress} activeOpacity={0.92} disabled={!isActive && !isCompleted}>
+    <TouchableOpacity 
+      style={[s.activeCard, { backgroundColor: cardBg, borderColor: cardBorder }]} 
+      onPress={onPress} 
+      activeOpacity={0.92} 
+    >
       {/* Header Row: Pharmacy info + Live badge */}
       <View style={s.activeCardHeaderRow}>
         <View style={s.pharmAvatar}>
@@ -82,36 +101,41 @@ const ActiveOrderCard = ({
           </View>
         ) : isCompleted ? (
           <View style={[s.liveBadgePill, { borderColor: '#A7F3D0', backgroundColor: '#ECFDF5' }]}>
-            <CheckCircle2 color={COLORS.midTeal} size={14} strokeWidth={2} />
-            <Text style={[s.liveBadgeText, { color: COLORS.midTeal, marginLeft: 2 }]}>Done</Text>
+            <Text style={[s.liveBadgeText, { color: COLORS.midTeal }]}>Completed</Text>
           </View>
         ) : (
           <View style={[s.liveBadgePill, { borderColor: '#FECACA', backgroundColor: '#FEF2F2' }]}>
             <Text style={[s.liveBadgeText, { color: COLORS.error }]}>Declined</Text>
           </View>
         )}
+        <ChevronRight color={COLORS.borderSoft} size={20} style={{ marginLeft: 8 }} />
       </View>
 
       {/* Status headline */}
       <View style={s.statusBlock}>
-        <Text style={[s.statusHeadline, isReady && { color: COLORS.midTeal }]}>
-          {getStatusHeadline(order.state)}
-        </Text>
-        <Text style={s.statusSub}>{getStatusSub(order.state)}</Text>
+        <View style={s.statusTextCol}>
+          <Text style={[s.statusHeadline, isReady && { color: COLORS.midTeal }, isCancelled && { color: COLORS.error }]}>
+            {getStatusHeadline(order.state)}
+          </Text>
+          <Text style={s.statusSub}>{getStatusSub(order.state)}</Text>
+        </View>
       </View>
 
       {/* Footer */}
       <View style={s.activeCardFooter}>
-        <View style={{ flex: 1 }}>
-          <Text style={s.footerLabel}>Total</Text>
-          <Text style={s.footerPrice}>LKR {order.totalAmount.toLocaleString()}</Text>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.footerLabel}>Total</Text>
+            <Text style={s.footerPrice}>LKR {order.totalAmount.toLocaleString()}</Text>
+          </View>
         </View>
+
         {isReady ? (
-          <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={onPress}>
+          <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={onAction}>
             <Text style={[s.footerBtnText, s.btnTealText]}>Show Pickup Code</Text>
           </TouchableOpacity>
         ) : isQuote ? (
-          <TouchableOpacity style={[s.footerBtn, s.btnYellow]} onPress={onPress}>
+          <TouchableOpacity style={[s.footerBtn, s.btnYellow]} onPress={onAction}>
             <Text style={[s.footerBtnText, s.btnYellowText]}>Review Quote</Text>
           </TouchableOpacity>
         ) : isCompleted ? (
@@ -121,7 +145,7 @@ const ActiveOrderCard = ({
         ) : isCancelled ? (
           <View />
         ) : (
-          <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onPress}>
+          <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onAction}>
             <Text style={[s.footerBtnText, s.btnGrayText]}>Track Order</Text>
           </TouchableOpacity>
         )}
@@ -149,7 +173,11 @@ export const OrdersScreen = () => {
     tab === 'completed' ? completedOrders :
     cancelledOrders;
 
-  const goToOrder = (o: typeof MOCK_ORDERS[0]) => {
+  const goToOrderDetails = (o: typeof MOCK_ORDERS[0]) => {
+    navigation.navigate('OrderDetails', { orderId: o.id });
+  };
+
+  const goToTracker = (o: typeof MOCK_ORDERS[0]) => {
     if (['READY_FOR_PICKUP', 'PREPARING', 'CONFIRMED', 'SUBMITTED'].includes(o.state)) {
       navigation.navigate('ReadyForPickup', { orderId: o.id });
     } else if (o.state === 'WAITING_CUSTOMER_CONFIRMATION') {
@@ -203,7 +231,12 @@ export const OrdersScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {displayed.map((o) => (
-          <ActiveOrderCard key={o.id} order={o} onPress={() => goToOrder(o)} />
+          <ActiveOrderCard 
+            key={o.id} 
+            order={o} 
+            onPress={() => goToOrderDetails(o)} 
+            onAction={() => goToTracker(o)} 
+          />
         ))}
 
         {displayed.length === 0 && (
@@ -262,8 +295,8 @@ const s = StyleSheet.create({
 
   // ── Active Order Card ───────────────────────────────────────
   activeCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 18,
-    borderWidth: 1.5, borderColor: '#D6EDA0',
+    borderRadius: 18,
+    borderWidth: 1.5,
     shadowColor: '#1C1917', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2,
     marginBottom: 16, overflow: 'hidden',
   },
@@ -289,19 +322,24 @@ const s = StyleSheet.create({
   liveDotSmall: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.midTeal },
   liveBadgeText: { fontFamily: FONTS.bold, fontSize: 10, color: COLORS.midTeal },
 
-  statusBlock: { paddingHorizontal: 16, paddingBottom: 20 },
-  statusHeadline: {
-    fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark,
-    letterSpacing: -0.4, marginBottom: 2,
+  statusBlock: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingBottom: 20 },
+  statusIconWrapper: {
+    width: 48, height: 48, borderRadius: 16, backgroundColor: '#F8FAFC',
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: COLORS.borderSoft,
   },
-  statusSub: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textMuted },
+  statusTextCol: { flex: 1 },
+  statusHeadline: {
+    fontFamily: FONTS.extrabold, fontSize: 16, color: COLORS.textDark,
+    letterSpacing: -0.3, marginBottom: 2,
+  },
+  statusSub: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted },
 
-  // ── Card Footer ──────────────────────────────────────────────
   activeCardFooter: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 14,
-    borderTopWidth: 1, borderTopColor: '#F1F5F9',
-    backgroundColor: '#FAFCFB',
+    borderTopWidth: 1, borderTopColor: COLORS.borderSoft,
+    backgroundColor: '#FAFAFA',
     borderBottomLeftRadius: 18, borderBottomRightRadius: 18,
   },
   footerLabel: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted },

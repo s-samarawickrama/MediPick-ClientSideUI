@@ -186,7 +186,7 @@ export const ProfileScreen = () => {
           <Text style={s.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        <Text style={s.versionText}>MediPick v1.0.0 · Licensed Pharmacy Network</Text>
+        <Text style={s.versionText}>MediPick · Licensed Pharmacy Network</Text>
       </Animated.ScrollView>
 
       {/* Change Phone Modal */}

@@ -182,13 +182,7 @@ export const ReadyForPickupScreen = () => {
               <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 }}>
                 The licensed pharmacy staff is assembling your items. Your 6-digit counter pickup OTP will display automatically once ready (in {prepSecondsLeft}s).
               </Text>
-              <TouchableOpacity
-                style={{ backgroundColor: COLORS.limeWhisper, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 12, marginTop: 4, borderWidth: 1, borderColor: '#D6EDA0' }}
-                onPress={() => setOrderState('READY')}
-                activeOpacity={0.8}
-              >
-                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.midTeal }}>Mark Order Ready for Counter Pickup</Text>
-              </TouchableOpacity>
+
             </View>
           ) : (
             <>
