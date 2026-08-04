@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,6 +31,38 @@ import { MOCK_PHARMACIES, MOCK_ORDERS, MOCK_MEDICINES, togglePharmacyFavorite } 
 import { MainStackParamList } from '../../navigation/MainNavigator';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
+
+const { width } = Dimensions.get('window');
+
+const AnimatedHeartButton = ({ isFavorite, onPress }: { isFavorite: boolean, onPress: () => void }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePress = (e: any) => {
+    e.stopPropagation();
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 1.6, duration: 150, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 40, useNativeDriver: true })
+    ]).start();
+    onPress();
+  };
+
+  return (
+    <TouchableOpacity 
+      style={s.favBtn} 
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      onPress={handlePress}
+    >
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Heart 
+          color={isFavorite ? "#EF4444" : COLORS.borderSoft} 
+          size={18} 
+          strokeWidth={2} 
+          fill={isFavorite ? "#EF4444" : "transparent"} 
+        />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
 
 const CATEGORIES_MEDICHY = [
   { id: 'vitamins',    name: 'Vitamins',    type: 'vitamins' as const },
@@ -182,7 +215,7 @@ export const HomeScreen = () => {
         <View style={s.quickActionsGrid}>
           <TouchableOpacity 
             style={s.actionCard}
-            onPress={() => (navigation as any).navigate('Tabs', { screen: 'Favorites' })}
+            onPress={() => (navigation as any).navigate('Favorites')}
             activeOpacity={0.7}
           >
             <View style={[s.actionIconBox, { backgroundColor: '#FEF2F2' }]}>
@@ -307,21 +340,10 @@ export const HomeScreen = () => {
                   <Text style={s.storeDistanceText}>{p.distance}</Text>
                 </View>
 
-                <TouchableOpacity 
-                  style={s.favBtn} 
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handleToggleFav(p.id);
-                  }}
-                >
-                  <Heart 
-                    color={p.isFavorite ? "#EF4444" : COLORS.borderSoft} 
-                    size={18} 
-                    strokeWidth={2} 
-                    fill={p.isFavorite ? "#EF4444" : "transparent"} 
-                  />
-                </TouchableOpacity>
+                <AnimatedHeartButton 
+                  isFavorite={!!p.isFavorite}
+                  onPress={() => handleToggleFav(p.id)}
+                />
               </View>
 
               <View style={s.storeMetaContainer}>

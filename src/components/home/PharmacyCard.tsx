@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { COLORS } from '../../theme/colors';
 import { Badge } from '../common/Badge';
-import { ShieldCheck, MapPin, Star, Clock } from 'lucide-react-native';
+import { ShieldCheck, MapPin, Star, Clock, Heart } from 'lucide-react-native';
 import { Pharmacy } from '../../types';
+import { togglePharmacyFavorite } from '../../mock/demoData';
 
 interface PharmacyCardProps {
   pharmacy: Pharmacy;
@@ -11,6 +12,19 @@ interface PharmacyCardProps {
 }
 
 export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect }) => {
+  const [isFav, setIsFav] = useState(pharmacy.isFavorite || false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handleFavorite = () => {
+    // Make the animation much more pronounced so it's easy to see
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 1.6, duration: 150, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 40, useNativeDriver: true })
+    ]).start();
+
+    togglePharmacyFavorite(pharmacy.id);
+    setIsFav(!isFav);
+  };
   return (
     <TouchableOpacity
       style={styles.card}
@@ -27,9 +41,25 @@ export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect }
           </View>
         </View>
 
-        <View style={styles.ratingBox}>
-          <Star color="#EAB308" size={14} fill="#EAB308" />
-          <Text style={styles.ratingText}>{pharmacy.rating}</Text>
+        <View style={{ alignItems: 'flex-end', gap: 6 }}>
+          <TouchableOpacity 
+            onPress={handleFavorite} 
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.7}
+          >
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+              <Heart 
+                color={isFav ? '#EF4444' : COLORS.textMuted} 
+                size={20} 
+                strokeWidth={isFav ? 2 : 1.5}
+                fill={isFav ? '#EF4444' : 'transparent'} 
+              />
+            </Animated.View>
+          </TouchableOpacity>
+          <View style={styles.ratingBox}>
+            <Star color="#EAB308" size={14} fill="#EAB308" />
+            <Text style={styles.ratingText}>{pharmacy.rating}</Text>
+          </View>
         </View>
       </View>
 

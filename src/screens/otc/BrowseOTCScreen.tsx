@@ -4,12 +4,12 @@ import {
   Animated, TextInput, StatusBar, Pressable, Modal,
   KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
-import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, ChevronRight, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock } from 'lucide-react-native';
+import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, ChevronRight, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock, Heart } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
-import { MOCK_MEDICINES, MOCK_PHARMACIES } from '../../mock/demoData';
+import { MOCK_MEDICINES, MOCK_PHARMACIES, togglePharmacyFavorite } from '../../mock/demoData';
 import { MedicineItem as Medicine, Pharmacy } from '../../types';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MapPreview } from '../../components/MapPreview';
@@ -38,6 +38,14 @@ export const BrowseOTCScreen = () => {
   const ITEMS_PER_PAGE = 4;
 
   const opacity = useRef(new Animated.Value(0)).current;
+  const heartScale = useRef(new Animated.Value(1)).current;
+
+  const triggerHeartAnimation = () => {
+    Animated.sequence([
+      Animated.spring(heartScale, { toValue: 1.3, useNativeDriver: true }),
+      Animated.spring(heartScale, { toValue: 1, useNativeDriver: true })
+    ]).start();
+  };
 
   useEffect(() => {
     setCurrentPage(1);
@@ -229,18 +237,41 @@ export const BrowseOTCScreen = () => {
             <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={s.storeHeaderTitle} numberOfLines={1}>{activeStore.name}</Text>
-          <TouchableOpacity
-            style={s.headerCartBtn}
-            onPress={() => navigation.navigate('MultiStoreCart')}
-            activeOpacity={0.8}
-          >
-            <ShoppingCart color={COLORS.textDark} size={20} strokeWidth={2} />
-            {totalCartCount > 0 && (
-              <View style={s.cartBadgeTop}>
-                <Text style={s.cartBadgeTopText}>{totalCartCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity
+              style={s.headerCartBtn}
+              onPress={() => {
+                Animated.sequence([
+                  Animated.timing(heartScale, { toValue: 1.6, duration: 150, useNativeDriver: true }),
+                  Animated.spring(heartScale, { toValue: 1, friction: 3, tension: 40, useNativeDriver: true })
+                ]).start();
+                togglePharmacyFavorite(activeStore.id);
+                setActiveStore({ ...activeStore, isFavorite: !activeStore.isFavorite });
+              }}
+              activeOpacity={0.8}
+            >
+              <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                <Heart 
+                  color={activeStore.isFavorite ? '#EF4444' : COLORS.textDark} 
+                  size={22} 
+                  strokeWidth={2} 
+                  fill={activeStore.isFavorite ? '#EF4444' : 'transparent'} 
+                />
+              </Animated.View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.headerCartBtn}
+              onPress={() => navigation.navigate('MultiStoreCart')}
+              activeOpacity={0.8}
+            >
+              <ShoppingCart color={COLORS.textDark} size={20} strokeWidth={2} />
+              {totalCartCount > 0 && (
+                <View style={s.cartBadgeTop}>
+                  <Text style={s.cartBadgeTopText}>{totalCartCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={s.storeScroll} showsVerticalScrollIndicator={false}>
@@ -626,8 +657,8 @@ export const BrowseOTCScreen = () => {
       )}
 
       {/* Content List */}
-      <Animated.ScrollView
-        style={{ flex: 1, opacity }}
+      <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -740,7 +771,7 @@ export const BrowseOTCScreen = () => {
             {renderPagination(sortedPharmacies.length, totalPharmPages, pharmStartIndex)}
           </View>
         )}
-      </Animated.ScrollView>
+      </ScrollView>
 
       {/* Uber Eats Bottom Floating Cart Bar */}
       {totalCartCount > 0 && (

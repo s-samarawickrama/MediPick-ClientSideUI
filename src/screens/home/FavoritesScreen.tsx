@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Pressable, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ChevronLeft, Store, Heart, Star, Clock } from 'lucide-react-native';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
@@ -16,9 +16,12 @@ export const FavoritesScreen = () => {
     setTick(t => t + 1);
   };
 
-  useEffect(() => {
-    StatusBar.setBarStyle('dark-content');
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setBarStyle('dark-content');
+      setTick(t => t + 1); // Force re-render to pick up new favorites
+    }, [])
+  );
 
   return (
     <View style={s.screen}>
