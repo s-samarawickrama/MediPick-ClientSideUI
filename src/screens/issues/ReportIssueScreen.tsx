@@ -85,27 +85,13 @@ export const ReportIssueScreen = () => {
     }
   };
 
-  const handlePickImage = async (source: 'camera' | 'gallery' | 'sample') => {
+  const handlePickImage = async (source: 'camera' | 'gallery') => {
     setPickerModalVisible(false);
 
-    if (source === 'sample') {
-      const sample = SAMPLE_EVIDENCE_PHOTOS[attachedPhotos.length % SAMPLE_EVIDENCE_PHOTOS.length];
-      setAttachedPhotos((prev) => [...prev, sample]);
-      return;
-    }
-
     try {
-      if (Platform.OS === 'web') {
-        const sample = SAMPLE_EVIDENCE_PHOTOS[attachedPhotos.length % SAMPLE_EVIDENCE_PHOTOS.length];
-        setAttachedPhotos((prev) => [...prev, sample]);
-        return;
-      }
-
       const ok = await requestPermission(source);
       if (!ok) {
-        // Fallback sample photo if permission denied
-        const sample = SAMPLE_EVIDENCE_PHOTOS[attachedPhotos.length % SAMPLE_EVIDENCE_PHOTOS.length];
-        setAttachedPhotos((prev) => [...prev, sample]);
+        // Just return if permission is denied, don't fake it
         return;
       }
 
@@ -130,8 +116,7 @@ export const ReportIssueScreen = () => {
         setAttachedPhotos((prev) => [...prev, result.assets[0].uri]);
       }
     } catch {
-      const sample = SAMPLE_EVIDENCE_PHOTOS[attachedPhotos.length % SAMPLE_EVIDENCE_PHOTOS.length];
-      setAttachedPhotos((prev) => [...prev, sample]);
+      // Just silently fail or show an alert if picker fails, don't fake it
     }
   };
 
