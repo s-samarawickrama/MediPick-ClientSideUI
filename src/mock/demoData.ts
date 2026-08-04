@@ -382,4 +382,18 @@ export const MOCK_ORDERS: Order[] = [
     isPaid: false,
     createdAt: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
   },
+  {
+    id: 'ord-105',
+    orderNumber: '#MP123460',
+    orderType: 'MIXED',
+    state: 'WAITING_PHARMACY_CONFIRMATION',
+    pharmacy: MOCK_PHARMACIES[0],
+    items: [
+      { medicine: MOCK_MEDICINES[0], quantity: 1, price: 100 }
+    ],
+    totalAmount: 0,
+    totalMrp: 0,
+    isPaid: false,
+    createdAt: new Date().toISOString(),
+  },
 ];

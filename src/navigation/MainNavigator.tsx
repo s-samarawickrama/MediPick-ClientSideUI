@@ -29,7 +29,7 @@ export type MainStackParamList = {
   Tabs: { screen?: string; params?: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } } | undefined;
   Browse: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } | undefined;
   UploadPrescription: { pharmacyId?: string; pharmacyName?: string; initialSelectedExtraItems?: Record<string, number> } | undefined;
-  AIQualityCheck: { clarityScore?: number; pharmacyId?: string; pharmacyName?: string; selectedItems?: string[]; selectedExtraItemsDict?: Record<string, number> } | undefined;
+  AIQualityCheck: { clarityScore?: number; pharmacyId?: string; pharmacyName?: string; selectedItems?: string[]; selectedExtraItemsDict?: Record<string, number>; nextScreen?: string; nextParams?: any } | undefined;
   SelectPharmacies: { fromOtc?: boolean; selectedItems?: string[] };
   Quotation: { orderId: string; pharmacyId?: string };
   ReadyForPickup: { orderId: string; isPaidOnline?: boolean };

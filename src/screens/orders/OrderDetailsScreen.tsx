@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, StatusBar, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, StatusBar, Image, Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronLeft, MapPin, Receipt, ShieldCheck, CheckCircle2, XCircle, Clock, ChevronRight, FileText } from 'lucide-react-native';
@@ -12,6 +12,16 @@ import { Button } from '../../components/common/Button';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'OrderDetails'>;
+
+const showAlert = (title: string, message: string) => {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    // @ts-ignore - dynamic require for native Alert
+    const { Alert } = require('react-native');
+    Alert.alert(title, message);
+  }
+};
 
 export const OrderDetailsScreen = () => {
   const navigation = useNavigation<Nav>();
@@ -104,14 +114,22 @@ export const OrderDetailsScreen = () => {
               <Text style={s.sectionTitle}>Uploaded Prescriptions</Text>
             </View>
             <View style={s.prescriptionGrid}>
-              <View style={s.prescriptionPlaceholder}>
+              <TouchableOpacity 
+                style={s.prescriptionPlaceholder}
+                activeOpacity={0.7}
+                onPress={() => showAlert('Prescription', 'Opening high-res prescription image viewer...')}
+              >
                 <FileText color={COLORS.midTeal} size={28} style={{ opacity: 0.5 }} />
                 <Text style={s.prescriptionPlaceholderText}>Page 1</Text>
-              </View>
-              <View style={s.prescriptionPlaceholder}>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={s.prescriptionPlaceholder}
+                activeOpacity={0.7}
+                onPress={() => showAlert('Prescription', 'Opening high-res prescription image viewer...')}
+              >
                 <FileText color={COLORS.midTeal} size={28} style={{ opacity: 0.5 }} />
                 <Text style={s.prescriptionPlaceholderText}>Page 2</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -162,17 +180,26 @@ export const OrderDetailsScreen = () => {
         {/* Actions */}
         <View style={s.actionsWrapper}>
           {isActive ? (
-            <Button 
-              title="Track Order Status" 
-              variant="primary" 
-              onPress={() => {
-                if (order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
-                  navigation.navigate('Quotation', { orderId: order.id });
-                } else {
-                  navigation.navigate('ReadyForPickup', { orderId: order.id });
-                }
-              }} 
-            />
+            order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
+              <Button 
+                title="Waiting for Pharmacy Quote..." 
+                variant="secondary" 
+                onPress={() => {}} 
+                disabled 
+              />
+            ) : (
+              <Button 
+                title="Track Order Status" 
+                variant="primary" 
+                onPress={() => {
+                  if (order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
+                    navigation.navigate('Quotation', { orderId: order.id });
+                  } else {
+                    navigation.navigate('ReadyForPickup', { orderId: order.id });
+                  }
+                }} 
+              />
+            )
           ) : isCompleted ? (
             <Button title="Reorder Items" variant="primary" onPress={() => {}} />
           ) : null}

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Animated, StatusBar, ActivityIndicator
+  TouchableOpacity, Animated, StatusBar, ActivityIndicator, Platform
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { Button } from '../../components/common/Button';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -18,6 +19,7 @@ type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'AIQualityCheck'>;
 
 export const AIQualityCheckScreen = () => {
+  const uid = React.useMemo(() => Math.random().toString(36).slice(2), []);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const targetPharmacyId   = route.params?.pharmacyId;
@@ -60,6 +62,8 @@ export const AIQualityCheckScreen = () => {
     });
   }, []);
 
+  const isAutoRedirect = route.params?.nextScreen === 'Tabs' && route.params?.nextParams?.screen === 'Browse';
+
   const runSequence = () => {
     animateStep(0, () => {
       setTimeout(() => animateStep(1, () => {
@@ -67,7 +71,11 @@ export const AIQualityCheckScreen = () => {
         setTimeout(() => animateStep(2, () => {
           setTimeout(() => animateStep(3, () => {
             setTimeout(() => animateStep(4, () => {
-              setTimeout(() => animateStep(5), 600);
+              setTimeout(() => animateStep(5, () => {
+                if (isAutoRedirect) {
+                  setTimeout(() => handleProceed(), 1000);
+                }
+              }), 600);
             }), 600);
           }), 600);
         }), 600);
@@ -86,7 +94,9 @@ export const AIQualityCheckScreen = () => {
   };
 
   const handleProceed = () => {
-    if (targetPharmacyId) {
+    if (route.params?.nextScreen) {
+      (navigation as any).navigate(route.params.nextScreen, route.params.nextParams);
+    } else if (targetPharmacyId) {
       navigation.navigate('Quotation', { orderId: 'ord-102', pharmacyId: targetPharmacyId });
     } else {
       navigation.navigate('SelectPharmacies', { selectedItems });
@@ -154,42 +164,42 @@ export const AIQualityCheckScreen = () => {
           {/* Real SVG Radial Gradient Soft Blobs (No square edges!) */}
           <View style={s.auroraContainer}>
             {/* Subtle Purple/Blue Magic Touch */}
-            <Animated.View style={[s.auroraGlow, { top: -20, left: -20, transform: [{ scale: blobBreath.interpolate({ inputRange: [0, 1], outputRange: [1.05, 0.95] }) }] }]}>
-              <Svg height="300" width="300">
+            <Animated.View style={[s.auroraGlow, { top: -20, left: -20, transform: [{ scale: blobBreath.interpolate({ inputRange: [0, 1], outputRange: [1.2, 0.8] }) }] }]}>
+              <Svg height="300" width="300" viewBox="0 0 300 300">
                 <Defs>
-                  <RadialGradient id="gradPurple" cx="50%" cy="50%" r="50%">
-                    <Stop offset="0" stopColor="rgba(76, 29, 149, 0.15)" stopOpacity="1" />
-                    <Stop offset="0.6" stopColor="rgba(76, 29, 149, 0.05)" stopOpacity="1" />
-                    <Stop offset="1" stopColor="rgba(76, 29, 149, 0)" stopOpacity="1" />
+                  <RadialGradient id={`gradPurple-${uid}`} cx="150" cy="150" rx="150" ry="150" fx="150" fy="150" gradientUnits="userSpaceOnUse">
+                    <Stop offset="0" stopColor="#4c1d95" stopOpacity="0.35" />
+                    <Stop offset="0.6" stopColor="#4c1d95" stopOpacity="0.15" />
+                    <Stop offset="1" stopColor="#4c1d95" stopOpacity="0" />
                   </RadialGradient>
                 </Defs>
-                <Circle cx="150" cy="150" r="150" fill="url(#gradPurple)" />
+                <Circle cx="150" cy="150" r="150" fill={`url(#gradPurple-${uid})`} />
               </Svg>
             </Animated.View>
 
-            <Animated.View style={[s.auroraGlow, { transform: [{ scale: blobBreath.interpolate({ inputRange: [0, 1], outputRange: [0.95, 1.05] }) }] }]}>
-              <Svg height="320" width="320">
+            <Animated.View style={[s.auroraGlow, { transform: [{ scale: blobBreath.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1.15] }) }] }]}>
+              <Svg height="320" width="320" viewBox="0 0 320 320">
                 <Defs>
-                  <RadialGradient id="grad1" cx="50%" cy="50%" r="50%">
-                    <Stop offset="0" stopColor="rgba(199, 227, 107, 0.4)" stopOpacity="1" />
-                    <Stop offset="0.5" stopColor="rgba(199, 227, 107, 0.15)" stopOpacity="1" />
-                    <Stop offset="1" stopColor="rgba(199, 227, 107, 0)" stopOpacity="1" />
+                  <RadialGradient id={`grad1-${uid}`} cx="160" cy="160" rx="160" ry="160" fx="160" fy="160" gradientUnits="userSpaceOnUse">
+                    <Stop offset="0" stopColor="#c7e36b" stopOpacity="0.4" />
+                    <Stop offset="0.5" stopColor="#c7e36b" stopOpacity="0.15" />
+                    <Stop offset="1" stopColor="#c7e36b" stopOpacity="0" />
                   </RadialGradient>
                 </Defs>
-                <Circle cx="160" cy="160" r="160" fill="url(#grad1)" />
+                <Circle cx="160" cy="160" r="160" fill={`url(#grad1-${uid})`} />
               </Svg>
             </Animated.View>
 
-            <Animated.View style={[s.auroraGlow, s.auroraOffset, { transform: [{ scale: blobBreath.interpolate({ inputRange: [0, 1], outputRange: [1.02, 0.98] }) }] }]}>
-              <Svg height="240" width="240">
+            <Animated.View style={[s.auroraGlow, s.auroraOffset, { transform: [{ scale: blobBreath.interpolate({ inputRange: [0, 1], outputRange: [1.1, 0.9] }) }] }]}>
+              <Svg height="240" width="240" viewBox="0 0 240 240">
                 <Defs>
-                  <RadialGradient id="grad2" cx="50%" cy="50%" r="50%">
-                    <Stop offset="0" stopColor="rgba(29, 111, 114, 0.25)" stopOpacity="1" />
-                    <Stop offset="0.5" stopColor="rgba(29, 111, 114, 0.08)" stopOpacity="1" />
-                    <Stop offset="1" stopColor="rgba(29, 111, 114, 0)" stopOpacity="1" />
+                  <RadialGradient id={`grad2-${uid}`} cx="120" cy="120" rx="120" ry="120" fx="120" fy="120" gradientUnits="userSpaceOnUse">
+                    <Stop offset="0" stopColor="#1d6f72" stopOpacity="0.35" />
+                    <Stop offset="0.5" stopColor="#1d6f72" stopOpacity="0.15" />
+                    <Stop offset="1" stopColor="#1d6f72" stopOpacity="0" />
                   </RadialGradient>
                 </Defs>
-                <Circle cx="120" cy="120" r="120" fill="url(#grad2)" />
+                <Circle cx="120" cy="120" r="120" fill={`url(#grad2-${uid})`} />
               </Svg>
             </Animated.View>
           </View>
@@ -220,14 +230,14 @@ export const AIQualityCheckScreen = () => {
                   {/* Dashed Pastel Gradient Progress Ring (Masked Animation) */}
                   <Svg width={200} height={200} viewBox="0 0 200 200">
                     <Defs>
-                      <SvgLinearGradient id="pastelGrad" x1="0" y1="0" x2="1" y2="1">
+                      <SvgLinearGradient id={`pastelGrad-${uid}`} x1="0" y1="0" x2="1" y2="1">
                          <Stop offset="0" stopColor={COLORS.deepPlum} stopOpacity="0.5" />
                          <Stop offset="0.5" stopColor={COLORS.midTeal} stopOpacity="0.6" />
                          <Stop offset="1" stopColor={COLORS.softLime} stopOpacity="0.5" />
                       </SvgLinearGradient>
                       
                       {/* The mask draws a solid line to reveal the dashed ring underneath */}
-                      <Mask id="progressMask">
+                      <Mask id={`progressMask-${uid}`}>
                          <AnimatedCircle 
                            cx="100" cy="100" r="90" 
                            stroke="white" strokeWidth={10} fill="none"
@@ -249,9 +259,9 @@ export const AIQualityCheckScreen = () => {
                     {/* The Dashed Gradient Ring (Revealed by Mask) */}
                     <Circle 
                       cx="100" cy="100" r="90" 
-                      stroke="url(#pastelGrad)" strokeWidth={3.5} fill="none"
+                      stroke={`url(#pastelGrad-${uid})`} strokeWidth={3.5} fill="none"
                       strokeDasharray="12 8" strokeLinecap="round"
-                      mask="url(#progressMask)"
+                      mask={`url(#progressMask-${uid})`}
                     />
                   </Svg>
 
@@ -265,7 +275,6 @@ export const AIQualityCheckScreen = () => {
                         <Text style={s.ringScoreSymbol}>%</Text>
                      </View>
                      <View style={s.ringBadgeRow}>
-                        <Sparkles color={COLORS.textMuted} size={10} strokeWidth={2.5} />
                         <Text style={s.ringBadgeText}>QUALITY SCORE</Text>
                      </View>
                   </Animated.View>
@@ -295,17 +304,13 @@ export const AIQualityCheckScreen = () => {
       {/* Standard App Bottom Button */}
       <Animated.View style={[s.bottomBar, { opacity: stepAnims[1] }]}>
         {isClarityPassed ? (
-          <TouchableOpacity
-            style={[s.primaryBtn, !isFullyComplete && s.primaryBtnDisabled]}
-            disabled={!isFullyComplete}
-            activeOpacity={0.8}
+          <Button
+            title={isAutoRedirect ? "Redirecting to Store..." : (route.params?.nextScreen ? "Continue to Cart" : "Select Pharmacies")}
+            variant="primary"
             onPress={handleProceed}
-          >
-            <Text style={s.primaryBtnTxt}>
-              {targetPharmacyName ? `Send to ${targetPharmacyName}` : "Select Pharmacies"}
-            </Text>
-            <Send color={COLORS.white} size={18} strokeWidth={2.5} />
-          </TouchableOpacity>
+            disabled={!isFullyComplete || isAutoRedirect}
+            style={{ width: '100%', opacity: isAutoRedirect ? 0.8 : 1 }}
+          />
         ) : (
           <TouchableOpacity
             style={[s.primaryBtn, s.primaryBtnDanger]}

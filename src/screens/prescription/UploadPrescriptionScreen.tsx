@@ -16,6 +16,7 @@ import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MOCK_MEDICINES } from '../../mock/demoData';
+import { useCart } from '../../context/CartContext';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'UploadPrescription'>;
@@ -25,6 +26,7 @@ export const UploadPrescriptionScreen = () => {
   const route      = useRoute<Route>();
   const targetPharmacyId   = route.params?.pharmacyId;
   const targetPharmacyName = route.params?.pharmacyName;
+  const { setAttachedPrescription } = useCart();
 
   const [note, setNote]                   = useState('');
   const [image, setImage]                 = useState<string | null>(null);
@@ -176,15 +178,39 @@ export const UploadPrescriptionScreen = () => {
   const clearImage = () => setImage(null);
 
   const proceed = () => {
-    const selectedItemIds = Object.keys(selectedItemQtys);
+    if (!image) {
+      if (Platform.OS === 'web') {
+        window.alert('Please take a photo or upload an image of your prescription first.');
+      } else {
+        Alert.alert('Missing Prescription', 'Please take a photo or upload an image of your prescription first.');
+      }
+      return;
+    }
 
-    navigation.navigate('AIQualityCheck', {
-      clarityScore: 94,
-      pharmacyId: targetPharmacyId,
-      pharmacyName: targetPharmacyName,
-      selectedItems: selectedItemIds,
-      selectedExtraItemsDict: selectedItemQtys,
-    });
+    if (targetPharmacyId && targetPharmacyName) {
+      setAttachedPrescription({
+        image,
+        note,
+        pharmacyId: targetPharmacyId,
+        pharmacyName: targetPharmacyName,
+      });
+      navigation.navigate('AIQualityCheck', {
+        clarityScore: 94,
+        pharmacyId: targetPharmacyId,
+        pharmacyName: targetPharmacyName,
+        nextScreen: 'Tabs',
+        nextParams: { screen: 'Cart' }
+      });
+    } else {
+      const selectedItemIds = Object.keys(selectedItemQtys);
+      navigation.navigate('AIQualityCheck', {
+        clarityScore: 94,
+        pharmacyId: targetPharmacyId,
+        pharmacyName: targetPharmacyName,
+        selectedItems: selectedItemIds,
+        selectedExtraItemsDict: selectedItemQtys,
+      });
+    }
   };
 
   const totalSelectedItemsCount = Object.values(selectedItemQtys).reduce((a, b) => a + b, 0);
@@ -275,165 +301,209 @@ export const UploadPrescriptionScreen = () => {
         </View>
 
         {/* Extra OTC Items Card */}
-        <View style={s.extraItemsContainer}>
-          <View style={s.extraHeaderBanner}>
-            <View style={s.catchyIconBox}>
-              <ShoppingBag color={COLORS.midTeal} size={22} strokeWidth={2.5} />
-            </View>
-            <View style={{ flex: 1, gap: 3 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <View style={s.needMedsBadge}>
-                  <Text style={s.needMedsBadgeText}>ADD-ON REQUEST</Text>
-                </View>
-                {totalSelectedItemsCount > 0 && (
-                  <View style={s.selectedCountPill}>
-                    <Text style={s.selectedCountText}>{totalSelectedItemsCount} added</Text>
-                  </View>
-                )}
+        {targetPharmacyId ? (
+          <View style={[s.extraItemsContainer, { paddingBottom: 24, marginTop: 10 }]}>
+            <View style={s.extraHeaderBanner}>
+              <View style={s.catchyIconBox}>
+                <Store color={COLORS.midTeal} size={22} strokeWidth={2.5} />
               </View>
-              <Text style={s.catchyTitle}>Need everyday wellness items?</Text>
-              <Text style={s.catchySub}>Add items below to get quotes for everything in one go!</Text>
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text style={s.catchyTitle}>Need everyday items?</Text>
+                <Text style={s.catchySub}>Browse {targetPharmacyName}'s catalog to add OTC medicines or wellness items directly to this order.</Text>
+              </View>
             </View>
+            <TouchableOpacity 
+              style={s.browseStoreBtn} 
+              activeOpacity={0.88}
+              onPress={() => {
+                if (!image) {
+                  if (Platform.OS === 'web') {
+                    window.alert('Please take a photo or upload an image of your prescription first before browsing for extra items.');
+                  } else {
+                    Alert.alert('Missing Prescription', 'Please upload your prescription first before browsing for extra items.');
+                  }
+                  return;
+                }
+                setAttachedPrescription({
+                  image,
+                  note,
+                  pharmacyId: targetPharmacyId,
+                  pharmacyName: targetPharmacyName!,
+                });
+                navigation.navigate('AIQualityCheck', {
+                  clarityScore: 94,
+                  pharmacyId: targetPharmacyId,
+                  pharmacyName: targetPharmacyName,
+                  nextScreen: 'Tabs',
+                  nextParams: { screen: 'Browse', params: { storeId: targetPharmacyId, initialMode: 'meds' } }
+                });
+              }}
+            >
+              <ShoppingBag color={COLORS.midTeal} size={18} strokeWidth={2.5} />
+              <Text style={s.browseStoreBtnText}>Browse {targetPharmacyName}</Text>
+            </TouchableOpacity>
           </View>
+        ) : (
+          <View style={s.extraItemsContainer}>
+            <View style={s.extraHeaderBanner}>
+              <View style={s.catchyIconBox}>
+                <ShoppingBag color={COLORS.midTeal} size={22} strokeWidth={2.5} />
+              </View>
+              <View style={{ flex: 1, gap: 3 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={s.needMedsBadge}>
+                    <Text style={s.needMedsBadgeText}>ADD-ON REQUEST</Text>
+                  </View>
+                  {totalSelectedItemsCount > 0 && (
+                    <View style={s.selectedCountPill}>
+                      <Text style={s.selectedCountText}>{totalSelectedItemsCount} added</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={s.catchyTitle}>Need everyday wellness items?</Text>
+                <Text style={s.catchySub}>Add items below to get quotes for everything in one go!</Text>
+              </View>
+            </View>
 
-          {/* Search Bar */}
-          <View style={s.extraSearchBar}>
-            <Search color={COLORS.textMuted} size={16} strokeWidth={2} />
-            <TextInput
-              style={s.extraSearchInput}
-              placeholder="Search items (e.g. Panadol, Bandages)..."
-              placeholderTextColor={COLORS.textMuted}
-              value={itemSearchQuery}
-              onChangeText={setItemSearchQuery}
-            />
-            {itemSearchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setItemSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <X color={COLORS.textMuted} size={16} strokeWidth={2} />
+            {/* Search Bar */}
+            <View style={s.extraSearchBar}>
+              <Search color={COLORS.textMuted} size={16} strokeWidth={2} />
+              <TextInput
+                style={s.extraSearchInput}
+                placeholder="Search items (e.g. Panadol, Bandages)..."
+                placeholderTextColor={COLORS.textMuted}
+                value={itemSearchQuery}
+                onChangeText={setItemSearchQuery}
+              />
+              {itemSearchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setItemSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <X color={COLORS.textMuted} size={16} strokeWidth={2} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {itemSearchQuery.trim().length > 0 && filteredCatalog.length === 0 && (
+              <TouchableOpacity style={s.addCustomBtn} onPress={handleAddCustomItem} activeOpacity={0.8}>
+                <Plus color="#FFF" size={16} strokeWidth={3} />
+                <Text style={s.addCustomBtnText}>Add "{itemSearchQuery.trim()}" to Request</Text>
               </TouchableOpacity>
             )}
-          </View>
 
-          {itemSearchQuery.trim().length > 0 && filteredCatalog.length === 0 && (
-            <TouchableOpacity style={s.addCustomBtn} onPress={handleAddCustomItem} activeOpacity={0.8}>
-              <Plus color="#FFF" size={16} strokeWidth={3} />
-              <Text style={s.addCustomBtnText}>Add "{itemSearchQuery.trim()}" to Request</Text>
-            </TouchableOpacity>
-          )}
+            {/* Premium 2-Column Grid Items List (Paginated) */}
+            <View style={s.extraGrid}>
+              {paginatedCatalog.map((item) => {
+                const qty = selectedItemQtys[item.id] || 0;
+                const isSelected = qty > 0;
 
-          {/* Premium 2-Column Grid Items List (Paginated) */}
-          <View style={s.extraGrid}>
-            {paginatedCatalog.map((item) => {
-              const qty = selectedItemQtys[item.id] || 0;
-              const isSelected = qty > 0;
-
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[s.gridCard, isSelected && s.gridCardSelected]}
-                  onPress={() => setDetailModalItem(item)}
-                  activeOpacity={0.93}
-                >
-                  {/* Image Box — same as Browse productImgBox */}
-                  <View style={[s.gridImgBox, isSelected && s.gridImgBoxSelected]}>
-                    {item.image ? (
-                      <Image source={item.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
-                    ) : (
-                      <ShoppingBag color={COLORS.midTeal} size={28} strokeWidth={2} />
-                    )}
-                    {/* Info overlay top-right */}
-                    <TouchableOpacity
-                      style={s.gridInfoBadge}
-                      onPress={() => setDetailModalItem(item)}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Info color="rgba(255,255,255,0.9)" size={13} strokeWidth={2.5} />
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Name & Dosage */}
-                  <Text style={s.gridProdName} numberOfLines={2}>{item.name}</Text>
-                  <Text style={s.gridProdDosage} numberOfLines={1}>{item.dosage || 'Standard'}</Text>
-
-                  {/* Footer: Price + Stepper */}
-                  <View style={s.gridCardFooter}>
-                    <View style={{ gap: 1 }}>
-                      <Text style={s.gridProdPricePrefix}>Starting from</Text>
-                      <Text style={s.gridProdPrice}>{item.price?.replace('Estimated ', '')}</Text>
-                    </View>
-                    {isSelected ? (
-                      <View style={s.gridStepperBox}>
-                        <TouchableOpacity
-                          style={s.gridStepBtn}
-                          onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, -1); }}
-                          activeOpacity={0.7}
-                        >
-                          <Minus color={COLORS.midTeal} size={12} strokeWidth={3} />
-                        </TouchableOpacity>
-                        <Text style={s.gridStepQty}>{qty}</Text>
-                        <TouchableOpacity
-                          style={s.gridStepBtn}
-                          onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, 1); }}
-                          activeOpacity={0.7}
-                        >
-                          <Plus color={COLORS.midTeal} size={12} strokeWidth={3} />
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        style={s.gridAddCircle}
-                        onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, 1); }}
-                        activeOpacity={0.85}
-                      >
-                        <Plus color="#FFF" size={14} strokeWidth={3} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Pagination Controls */}
-          {filteredCatalog.length > ITEMS_PER_PAGE && (
-            <View style={s.paginationContainer}>
-              <Text style={s.paginationInfoText}>
-                Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filteredCatalog.length)} of {filteredCatalog.length} items
-              </Text>
-              <View style={s.paginationRow}>
-                <TouchableOpacity
-                  style={[s.pageNavBtn, currentPage === 1 && s.pageNavBtnDisabled]}
-                  disabled={currentPage === 1}
-                  onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  activeOpacity={0.7}
-                >
-                  <ChevronLeft color={currentPage === 1 ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
-                </TouchableOpacity>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                return (
                   <TouchableOpacity
-                    key={pageNum}
-                    style={[s.pageNumberBtn, pageNum === currentPage && s.pageNumberBtnActive]}
-                    onPress={() => setCurrentPage(pageNum)}
+                    key={item.id}
+                    style={[s.gridCard, isSelected && s.gridCardSelected]}
+                    onPress={() => setDetailModalItem(item)}
+                    activeOpacity={0.93}
+                  >
+                    {/* Image Box — same as Browse productImgBox */}
+                    <View style={[s.gridImgBox, isSelected && s.gridImgBoxSelected]}>
+                      {item.image ? (
+                        <Image source={item.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
+                      ) : (
+                        <ShoppingBag color={COLORS.midTeal} size={28} strokeWidth={2} />
+                      )}
+                      {/* Info overlay top-right */}
+                      <TouchableOpacity
+                        style={s.gridInfoBadge}
+                        onPress={() => setDetailModalItem(item)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Info color="rgba(255,255,255,0.9)" size={13} strokeWidth={2.5} />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Name & Dosage */}
+                    <Text style={s.gridProdName} numberOfLines={2}>{item.name}</Text>
+                    <Text style={s.gridProdDosage} numberOfLines={1}>{item.dosage || 'Standard'}</Text>
+
+                    {/* Footer: Price + Stepper */}
+                    <View style={s.gridCardFooter}>
+                      <View style={{ gap: 1 }}>
+                        <Text style={s.gridProdPricePrefix}>Starting from</Text>
+                        <Text style={s.gridProdPrice}>{item.price?.replace('Estimated ', '')}</Text>
+                      </View>
+                      {isSelected ? (
+                        <View style={s.gridStepperBox}>
+                          <TouchableOpacity
+                            style={s.gridStepBtn}
+                            onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, -1); }}
+                            activeOpacity={0.7}
+                          >
+                            <Minus color={COLORS.midTeal} size={12} strokeWidth={3} />
+                          </TouchableOpacity>
+                          <Text style={s.gridStepQty}>{qty}</Text>
+                          <TouchableOpacity
+                            style={s.gridStepBtn}
+                            onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, 1); }}
+                            activeOpacity={0.7}
+                          >
+                            <Plus color={COLORS.midTeal} size={12} strokeWidth={3} />
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          style={s.gridAddCircle}
+                          onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, 1); }}
+                          activeOpacity={0.85}
+                        >
+                          <Plus color="#FFF" size={14} strokeWidth={3} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Pagination Controls */}
+            {filteredCatalog.length > ITEMS_PER_PAGE && (
+              <View style={s.paginationContainer}>
+                <Text style={s.paginationInfoText}>
+                  Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filteredCatalog.length)} of {filteredCatalog.length} items
+                </Text>
+                <View style={s.paginationRow}>
+                  <TouchableOpacity
+                    style={[s.pageNavBtn, currentPage === 1 && s.pageNavBtnDisabled]}
+                    disabled={currentPage === 1}
+                    onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     activeOpacity={0.7}
                   >
-                    <Text style={[s.pageNumberText, pageNum === currentPage && s.pageNumberTextActive]}>
-                      {pageNum}
-                    </Text>
+                    <ChevronLeft color={currentPage === 1 ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
                   </TouchableOpacity>
-                ))}
 
-                <TouchableOpacity
-                  style={[s.pageNavBtn, currentPage === totalPages && s.pageNavBtnDisabled]}
-                  disabled={currentPage === totalPages}
-                  onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  activeOpacity={0.7}
-                >
-                  <ChevronRight color={currentPage === totalPages ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
-                </TouchableOpacity>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <TouchableOpacity
+                      key={pageNum}
+                      style={[s.pageNumberBtn, pageNum === currentPage && s.pageNumberBtnActive]}
+                      onPress={() => setCurrentPage(pageNum)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[s.pageNumberText, pageNum === currentPage && s.pageNumberTextActive]}>
+                        {pageNum}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+
+                  <TouchableOpacity
+                    style={[s.pageNavBtn, currentPage === totalPages && s.pageNavBtnDisabled]}
+                    disabled={currentPage === totalPages}
+                    onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    activeOpacity={0.7}
+                  >
+                    <ChevronRight color={currentPage === totalPages ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          )}
-        </View>
+            )}
+          </View>
+        )}
 
         <Button
           title="Continue to Quality Check"
@@ -566,6 +636,24 @@ const s = StyleSheet.create({
   extraItemsContainer: {
     backgroundColor: COLORS.white, borderRadius: 18, padding: 16,
     borderWidth: 1.5, borderColor: '#E2E8F0', gap: 12,
+  },
+  browseStoreBtn: {
+    backgroundColor: COLORS.limeWhisper,
+    paddingVertical: 14,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    marginHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(20, 184, 166, 0.2)',
+  },
+  browseStoreBtnText: {
+    fontFamily: FONTS.bold,
+    fontSize: 14,
+    color: COLORS.deepTeal,
   },
   extraHeaderBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   catchyIconBox: {

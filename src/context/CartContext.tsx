@@ -6,13 +6,22 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface AttachedPrescription {
+  image: string;
+  note: string;
+  pharmacyId: string;
+  pharmacyName: string;
+}
+
 interface CartContextType {
   cartItems: CartItem[];
   selectedPharmacy: Pharmacy | null;
+  attachedPrescription: AttachedPrescription | null;
   addToCart: (medicine: MedicineItem) => void;
   removeFromCart: (medicineId: string) => void;
   updateQuantity: (medicineId: string, delta: number) => void;
   setSelectedPharmacy: (pharmacy: Pharmacy | null) => void;
+  setAttachedPrescription: (prescription: AttachedPrescription | null) => void;
   clearCart: () => void;
   subtotal: number;
   totalMrp: number;
@@ -23,6 +32,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacy | null>(null);
+  const [attachedPrescription, setAttachedPrescription] = useState<AttachedPrescription | null>(null);
 
   const addToCart = (medicine: MedicineItem) => {
     if (medicine.isRxRequired) {
@@ -58,7 +68,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  const clearCart = () => setCartItems([]);
+  const clearCart = () => {
+    setCartItems([]);
+    setAttachedPrescription(null);
+  };
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.medicine.pharmacyPrice * item.quantity, 0);
   const totalMrp = cartItems.reduce((acc, item) => acc + item.medicine.mrpPrice * item.quantity, 0);
@@ -68,10 +81,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         cartItems,
         selectedPharmacy,
+        attachedPrescription,
         addToCart,
         removeFromCart,
         updateQuantity,
         setSelectedPharmacy,
+        setAttachedPrescription,
         clearCart,
         subtotal,
         totalMrp,

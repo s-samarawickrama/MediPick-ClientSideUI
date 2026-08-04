@@ -13,69 +13,38 @@ import { MOCK_PHARMACIES, MOCK_MEDICINES } from '../../mock/demoData';
 import { PaymentMethodSelector } from '../../components/common/PaymentMethodSelector';
 import { StripePaymentModal } from '../../components/common/StripePaymentModal';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { useCart } from '../../context/CartContext';
+import { FileText } from 'lucide-react-native';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
 export const MultiStoreCartScreen = () => {
   const navigation = useNavigation<Nav>();
   const opacity = useRef(new Animated.Value(0)).current;
-  const [payMethod, setPayMethod]             = useState<'counter' | 'stripe'>('counter');
+  const [payMethod, setPayMethod] = useState<'counter' | 'stripe'>('counter');
   const [showStripeModal, setShowStripeModal] = useState(false);
 
-  // Mock Multi-Pharmacy Cart items (2 Pharmacies simultaneously)
-  const [cartStores, setCartStores] = useState([
-    {
-      pharmacy: MOCK_PHARMACIES[0], // MediCare Central Pharmacy
-      items: [
-        { ...MOCK_MEDICINES[0], qty: 2 }, // Panadol
-        { ...MOCK_MEDICINES[2], qty: 1 }, // Amoxicillin
-      ],
-    },
-    {
-      pharmacy: MOCK_PHARMACIES[1], // City Health Pharmacy
-      items: [
-        { ...MOCK_MEDICINES[1], qty: 1 }, // Vitamin C
-      ],
-    },
-  ]);
+  const { cartItems, attachedPrescription, updateQuantity, removeFromCart, clearCart } = useCart();
+
+  // Group cart items. For simplicity in this flow, if a prescription is attached, 
+  // we group everything under that pharmacy. Otherwise, we group under a default mock pharmacy.
+  const targetPharmacy = attachedPrescription 
+    ? { id: attachedPrescription.pharmacyId, name: attachedPrescription.pharmacyName, address: 'See details in store', distance: 'Calculated at checkout' }
+    : MOCK_PHARMACIES[0];
+
+  const cartStores = cartItems.length > 0 || attachedPrescription ? [{
+    pharmacy: targetPharmacy,
+    items: cartItems.map(c => ({ ...c.medicine, qty: c.quantity })),
+    hasPrescription: !!attachedPrescription
+  }] : [];
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
-  const updateItemQty = (pharmacyId: string, medId: string, delta: number) => {
-    setCartStores((prev) =>
-      prev
-        .map((store) => {
-          if (store.pharmacy.id !== pharmacyId) return store;
-          const updatedItems = store.items
-            .map((item) => {
-              if (item.id !== medId) return item;
-              const newQty = item.qty + delta;
-              return newQty > 0 ? { ...item, qty: newQty } : null;
-            })
-            .filter(Boolean) as typeof store.items;
-
-          return updatedItems.length > 0 ? { ...store, items: updatedItems } : null;
-        })
-        .filter(Boolean) as typeof prev
-    );
-  };
-
-  const removeStoreGroup = (pharmacyId: string) => {
-    setCartStores((prev) => prev.filter((s) => s.pharmacy.id !== pharmacyId));
-  };
-
-  const totalItemCount = cartStores.reduce(
-    (sum, store) => sum + store.items.reduce((s, i) => s + i.qty, 0),
-    0
-  );
-
-  const grandTotal = cartStores.reduce(
-    (sum, store) => sum + store.items.reduce((s, i) => s + i.pharmacyPrice * i.qty, 0),
-    0
-  );
+  const totalItemCount = cartItems.reduce((sum, c) => sum + c.quantity, 0) + (attachedPrescription ? 1 : 0);
+  const grandTotal = cartItems.reduce((sum, c) => sum + c.medicine.pharmacyPrice * c.quantity, 0);
 
   return (
     <View style={s.screen}>
@@ -96,13 +65,15 @@ export const MultiStoreCartScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Banner Explaining 2-Pharmacy Pickup */}
-        <View style={s.multiStoreBanner}>
-          <Store color={COLORS.midTeal} size={20} strokeWidth={2} />
-          <View style={{ flex: 1 }}>
-            <Text style={s.bannerTitle}>{cartStores.length} Separate Orders Generated</Text>
-            <Text style={s.bannerSub}>Items are split into independent orders with separate counter pickup OTP codes.</Text>
+        {cartStores.length > 1 && (
+          <View style={s.multiStoreBanner}>
+            <Store color={COLORS.midTeal} size={20} strokeWidth={2} />
+            <View style={{ flex: 1 }}>
+              <Text style={s.bannerTitle}>{cartStores.length} Separate Orders Generated</Text>
+              <Text style={s.bannerSub}>Items are split into independent orders with separate counter pickup OTP codes.</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Store Groups */}
         {cartStores.map((storeGroup) => {
@@ -121,7 +92,7 @@ export const MultiStoreCartScreen = () => {
                 </View>
                 <TouchableOpacity
                   style={s.removeStoreBtn}
-                  onPress={() => removeStoreGroup(storeGroup.pharmacy.id)}
+                  onPress={() => clearCart()}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <Trash2 color={COLORS.error} size={16} strokeWidth={2} />
@@ -132,6 +103,16 @@ export const MultiStoreCartScreen = () => {
 
               {/* Items List */}
               <View style={s.itemList}>
+                {storeGroup.hasPrescription && attachedPrescription && (
+                  <View style={s.attachedRxCard}>
+                    <View style={s.attachedRxHeader}>
+                      <FileText color={COLORS.peacockBlue} size={20} strokeWidth={2} />
+                      <Text style={s.attachedRxTitle}>Attached Prescription</Text>
+                    </View>
+                    <Text style={s.attachedRxNote}>{attachedPrescription.note || 'No special instructions.'}</Text>
+                    <Text style={s.itemPrice}>(Price will be quoted by pharmacy)</Text>
+                  </View>
+                )}
                 {storeGroup.items.map((item) => (
                   <View key={item.id} style={s.itemRow}>
                     <View style={{ flex: 1 }}>
@@ -143,14 +124,14 @@ export const MultiStoreCartScreen = () => {
                     <View style={s.stepperBox}>
                       <TouchableOpacity
                         style={s.stepperBtn}
-                        onPress={() => updateItemQty(storeGroup.pharmacy.id, item.id, -1)}
+                        onPress={() => updateQuantity(item.id, -1)}
                       >
                         <Minus color={COLORS.midTeal} size={13} strokeWidth={3} />
                       </TouchableOpacity>
                       <Text style={s.stepperQty}>{item.qty}</Text>
                       <TouchableOpacity
                         style={s.stepperBtn}
-                        onPress={() => updateItemQty(storeGroup.pharmacy.id, item.id, 1)}
+                        onPress={() => updateQuantity(item.id, 1)}
                       >
                         <Plus color={COLORS.midTeal} size={13} strokeWidth={3} />
                       </TouchableOpacity>
@@ -163,7 +144,9 @@ export const MultiStoreCartScreen = () => {
 
               <View style={s.storeFooter}>
                 <Text style={s.subtotalLabel}>Store Subtotal</Text>
-                <Text style={s.subtotalPrice}>LKR {storeSubtotal}</Text>
+                <Text style={s.subtotalPrice}>
+                  {storeGroup.hasPrescription ? 'Pending Quote' : `LKR ${storeSubtotal}`}
+                </Text>
               </View>
             </View>
           );
@@ -178,7 +161,7 @@ export const MultiStoreCartScreen = () => {
         )}
 
         {/* Standardized Payment Method Selector */}
-        {cartStores.length > 0 && (
+        {cartStores.length > 0 && !attachedPrescription && (
           <PaymentMethodSelector
             selectedMethod={payMethod}
             onSelect={setPayMethod}
@@ -192,15 +175,23 @@ export const MultiStoreCartScreen = () => {
           <View style={s.grandTotalRow}>
             <View>
               <Text style={s.grandTotalLabel}>Grand Total ({cartStores.length} Stores)</Text>
-              <Text style={s.grandTotalAmount}>LKR {grandTotal}</Text>
+              <Text style={[s.grandTotalAmount, attachedPrescription && { fontFamily: FONTS.bold, fontSize: 18 }]}>
+                {attachedPrescription ? 'Pending Quote' : `LKR ${grandTotal}`}
+              </Text>
             </View>
 
             <TouchableOpacity
               style={s.checkoutBtn}
               onPress={() => {
-                if (payMethod === 'stripe') {
+                if (attachedPrescription) {
+                  clearCart();
+                  navigation.navigate('OrderDetails', { 
+                    orderId: 'ord-105'
+                  });
+                } else if (payMethod === 'stripe') {
                   setShowStripeModal(true);
                 } else {
+                  clearCart();
                   navigation.navigate('ReadyForPickup', { orderId: 'ord-1' });
                 }
               }}
@@ -303,4 +294,13 @@ const s = StyleSheet.create({
     backgroundColor: COLORS.midTeal, paddingHorizontal: 20, height: 48, borderRadius: 14,
   },
   checkoutBtnText: { fontFamily: FONTS.bold, fontSize: 14, color: '#FFFFFF' },
+  attachedRxCard: {
+    backgroundColor: COLORS.limeWhisper,
+    padding: 12, borderRadius: 12,
+    borderWidth: 1, borderColor: '#D6EDA0',
+    marginBottom: 8,
+  },
+  attachedRxHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  attachedRxTitle: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.peacockBlue },
+  attachedRxNote: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textDark },
 });

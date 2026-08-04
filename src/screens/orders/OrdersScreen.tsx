@@ -20,6 +20,7 @@ function getStatusHeadline(state: string): string {
   if (state === 'READY_FOR_PICKUP')              return 'Ready for Counter Pickup';
   if (state === 'PREPARING')                     return 'Pharmacist is Packaging';
   if (state === 'WAITING_CUSTOMER_CONFIRMATION') return 'Quote Ready to Review';
+  if (state === 'WAITING_PHARMACY_CONFIRMATION') return 'Under Pharmacist Review';
   return 'Order Confirmed';
 }
 
@@ -29,6 +30,7 @@ function getStatusSub(state: string): string {
   if (state === 'READY_FOR_PICKUP')              return 'Show your OTP code at the pharmacy counter';
   if (state === 'PREPARING')                     return 'Your medicines are being carefully prepared';
   if (state === 'WAITING_CUSTOMER_CONFIRMATION') return 'Tap to view and confirm your quote';
+  if (state === 'WAITING_PHARMACY_CONFIRMATION') return 'Waiting for pharmacy to send a quote';
   return 'Your prescription has been received';
 }
 
@@ -144,6 +146,10 @@ const ActiveOrderCard = ({
           </TouchableOpacity>
         ) : isCancelled ? (
           <View />
+        ) : order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
+          <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onPress}>
+            <Text style={[s.footerBtnText, s.btnGrayText]}>View Details</Text>
+          </TouchableOpacity>
         ) : (
           <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onAction}>
             <Text style={[s.footerBtnText, s.btnGrayText]}>Track Order</Text>
