@@ -88,8 +88,7 @@ export const SelectPharmacyScreen = () => {
           })
           .map((p) => {
           const isTopRated = parseFloat(p.rating) >= 4.9;
-          const isFastest = p.deliveryTime === '15 mins';
-
+          
           return (
             <Pressable
               key={p.id}
@@ -111,36 +110,21 @@ export const SelectPharmacyScreen = () => {
                 <View style={s.cardInfo}>
                   <View style={s.nameBadgeRow}>
                     <Text style={s.pharmacyName} numberOfLines={1}>{p.name}</Text>
-                    {(isTopRated || isFastest) && (
-                      <View style={[s.badge, isTopRated ? s.badgeTop : s.badgeFast]}>
-                        <Text style={[s.badgeText, isTopRated ? s.badgeTextTop : s.badgeTextFast]}>
-                          {isTopRated ? 'TOP RATED' : 'FASTEST'}
-                        </Text>
+                    {isTopRated && (
+                      <View style={s.badgeTop}>
+                        <Text style={s.badgeTextTop}>TOP RATED</Text>
                       </View>
                     )}
                   </View>
+                  <Text style={s.pharmacyAddress} numberOfLines={1}>{p.address}</Text>
+
                   <View style={s.ratingRow}>
-                    <Star color="#F59E0B" size={14} fill="#F59E0B" />
+                    <Star color="#F59E0B" size={13} fill="#F59E0B" />
                     <Text style={s.ratingText}>{p.rating}</Text>
-                    <View style={s.dot} />
-                    <Clock color={COLORS.textMuted} size={12} strokeWidth={2} />
-                    <Text style={s.metaText}>{p.estimatedResponseTime}</Text>
-                    <View style={s.dot} />
-                    <MapPin color={COLORS.textMuted} size={12} strokeWidth={2} />
+                    <Text style={s.sep}>·</Text>
+                    <MapPin color={COLORS.textMuted} size={11} strokeWidth={2.5} />
                     <Text style={s.metaText}>{p.distance}</Text>
                   </View>
-                  
-                  {p.isOpen ? (
-                    <View style={s.openPill}>
-                      <View style={s.openDot} />
-                      <Text style={s.openPillText}>Open Now</Text>
-                    </View>
-                  ) : (
-                    <View style={[s.openPill, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
-                      <View style={[s.openDot, { backgroundColor: '#EF4444' }]} />
-                      <Text style={[s.openPillText, { color: '#B91C1C' }]}>Closed</Text>
-                    </View>
-                  )}
                 </View>
                 
                 <View style={[s.arrowCircle, !p.isOpen && { backgroundColor: '#F8FAFC' }]}>
@@ -205,9 +189,10 @@ const s = StyleSheet.create({
   card: {
     backgroundColor: COLORS.surfaceWhite,
     borderRadius: 20, padding: 16,
-    borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)',
+    borderWidth: 1, borderColor: 'rgba(0,0,0,0.02)',
     shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.04, shadowRadius: 16, elevation: 3,
+    marginBottom: 14,
   },
   cardTop: {
     flexDirection: 'row', alignItems: 'center', gap: 16,
@@ -224,38 +209,34 @@ const s = StyleSheet.create({
   logoText: {
     fontSize: 24, fontFamily: FONTS.black, color: COLORS.midTeal,
   },
-  cardInfo: { flex: 1, gap: 8 },
+  cardInfo: { flex: 1, gap: 2, justifyContent: 'center' },
   nameBadgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   pharmacyName: {
-    flex: 1, fontSize: 16, fontFamily: FONTS.black, color: COLORS.peacockBlue,
+    flex: 1, fontSize: 15, fontFamily: FONTS.bold, color: COLORS.textDark,
   },
-  badge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
-  badgeTop: { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' },
-  badgeFast: { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0' },
-  badgeText: { fontFamily: FONTS.bold, fontSize: 9, letterSpacing: 0.5 },
-  badgeTextTop: { color: '#D97706' },
-  badgeTextFast: { color: '#16A34A' },
-  
-  ratingRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
+  badgeTop: { 
+    backgroundColor: '#FEF3C7', paddingHorizontal: 6, paddingVertical: 3, 
+    borderRadius: 6, borderWidth: 1, borderColor: '#FDE68A' 
   },
-  ratingText: {
-    fontSize: 13, fontFamily: FONTS.semiBold, color: COLORS.textDark,
+  badgeTextTop: { 
+    fontFamily: FONTS.bold, fontSize: 9, letterSpacing: 0.5, color: '#D97706' 
   },
-  metaText: {
+  pharmacyAddress: {
     fontSize: 12, fontFamily: FONTS.medium, color: COLORS.textMuted,
   },
-  dot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.borderSoft },
+  
+  ratingRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4,
+  },
+  ratingText: {
+    fontSize: 12, fontFamily: FONTS.bold, color: COLORS.textDark,
+  },
+  metaText: {
+    fontSize: 12, fontFamily: FONTS.bold, color: COLORS.textDark,
+  },
+  sep: { color: COLORS.textMuted, fontSize: 10 },
   arrowCircle: { 
     width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.limeWhisper, 
     justifyContent: 'center', alignItems: 'center'
   },
-  openPill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#F0FDF4', paddingHorizontal: 6, paddingVertical: 2,
-    borderRadius: 6, borderWidth: 1, borderColor: '#BBF7D0', marginTop: 2,
-  },
-  openDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#16A34A' },
-  openPillText: { fontFamily: FONTS.bold, fontSize: 9, color: '#15803D', textTransform: 'uppercase' },
 });

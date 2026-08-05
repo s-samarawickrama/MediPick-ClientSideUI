@@ -20,7 +20,8 @@ export type FSMOrderState =
   | 'ISSUE_REPORTED'
   | 'UNDER_REVIEW'
   | 'RESOLVED'
-  | 'REJECTED';
+  | 'REJECTED'
+  | 'REUPLOAD_REQUESTED';
 
 export type OrderType = 'OTC' | 'PRESCRIPTION' | 'MIXED';
 
@@ -98,6 +99,7 @@ export interface Order {
   totalMrp: number;
   paymentMethod?: 'ONLINE' | 'PAY_AT_COUNTER';
   isPaid: boolean;
+  rejectReason?: string;
   pickupOtp?: string;
   pickupOtpVerified?: boolean;
   pickupDeadline?: string;

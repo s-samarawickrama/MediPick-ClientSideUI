@@ -2,13 +2,14 @@ import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, StatusBar, Image, Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, MapPin, Receipt, ShieldCheck, CheckCircle2, XCircle, Clock, ChevronRight, FileText } from 'lucide-react-native';
+import { ChevronLeft, MapPin, Receipt, ShieldCheck, CheckCircle2, XCircle, Clock, ChevronRight, FileText, Plus, Phone, MessageCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MOCK_ORDERS } from '../../mock/demoData';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Button } from '../../components/common/Button';
+import { AlertTriangle } from 'lucide-react-native';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'OrderDetails'>;
@@ -38,6 +39,8 @@ export const OrderDetailsScreen = () => {
 
   const isCompleted = order.state === 'COMPLETED';
   const isCancelled = ['CANCELLED', 'CLOSED', 'REJECTED'].includes(order.state);
+  const isReupload  = order.state === 'REUPLOAD_REQUESTED';
+  const isQuote     = order.state === 'WAITING_CUSTOMER_CONFIRMATION';
   const isActive = !isCompleted && !isCancelled;
 
   return (
@@ -51,18 +54,9 @@ export const OrderDetailsScreen = () => {
         </TouchableOpacity>
         <View style={s.headerCenter}>
           <Text style={s.headerTitle}>Order {order.orderNumber}</Text>
-          <View style={[
-            s.statusTag,
-            isCompleted ? s.statusTagCompleted :
-            isCancelled ? s.statusTagCancelled :
-            s.statusTagActive
-          ]}>
-            <Text style={[
-              s.statusTagText,
-              isCompleted ? { color: '#047857' } :
-              isCancelled ? { color: '#B91C1C' } :
-              { color: '#B45309' }
-            ]}>
+          <View style={s.statusTag}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isCompleted ? COLORS.midTeal : isCancelled ? '#EF4444' : COLORS.midTeal }} />
+            <Text style={s.statusTagText}>
               {isCompleted ? 'Completed' : isCancelled ? 'Declined' : 'Live'}
             </Text>
           </View>
@@ -75,6 +69,58 @@ export const OrderDetailsScreen = () => {
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Rejection / Reupload Banner */}
+        {(isCancelled || isReupload) && order.rejectReason && (
+          <View style={{
+            flexDirection: 'row', alignItems: 'center', gap: 12,
+            backgroundColor: isCancelled ? '#FEF2F2' : '#E6DFE8', 
+            borderRadius: 16, padding: 14,
+            borderWidth: 1, borderColor: isCancelled ? '#FECACA' : '#D4C9D6', 
+            marginBottom: 16,
+          }}>
+            <FileText color={isCancelled ? '#EF4444' : COLORS.deepPlum} size={24} strokeWidth={2} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: isCancelled ? '#B91C1C' : COLORS.deepPlum }}>
+                {isReupload ? 'Action Required: Image Unclear' : 'Order Declined'}
+              </Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: isCancelled ? COLORS.textMuted : COLORS.deepPlum, marginTop: 1, opacity: 0.9 }}>
+                {isReupload && <Text style={{ color: '#EF4444', fontFamily: FONTS.bold }}>23h 59m remaining to re-upload. </Text>}
+                {order.rejectReason}
+              </Text>
+            </View>
+            {isReupload && (
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 4,
+                  backgroundColor: '#EF4444', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+                }}
+                onPress={() => navigation.navigate('UploadPrescription', { pharmacyId: order.pharmacy?.id, pharmacyName: order.pharmacy?.name })}
+              >
+                <Plus color="#FFF" size={14} strokeWidth={3} />
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: '#FFFFFF' }}>Re-upload</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Confirm Quote Banner */}
+        {isQuote && (
+          <View style={{
+            flexDirection: 'row', alignItems: 'center', gap: 12,
+            backgroundColor: '#E6DFE8', borderRadius: 16, padding: 14,
+            borderWidth: 1, borderColor: '#D4C9D6', marginBottom: 16,
+          }}>
+            <Clock color={COLORS.deepPlum} size={24} strokeWidth={2} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.deepPlum }}>Quote Ready for Review</Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: COLORS.deepPlum, marginTop: 1, opacity: 0.9 }}>
+                <Text style={{ color: '#EF4444', fontFamily: FONTS.bold }}>23h 59m remaining </Text>
+                to confirm before auto-cancellation.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Pharmacy Info */}
         <TouchableOpacity 
           style={s.card} 
@@ -89,7 +135,6 @@ export const OrderDetailsScreen = () => {
           }}
         >
           <View style={s.sectionHeader}>
-            <MapPin color={COLORS.midTeal} size={18} />
             <Text style={s.sectionTitle}>Pharmacy</Text>
           </View>
           <View style={s.pharmacyRow}>
@@ -102,7 +147,24 @@ export const OrderDetailsScreen = () => {
               <Text style={s.pharmName}>{order.pharmacy?.name}</Text>
               <Text style={s.pharmAddress}>{order.pharmacy?.address}</Text>
             </View>
-            <ChevronRight color={COLORS.borderSoft} size={20} />
+            {isActive ? (
+              <View style={{ flexDirection: 'row', gap: 8, marginRight: 4 }}>
+                <TouchableOpacity 
+                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
+                  onPress={(e) => { e.stopPropagation(); showAlert('Call', 'Calling pharmacy...'); }}
+                >
+                  <Phone color={COLORS.midTeal} size={16} strokeWidth={2.5} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
+                  onPress={(e) => { e.stopPropagation(); showAlert('Chat', 'Opening chat...'); }}
+                >
+                  <MessageCircle color={COLORS.midTeal} size={16} strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ChevronRight color={COLORS.borderSoft} size={20} />
+            )}
           </View>
         </TouchableOpacity>
 
@@ -110,7 +172,6 @@ export const OrderDetailsScreen = () => {
         {(order.orderType === 'PRESCRIPTION' || order.orderType === 'MIXED') && (
           <View style={s.card}>
             <View style={s.sectionHeader}>
-              <FileText color={COLORS.midTeal} size={18} />
               <Text style={s.sectionTitle}>Uploaded Prescriptions</Text>
             </View>
             <View style={s.prescriptionGrid}>
@@ -137,7 +198,6 @@ export const OrderDetailsScreen = () => {
         {/* Order Items */}
         <View style={s.card}>
           <View style={s.sectionHeader}>
-            <Receipt color={COLORS.midTeal} size={18} />
             <Text style={s.sectionTitle}>Order Items</Text>
           </View>
           <View style={s.itemsList}>
@@ -189,7 +249,7 @@ export const OrderDetailsScreen = () => {
               />
             ) : (
               <Button 
-                title="Track Order Status" 
+                title={order.state === 'WAITING_CUSTOMER_CONFIRMATION' ? "Review Quotation" : "Track Order Status"}
                 variant="primary" 
                 onPress={() => {
                   if (order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
@@ -223,11 +283,11 @@ const s = StyleSheet.create({
   },
   headerCenter: { alignItems: 'center', gap: 4 },
   headerTitle: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark },
-  statusTag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, borderWidth: 1 },
-  statusTagCompleted: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' },
-  statusTagCancelled: { backgroundColor: '#FEF2F2', borderColor: '#FECACA' },
-  statusTagActive: { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' },
-  statusTagText: { fontFamily: FONTS.bold, fontSize: 11, textTransform: 'uppercase' },
+  statusTag: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 100, backgroundColor: '#F1F5F9', flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statusTagCompleted: {},
+  statusTagCancelled: {},
+  statusTagActive: {},
+  statusTagText: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.midTealDark },
 
   scrollContent: { padding: 16, paddingBottom: 60, gap: 16 },
 

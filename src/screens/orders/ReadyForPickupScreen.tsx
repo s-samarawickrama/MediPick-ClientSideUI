@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Animated,
-  TouchableOpacity, StatusBar, Pressable,
+  TouchableOpacity, StatusBar, Pressable, Alert
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -63,6 +63,30 @@ export const ReadyForPickupScreen = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleCancelOrder = () => {
+    Alert.alert(
+      'Late Cancellation Warning',
+      'You are cancelling an order while the pharmacist is preparing it. Proceeding will add 1 Strike to your account. 3 Strikes will limit your ability to pay at the counter.\n\nDo you want to proceed?',
+      [
+        { text: 'Keep Order', style: 'cancel' },
+        { 
+          text: 'Cancel Order (Add Strike)', 
+          style: 'destructive',
+          onPress: () => {
+            if (order) order.state = 'CANCELLED';
+            Alert.alert('Order Cancelled', 'Your order has been cancelled and 1 Strike has been recorded.', [
+              { text: 'OK', onPress: () => navigation.goBack() }
+            ]);
+          }
+        }
+      ]
+    );
+  };
+
+  const handleExtendPickup = () => {
+    Alert.alert('Extension Requested', 'Your 24-hour pickup window has been successfully extended.');
+  };
 
   const otp = order.pickupOtp ?? '849201';
 
@@ -268,6 +292,32 @@ export const ReadyForPickupScreen = () => {
           onPress={() => navigation.navigate('ReportIssue', { orderId: order.id })}
           textStyle={{ color: COLORS.error }}
         />
+
+        {orderState === 'PREPARING' && (
+          <Button
+            title="Cancel Order"
+            variant="ghost"
+            onPress={handleCancelOrder}
+            textStyle={{ color: COLORS.error }}
+            style={{ marginTop: 24, borderColor: COLORS.error, borderWidth: 1 }}
+          />
+        )}
+
+        {orderState === 'READY' && isPaidOnline && (
+          <Button
+            title="Extend Pickup Time (24h)"
+            variant="outline"
+            icon={<Clock color={COLORS.midTeal} size={16} strokeWidth={2} />}
+            onPress={handleExtendPickup}
+            style={{ marginTop: 24 }}
+          />
+        )}
+
+        {orderState === 'READY' && !isPaidOnline && (
+          <Text style={{ textAlign: 'center', marginTop: 32, fontSize: 12, color: COLORS.textMuted, paddingHorizontal: 20 }}>
+            Cannot extend pickup time automatically for unpaid orders. Please message the pharmacy if you need an extension.
+          </Text>
+        )}
       </Animated.ScrollView>
 
       {/* Rating Modal */}

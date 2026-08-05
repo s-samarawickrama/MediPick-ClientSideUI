@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Animated, TextInput, StatusBar, Pressable, Modal,
-  KeyboardAvoidingView, Platform, Image, Linking,
+  KeyboardAvoidingView, Platform, Image, Linking, Dimensions,
 } from 'react-native';
 import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, ChevronRight, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock, Heart, Navigation, Phone, Camera } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
@@ -298,8 +298,9 @@ export const BrowseOTCScreen = () => {
             </View>
           </View>
 
-          {/* Store Info Card Overlapping the Cover */}
-          <View style={s.storeMainInfoCard}>
+          {/* Store Info & Content Sheet Overlapping the Cover */}
+          <View style={s.sheetContent}>
+            <View style={s.storeMainInfoCard}>
             <Text style={s.storeMainName}>{activeStore.name}</Text>
 
             <View style={s.storeMetaBadgeRow}>
@@ -313,15 +314,16 @@ export const BrowseOTCScreen = () => {
               onPress={() => setStoreInfoModal(true)}
               activeOpacity={0.8}
             >
-              <MapPin color={COLORS.textDark} size={18} strokeWidth={2.5} />
+              <MapPin color={COLORS.textDark} size={18} strokeWidth={2} />
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={s.infoMapBtnTitle}>Store Info, map & address</Text>
+                <Text style={s.infoMapBtnTitle}>Store Info & Details</Text>
                 <Text style={s.infoMapBtnSub} numberOfLines={1}>{activeStore.address}</Text>
               </View>
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 20, color: COLORS.textMuted }}>›</Text>
+              <ChevronRight color={COLORS.borderSoft} size={20} />
             </TouchableOpacity>
           </View>
 
+          <View style={{ paddingHorizontal: 20, gap: 14, paddingTop: 4 }}>
             {/* Quick Contact Buttons */}
             <View style={s.storeContactRow}>
               <TouchableOpacity
@@ -374,9 +376,10 @@ export const BrowseOTCScreen = () => {
               </TouchableOpacity>
             )}
           </View>
+          </View>
 
           {/* Categories Horizontal List (Store Specific) */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8, gap: 10, marginTop: 14 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 8, gap: 10, marginTop: 14 }}>
             {MED_CATEGORIES.map(cat => (
               <TouchableOpacity
                 key={cat}
@@ -389,9 +392,10 @@ export const BrowseOTCScreen = () => {
             ))}
           </ScrollView>
 
-          {/* Store Available Medicines Grid */}
-          <Text style={s.sectionTitleText}>Available In Store ({storeMeds.length})</Text>
-          <View style={s.productGrid}>
+          <View style={{ paddingHorizontal: 20, gap: 14, marginTop: 4 }}>
+            {/* Store Available Medicines Grid */}
+            <Text style={s.sectionTitleText}>Available In Store ({storeMeds.length})</Text>
+            <View style={s.productGrid}>
             {paginatedStoreMeds.map((med) => {
               const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
 
@@ -441,7 +445,9 @@ export const BrowseOTCScreen = () => {
               );
             })}
           </View>
+          </View>
           {renderPagination(storeMeds.length, totalStoreMedPages, storeMedStartIndex)}
+          </View>
         </ScrollView>
 
         {/* Uber Eats Bottom Floating Cart Bar */}
@@ -1152,31 +1158,35 @@ const s = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.borderSoft,
   },
   storeHeaderTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark },
-  storeScroll: { padding: 20, paddingBottom: 100, gap: 14 },
+  storeScroll: { paddingBottom: 100 },
   storeCoverHero: {
-    height: 220, borderRadius: 20, backgroundColor: COLORS.limeWhisper,
+    height: 240, backgroundColor: COLORS.limeWhisper,
     overflow: 'hidden', justifyContent: 'center', alignItems: 'center', position: 'relative',
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+  },
+  sheetContent: {
+    backgroundColor: COLORS.surfaceWhite, borderTopLeftRadius: 32, borderTopRightRadius: 32,
+    marginTop: -32, shadowColor: '#1C1917',
+    shadowOpacity: 0.05, shadowRadius: 16, shadowOffset: { width: 0, height: -4 }, elevation: 6,
+    paddingBottom: 40, minHeight: Dimensions.get('window').height,
   },
   storeMainInfoCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 16,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 10,
-    marginTop: -40, marginHorizontal: 10, shadowColor: '#000',
-    shadowOpacity: 0.05, shadowRadius: 10, elevation: 4,
+    padding: 24, paddingBottom: 16,
+    gap: 10,
   },
   mapGridGraphic: { alignItems: 'center', gap: 4 },
   mapBadgeOpen: {
     position: 'absolute', top: 12, left: 12,
-    backgroundColor: COLORS.surfaceWhite, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10,
+    backgroundColor: COLORS.surfaceWhite, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100,
     flexDirection: 'row', alignItems: 'center', gap: 6,
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },
   mapBadgeOpenText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textDark },
-  storeMainName: { fontFamily: FONTS.black, fontSize: 24, color: COLORS.textDark, textAlign: 'center' },
-  storeMetaBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'center' },
+  storeMainName: { fontFamily: FONTS.black, fontSize: 22, color: COLORS.textDark },
+  storeMetaBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   metaPillText: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textDark },
   infoMapBtn: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.bgWarm,
-    padding: 14, borderRadius: 12, borderWidth: 1, borderColor: COLORS.borderSoft, marginTop: 4,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent',
+    paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.borderSoft, marginTop: 4,
   },
   infoMapBtnTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
   infoMapBtnSub: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted },

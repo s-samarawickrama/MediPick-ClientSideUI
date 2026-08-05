@@ -3,9 +3,9 @@ import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, Animated, StatusBar, Image, Platform
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Store, Clock, Package, Navigation2, FileText, Pill, Receipt, Camera, Star, ChevronRight } from 'lucide-react-native';
+import { Store, Clock, Package, Navigation2, FileText, Pill, Receipt, Camera, Star, ChevronRight, Phone, MessageCircle } from 'lucide-react-native';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MOCK_ORDERS } from '../../mock/demoData';
@@ -21,6 +21,7 @@ function getStatusHeadline(state: string): string {
   if (state === 'PREPARING')                     return 'Pharmacist is Packaging';
   if (state === 'WAITING_CUSTOMER_CONFIRMATION') return 'Quote Ready to Review';
   if (state === 'WAITING_PHARMACY_CONFIRMATION') return 'Under Pharmacist Review';
+  if (state === 'REUPLOAD_REQUESTED')            return 'Action Required';
   return 'Order Confirmed';
 }
 
@@ -31,6 +32,7 @@ function getStatusSub(state: string): string {
   if (state === 'PREPARING')                     return 'Your medicines are being carefully prepared';
   if (state === 'WAITING_CUSTOMER_CONFIRMATION') return 'Tap to view and confirm your quote';
   if (state === 'WAITING_PHARMACY_CONFIRMATION') return 'Waiting for pharmacy to send a quote';
+  if (state === 'REUPLOAD_REQUESTED')            return 'The pharmacist requested a clearer photo';
   return 'Your prescription has been received';
 }
 
@@ -62,7 +64,7 @@ const ActiveOrderCard = ({
 
   // Dynamic Card Styles
   let cardBg = COLORS.surfaceWhite;
-  let cardBorder = '#E2E8F0'; // Default gray border
+  let cardBorder = COLORS.borderSoft; // Default gray border
   
   if (isReady) {
     cardBg = '#F8FAFC';
@@ -71,6 +73,8 @@ const ActiveOrderCard = ({
     cardBorder = '#D1FAE5';
   } else if (isCancelled) {
     cardBorder = '#FECACA';
+  } else if (order.state === 'REUPLOAD_REQUESTED') {
+    cardBorder = COLORS.borderSoft; // Keep it clean, rely on the red button for attention
   }
 
   return (
@@ -102,11 +106,11 @@ const ActiveOrderCard = ({
             <Text style={s.liveBadgeText}>{isReady ? 'Ready' : 'Live'}</Text>
           </View>
         ) : isCompleted ? (
-          <View style={[s.liveBadgePill, { borderColor: '#A7F3D0', backgroundColor: '#ECFDF5' }]}>
+          <View style={[s.liveBadgePill, { backgroundColor: '#ECFDF5' }]}>
             <Text style={[s.liveBadgeText, { color: COLORS.midTeal }]}>Completed</Text>
           </View>
         ) : (
-          <View style={[s.liveBadgePill, { borderColor: '#FECACA', backgroundColor: '#FEF2F2' }]}>
+          <View style={[s.liveBadgePill, { backgroundColor: '#FEF2F2' }]}>
             <Text style={[s.liveBadgeText, { color: COLORS.error }]}>Declined</Text>
           </View>
         )}
@@ -116,7 +120,7 @@ const ActiveOrderCard = ({
       {/* Status headline */}
       <View style={s.statusBlock}>
         <View style={s.statusTextCol}>
-          <Text style={[s.statusHeadline, isReady && { color: COLORS.midTeal }, isCancelled && { color: COLORS.error }]}>
+          <Text style={[s.statusHeadline, isReady && { color: COLORS.midTeal }, (isCancelled || order.state === 'REUPLOAD_REQUESTED') && { color: COLORS.error }]}>
             {getStatusHeadline(order.state)}
           </Text>
           <Text style={s.statusSub}>{getStatusSub(order.state)}</Text>
@@ -137,9 +141,12 @@ const ActiveOrderCard = ({
             <Text style={[s.footerBtnText, s.btnTealText]}>Show Pickup Code</Text>
           </TouchableOpacity>
         ) : isQuote ? (
-          <TouchableOpacity style={[s.footerBtn, s.btnYellow]} onPress={onAction}>
-            <Text style={[s.footerBtnText, s.btnYellowText]}>Review Quote</Text>
-          </TouchableOpacity>
+          <View style={{ alignItems: 'flex-end', gap: 4 }}>
+            <TouchableOpacity style={[s.footerBtn, s.btnPurple]} onPress={onAction}>
+              <Text style={[s.footerBtnText, s.btnPurpleText]}>Review Quote</Text>
+            </TouchableOpacity>
+            <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: '#D97706' }}>Expires in 23h 59m</Text>
+          </View>
         ) : isCompleted ? (
           <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={() => showAlert('Added to Cart', 'Items have been added to your cart for reorder.')}>
             <Text style={[s.footerBtnText, s.btnTealText]}>Reorder</Text>
@@ -150,6 +157,21 @@ const ActiveOrderCard = ({
           <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onPress}>
             <Text style={[s.footerBtnText, s.btnGrayText]}>View Details</Text>
           </TouchableOpacity>
+        ) : order.state === 'REUPLOAD_REQUESTED' ? (
+          <View style={{ alignItems: 'flex-end', gap: 4 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onPress}>
+                <Text style={[s.footerBtnText, s.btnGrayText]}>Details</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[s.footerBtn, { backgroundColor: '#EF4444', borderColor: '#EF4444', borderWidth: 1 }]} 
+                onPress={onAction}
+              >
+                <Text style={[s.footerBtnText, { color: '#FFFFFF' }]}>Re-upload</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: '#EF4444' }}>Expires in 23h 59m</Text>
+          </View>
         ) : (
           <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onAction}>
             <Text style={[s.footerBtnText, s.btnGrayText]}>Track Order</Text>
@@ -162,6 +184,7 @@ const ActiveOrderCard = ({
 
 export const OrdersScreen = () => {
   const navigation = useNavigation<Nav>();
+  const isFocused = useIsFocused();
   const [tab, setTab] = useState<'active' | 'completed' | 'cancelled'>('active');
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -188,6 +211,8 @@ export const OrdersScreen = () => {
       navigation.navigate('ReadyForPickup', { orderId: o.id });
     } else if (o.state === 'WAITING_CUSTOMER_CONFIRMATION') {
       navigation.navigate('Quotation', { orderId: o.id });
+    } else if (o.state === 'REUPLOAD_REQUESTED') {
+      navigation.navigate('UploadPrescription', { pharmacyId: o.pharmacy?.id, pharmacyName: o.pharmacy?.name });
     }
   };
 
@@ -355,8 +380,8 @@ const s = StyleSheet.create({
   footerBtnText: { fontFamily: FONTS.bold, fontSize: 13 },
   btnTeal: { backgroundColor: COLORS.midTeal },
   btnTealText: { color: '#fff' },
-  btnYellow: { backgroundColor: '#FEF3C7' },
-  btnYellowText: { color: '#92400E' },
+  btnPurple: { backgroundColor: COLORS.deepPlum },
+  btnPurpleText: { color: '#FFFFFF' },
   btnGray: { backgroundColor: '#0F172A' },
   btnGrayText: { color: '#FFFFFF' },
 
