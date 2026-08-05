@@ -216,6 +216,11 @@ export const UploadPrescriptionScreen = () => {
               image: item.image,
               dosage: item.dosage,
               category: item.category || 'OTC',
+            }, {
+              id: targetPharmacyId,
+              name: targetPharmacyName,
+              address: 'Pharmacy Address',
+              distance: 'Distance'
             });
           }
         }

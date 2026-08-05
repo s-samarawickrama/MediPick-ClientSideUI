@@ -116,22 +116,34 @@ export const BrowseOTCScreen = () => {
   const paginatedStoreMeds = storeMeds.slice(storeMedStartIndex, storeMedStartIndex + ITEMS_PER_PAGE);
 
   const cartItems = globalCart.reduce((acc, item) => {
+    // Only map quantities for the currently viewed store so they don't bleed across stores!
+    if (activeStore && item.pharmacy.id !== activeStore.id) return acc;
     acc[item.medicine.id] = item.quantity;
     return acc;
   }, {} as Record<string, number>);
 
-  const totalCartCount = globalCart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalCartCount = activeStore 
+    ? globalCart.filter(c => c.pharmacy.id === activeStore.id).reduce((sum, item) => sum + item.quantity, 0)
+    : globalCart.reduce((sum, item) => sum + item.quantity, 0);
 
   const incrementQty = (med: Medicine) => {
+    if (!activeStore) return;
     if (cartItems[med.id]) {
-      updateQuantity(med.id, 1);
+      updateQuantity(med.id, activeStore.id, 1);
     } else {
-      addToCart(med);
+      addToCart(med, { 
+        id: activeStore.id, 
+        name: activeStore.name, 
+        address: activeStore.address, 
+        distance: activeStore.distance,
+        image: activeStore.image
+      });
     }
   };
 
   const decrementQty = (medId: string) => {
-    updateQuantity(medId, -1);
+    if (!activeStore) return;
+    updateQuantity(medId, activeStore.id, -1);
   };
 
   // Render Quantity Stepper Button (- 1 +)

@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Animated, StatusBar, Pressable, Modal,
+  Animated, StatusBar, Pressable, Modal, Image
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ShoppingCart, Plus, Minus, ChevronLeft, Store, CreditCard, Trash2 } from 'lucide-react-native';
+import { ShoppingCart, Plus, Minus, ChevronLeft, Store, CreditCard, Trash2, CheckSquare, Square } from 'lucide-react-native';
 import { Button } from '../../components/common/Button';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
@@ -23,28 +23,80 @@ export const MultiStoreCartScreen = () => {
   const opacity = useRef(new Animated.Value(0)).current;
   const [payMethod, setPayMethod] = useState<'counter' | 'stripe'>('counter');
   const [showStripeModal, setShowStripeModal] = useState(false);
+  const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
 
-  const { cartItems, attachedPrescription, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { cartItems, attachedPrescription, updateQuantity, removeFromCart, clearCart, removeStoreFromCart, setAttachedPrescription } = useCart();
 
-  // Group cart items. For simplicity in this flow, if a prescription is attached, 
-  // we group everything under that pharmacy. Otherwise, we group under a default mock pharmacy.
-  const targetPharmacy = attachedPrescription 
-    ? { id: attachedPrescription.pharmacyId, name: attachedPrescription.pharmacyName, address: 'See details in store', distance: 'Calculated at checkout' }
-    : MOCK_PHARMACIES[0];
+  // Group cart items dynamically by pharmacy
+  const cartStoresMap: Record<string, {
+    pharmacy: { id: string; name: string; address: string; distance: string; image?: any };
+    items: any[];
+    hasPrescription: boolean;
+  }> = {};
 
-  const cartStores = cartItems.length > 0 || attachedPrescription ? [{
-    pharmacy: targetPharmacy,
-    items: cartItems.map(c => ({ ...c.medicine, qty: c.quantity })),
-    hasPrescription: !!attachedPrescription
-  }] : [];
+  cartItems.forEach(c => {
+    if (!cartStoresMap[c.pharmacy.id]) {
+      cartStoresMap[c.pharmacy.id] = { pharmacy: c.pharmacy, items: [], hasPrescription: false };
+    }
+    cartStoresMap[c.pharmacy.id].items.push({ ...c.medicine, qty: c.quantity });
+  });
+
+  if (attachedPrescription) {
+    if (!cartStoresMap[attachedPrescription.pharmacyId]) {
+      cartStoresMap[attachedPrescription.pharmacyId] = {
+        pharmacy: {
+          id: attachedPrescription.pharmacyId,
+          name: attachedPrescription.pharmacyName,
+          address: 'See details in store',
+          distance: 'Calculated at checkout'
+        },
+        items: [],
+        hasPrescription: true
+      };
+    } else {
+      cartStoresMap[attachedPrescription.pharmacyId].hasPrescription = true;
+    }
+  }
+
+  const cartStores = Object.values(cartStoresMap);
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
-  const totalItemCount = cartItems.reduce((sum, c) => sum + c.quantity, 0) + (attachedPrescription ? 1 : 0);
-  const grandTotal = cartItems.reduce((sum, c) => sum + c.medicine.pharmacyPrice * c.quantity, 0);
+  // Sync initial selection so all stores are selected by default when entering the cart
+  useEffect(() => {
+    const currentStoreIds = cartStores.map(s => s.pharmacy.id);
+    const hasUnselected = currentStoreIds.some(id => !selectedStoreIds.includes(id));
+    if (selectedStoreIds.length === 0 && currentStoreIds.length > 0) {
+      setSelectedStoreIds(currentStoreIds);
+    }
+  }, [cartStores.length]);
+
+  const toggleStoreSelection = (storeId: string) => {
+    if (selectedStoreIds.includes(storeId)) {
+      setSelectedStoreIds(prev => prev.filter(id => id !== storeId));
+    } else {
+      setSelectedStoreIds(prev => [...prev, storeId]);
+    }
+  };
+
+  const checkedStores = cartStores.filter(store => selectedStoreIds.includes(store.pharmacy.id));
+
+  const totalItemCount = checkedStores.reduce((sum, store) => sum + store.items.reduce((s, c) => s + c.qty, 0) + (store.hasPrescription ? 1 : 0), 0);
+  const grandTotal = checkedStores.reduce((sum, store) => sum + store.items.reduce((s, c) => s + c.pharmacyPrice * c.qty, 0), 0);
+  const anyCheckedStoreHasPrescription = checkedStores.some(store => store.hasPrescription);
+
+  const processCheckout = () => {
+    checkedStores.forEach(store => {
+      removeStoreFromCart(store.pharmacy.id);
+    });
+    // If the prescription store was checked, clear the attached prescription globally
+    if (anyCheckedStoreHasPrescription) {
+      setAttachedPrescription(null);
+    }
+  };
 
   return (
     <View style={s.screen}>
@@ -83,13 +135,38 @@ export const MultiStoreCartScreen = () => {
             <View key={storeGroup.pharmacy.id} style={s.storeCard}>
               {/* Store Header */}
               <View style={s.storeCardHeader}>
-                <View style={s.storeAvatar}>
-                  <Text style={s.storeInitial}>{storeGroup.pharmacy.name[0]}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.storeName}>{storeGroup.pharmacy.name}</Text>
-                  <Text style={s.storeMeta}>{storeGroup.pharmacy.address} · {storeGroup.pharmacy.distance}</Text>
-                </View>
+                <TouchableOpacity onPress={() => toggleStoreSelection(storeGroup.pharmacy.id)} style={{ marginRight: 12 }}>
+                  {selectedStoreIds.includes(storeGroup.pharmacy.id) 
+                    ? <CheckSquare color={COLORS.midTeal} size={22} strokeWidth={2.5} />
+                    : <Square color="#CBD5E1" size={22} strokeWidth={2.5} />}
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    navigation.navigate('Tabs', {
+                      screen: 'Browse',
+                      params: { storeId: storeGroup.pharmacy.id }
+                    });
+                  }}
+                >
+                  {storeGroup.pharmacy.image ? (
+                    <Image 
+                      source={storeGroup.pharmacy.image} 
+                      style={s.storeAvatarImage} 
+                    />
+                  ) : (
+                    <View style={s.storeAvatar}>
+                      <Text style={s.storeInitial}>{storeGroup.pharmacy.name[0]}</Text>
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.storeName}>{storeGroup.pharmacy.name}</Text>
+                    <Text style={s.storeMeta}>{storeGroup.pharmacy.address} · {storeGroup.pharmacy.distance}</Text>
+                  </View>
+                </TouchableOpacity>
+
                 <TouchableOpacity
                   style={s.removeStoreBtn}
                   onPress={() => clearCart()}
@@ -124,14 +201,14 @@ export const MultiStoreCartScreen = () => {
                     <View style={s.stepperBox}>
                       <TouchableOpacity
                         style={s.stepperBtn}
-                        onPress={() => updateQuantity(item.id, -1)}
+                        onPress={() => updateQuantity(item.id, storeGroup.pharmacy.id, -1)}
                       >
                         <Minus color={COLORS.midTeal} size={13} strokeWidth={3} />
                       </TouchableOpacity>
                       <Text style={s.stepperQty}>{item.qty}</Text>
                       <TouchableOpacity
                         style={s.stepperBtn}
-                        onPress={() => updateQuantity(item.id, 1)}
+                        onPress={() => updateQuantity(item.id, storeGroup.pharmacy.id, 1)}
                       >
                         <Plus color={COLORS.midTeal} size={13} strokeWidth={3} />
                       </TouchableOpacity>
@@ -174,24 +251,26 @@ export const MultiStoreCartScreen = () => {
         <View style={s.checkoutFooterWrap}>
           <View style={s.grandTotalRow}>
             <View>
-              <Text style={s.grandTotalLabel}>Grand Total ({cartStores.length} Stores)</Text>
+              <Text style={s.grandTotalLabel}>Grand Total ({checkedStores.length} Stores)</Text>
               <Text style={[s.grandTotalAmount, attachedPrescription && { fontFamily: FONTS.bold, fontSize: 18 }]}>
-                {attachedPrescription ? 'Pending Quote' : `LKR ${grandTotal}`}
+                {anyCheckedStoreHasPrescription ? 'Pending Quote' : `LKR ${grandTotal}`}
               </Text>
             </View>
 
             <TouchableOpacity
               style={s.checkoutBtn}
               onPress={() => {
-                if (attachedPrescription) {
-                  clearCart();
+                if (checkedStores.length === 0) return;
+                
+                if (anyCheckedStoreHasPrescription) {
+                  processCheckout();
                   navigation.navigate('OrderDetails', { 
                     orderId: 'ord-105'
                   });
                 } else if (payMethod === 'stripe') {
                   setShowStripeModal(true);
                 } else {
-                  clearCart();
+                  processCheckout();
                   navigation.navigate('ReadyForPickup', { orderId: 'ord-1' });
                 }
               }}
@@ -210,6 +289,7 @@ export const MultiStoreCartScreen = () => {
         onClose={() => setShowStripeModal(false)}
         onSuccess={() => {
           setShowStripeModal(false);
+          processCheckout();
           navigation.navigate('ReadyForPickup', { orderId: 'ord-1' });
         }}
       />
@@ -246,6 +326,9 @@ const s = StyleSheet.create({
   storeAvatar: {
     width: 42, height: 42, borderRadius: 12, backgroundColor: COLORS.limeWhisper,
     justifyContent: 'center', alignItems: 'center',
+  },
+  storeAvatarImage: {
+    width: 42, height: 42, borderRadius: 12,
   },
   storeInitial: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.midTeal },
   storeName: { fontFamily: FONTS.bold, fontSize: 15, color: COLORS.textDark },

@@ -4,6 +4,7 @@ import { MedicineItem, Pharmacy } from '../types';
 export interface CartItem {
   medicine: MedicineItem;
   quantity: number;
+  pharmacy: { id: string; name: string; address: string; distance: string; image?: any };
 }
 
 export interface AttachedPrescription {
@@ -17,9 +18,10 @@ interface CartContextType {
   cartItems: CartItem[];
   selectedPharmacy: Pharmacy | null;
   attachedPrescription: AttachedPrescription | null;
-  addToCart: (medicine: MedicineItem) => void;
-  removeFromCart: (medicineId: string) => void;
-  updateQuantity: (medicineId: string, delta: number) => void;
+  addToCart: (medicine: MedicineItem, pharmacy: { id: string; name: string; address: string; distance: string; image?: any }) => void;
+  removeFromCart: (medicineId: string, pharmacyId: string) => void;
+  removeStoreFromCart: (storeId: string) => void;
+  updateQuantity: (medicineId: string, pharmacyId: string, delta: number) => void;
   setSelectedPharmacy: (pharmacy: Pharmacy | null) => void;
   setAttachedPrescription: (prescription: AttachedPrescription | null) => void;
   clearCart: () => void;
@@ -34,31 +36,36 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacy | null>(null);
   const [attachedPrescription, setAttachedPrescription] = useState<AttachedPrescription | null>(null);
 
-  const addToCart = (medicine: MedicineItem) => {
+  const addToCart = (medicine: MedicineItem, pharmacy: { id: string; name: string; address: string; distance: string; image?: any }) => {
     if (medicine.isRxRequired) {
       alert('Rx Required: Prescription-Only Medicines cannot be added to direct cart. Please use Prescription Upload!');
       return;
     }
     setCartItems((prev) => {
-      const existing = prev.find((item) => item.medicine.id === medicine.id);
+      const existing = prev.find((item) => item.medicine.id === medicine.id && item.pharmacy.id === pharmacy.id);
       if (existing) {
         return prev.map((item) =>
-          item.medicine.id === medicine.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.medicine.id === medicine.id && item.pharmacy.id === pharmacy.id 
+            ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { medicine, quantity: 1 }];
+      return [...prev, { medicine, quantity: 1, pharmacy }];
     });
   };
 
-  const removeFromCart = (medicineId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.medicine.id !== medicineId));
+  const removeFromCart = (medicineId: string, pharmacyId: string) => {
+    setCartItems((prev) => prev.filter((item) => !(item.medicine.id === medicineId && item.pharmacy.id === pharmacyId)));
   };
 
-  const updateQuantity = (medicineId: string, delta: number) => {
+  const removeStoreFromCart = (storeId: string) => {
+    setCartItems((prev) => prev.filter((item) => item.pharmacy.id !== storeId));
+  };
+
+  const updateQuantity = (medicineId: string, pharmacyId: string, delta: number) => {
     setCartItems((prev) =>
       prev
         .map((item) => {
-          if (item.medicine.id === medicineId) {
+          if (item.medicine.id === medicineId && item.pharmacy.id === pharmacyId) {
             const newQty = item.quantity + delta;
             return newQty > 0 ? { ...item, quantity: newQty } : null;
           }
@@ -84,6 +91,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         attachedPrescription,
         addToCart,
         removeFromCart,
+        removeStoreFromCart,
         updateQuantity,
         setSelectedPharmacy,
         setAttachedPrescription,
