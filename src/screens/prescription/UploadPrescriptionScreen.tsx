@@ -18,6 +18,8 @@ import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MOCK_MEDICINES } from '../../mock/demoData';
 import { useCart } from '../../context/CartContext';
 
+const FUN_3D_BAG = require('../../../assets/fun_3d_bag.png');
+
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'UploadPrescription'>;
 
@@ -26,7 +28,7 @@ export const UploadPrescriptionScreen = () => {
   const route      = useRoute<Route>();
   const targetPharmacyId   = route.params?.pharmacyId;
   const targetPharmacyName = route.params?.pharmacyName;
-  const { setAttachedPrescription } = useCart();
+  const { setAttachedPrescription, addToCart } = useCart();
 
   const [note, setNote]                   = useState('');
   const [image, setImage]                 = useState<string | null>(null);
@@ -49,14 +51,18 @@ export const UploadPrescriptionScreen = () => {
   const catalogList = [
     ...customItems,
     ...MOCK_MEDICINES
-      .filter((m) => !m.isRxRequired)
+      .filter((m) => {
+        if (m.isRxRequired) return false;
+        if (targetPharmacyId && m.availableAtPharmacyIds && !m.availableAtPharmacyIds.includes(targetPharmacyId)) return false;
+        return true;
+      })
       .map((m) => ({
         id: m.id,
         name: m.name,
         dosage: m.dosage,
         category: m.category,
         description: m.description || 'Quality health & wellness supply.',
-        price: `Estimated LKR ${m.pharmacyPrice}`,
+        price: `LKR ${m.pharmacyPrice}`,
         image: m.image,
       })),
   ];
@@ -194,26 +200,48 @@ export const UploadPrescriptionScreen = () => {
         pharmacyId: targetPharmacyId,
         pharmacyName: targetPharmacyName,
       });
+
+      // Add all selected OTC items to the cart
+      Object.entries(selectedItemQtys).forEach(([itemId, qty]) => {
+        const item = catalogList.find((c) => c.id === itemId);
+        if (item) {
+          // Add it 'qty' times
+          for (let i = 0; i < qty; i++) {
+            addToCart({
+              id: item.id,
+              name: item.name,
+              mrpPrice: parseFloat(item.price.replace(/[^\d.]/g, '')) || 0,
+              pharmacyPrice: parseFloat(item.price.replace(/[^\d.]/g, '')) || 0,
+              isRxRequired: false,
+              image: item.image,
+              dosage: item.dosage,
+              category: item.category || 'OTC',
+            });
+          }
+        }
+      });
+
       navigation.navigate('AIQualityCheck', {
         clarityScore: 94,
         pharmacyId: targetPharmacyId,
         pharmacyName: targetPharmacyName,
-        nextScreen: 'Tabs',
-        nextParams: { screen: 'Cart' }
+        nextScreen: 'MultiStoreCart',
       });
     } else {
-      const selectedItemIds = Object.keys(selectedItemQtys);
-      navigation.navigate('AIQualityCheck', {
-        clarityScore: 94,
-        pharmacyId: targetPharmacyId,
-        pharmacyName: targetPharmacyName,
-        selectedItems: selectedItemIds,
-        selectedExtraItemsDict: selectedItemQtys,
-      });
+      Alert.alert('Error', 'No pharmacy selected for this prescription.');
     }
   };
 
   const totalSelectedItemsCount = Object.values(selectedItemQtys).reduce((a, b) => a + b, 0);
+
+  const totalSelectedPrice = Object.entries(selectedItemQtys).reduce((total, [id, qty]) => {
+    const item = catalogList.find((c) => c.id === id);
+    if (item && item.price) {
+      const priceNum = parseFloat(item.price.replace(/[^\d.]/g, '')) || 0;
+      return total + (priceNum * qty);
+    }
+    return total;
+  }, 0);
 
   return (
     <KeyboardAvoidingView
@@ -225,15 +253,14 @@ export const UploadPrescriptionScreen = () => {
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
           <ChevronLeft color={COLORS.peacockBlue} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
-        <Text style={s.navTitle}>{targetPharmacyName ? `Prescription for ${targetPharmacyName}` : 'Prescription Upload'}</Text>
+        <Text style={s.navTitle}>{targetPharmacyName ? `Upload to ${targetPharmacyName}` : 'Upload Prescription'}</Text>
         <View style={{ width: 36 }} />
       </View>
 
-      {targetPharmacyName && (
-        <View style={s.targetBanner}>
-          <Store color={COLORS.deepTeal} size={18} strokeWidth={2} />
-          <Text style={s.targetBannerText}>
-            Attaching directly to <Text style={{ fontFamily: FONTS.black }}>{targetPharmacyName}</Text>
+      {totalSelectedItemsCount > 0 && (
+        <View style={[s.targetBanner, { justifyContent: 'center', backgroundColor: COLORS.midTeal }]}>
+          <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: COLORS.white }}>
+            Cart Total: <Text style={{ fontFamily: FONTS.black }}>LKR {totalSelectedPrice.toFixed(2)}</Text> ({totalSelectedItemsCount} item{totalSelectedItemsCount !== 1 ? 's' : ''})
           </Text>
         </View>
       )}
@@ -262,8 +289,8 @@ export const UploadPrescriptionScreen = () => {
         ) : (
           <>
             <TouchableOpacity style={s.cameraZone} onPress={takePhoto} activeOpacity={0.88}>
-              <View style={s.cameraCircle}>
-                <Camera color={COLORS.midTeal} size={32} strokeWidth={2.2} />
+              <View style={[s.cameraCircle, { backgroundColor: '#FFF', overflow: 'hidden', padding: 0 }]}>
+                <Image source={require('../../../assets/prescription_and_camera.png')} style={{ width: 64, height: 64, transform: [{ scale: 1.35 }] }} resizeMode="cover" />
               </View>
               <Text style={s.cameraTitle}>Take Prescription Photo</Text>
               <Text style={s.cameraSub}>Hold camera steady under bright lighting</Text>
@@ -301,69 +328,22 @@ export const UploadPrescriptionScreen = () => {
         </View>
 
         {/* Extra OTC Items Card */}
-        {targetPharmacyId ? (
-          <View style={[s.extraItemsContainer, { paddingBottom: 24, marginTop: 10 }]}>
-            <View style={s.extraHeaderBanner}>
-              <View style={s.catchyIconBox}>
-                <Store color={COLORS.midTeal} size={22} strokeWidth={2.5} />
-              </View>
-              <View style={{ flex: 1, gap: 3 }}>
-                <Text style={s.catchyTitle}>Need everyday items?</Text>
-                <Text style={s.catchySub}>Browse {targetPharmacyName}'s catalog to add OTC medicines or wellness items directly to this order.</Text>
-              </View>
+        <View style={s.extraItemsContainer}>
+          <View style={s.extraHeaderBanner}>
+            <View style={{ width: 56, height: 56, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
+              <Image source={require('../../../assets/clay_3d_bag_white.png')} style={{ width: 56, height: 56, transform: [{ scale: 1.35 }] }} resizeMode="cover" />
             </View>
-            <TouchableOpacity 
-              style={s.browseStoreBtn} 
-              activeOpacity={0.88}
-              onPress={() => {
-                if (!image) {
-                  if (Platform.OS === 'web') {
-                    window.alert('Please take a photo or upload an image of your prescription first before browsing for extra items.');
-                  } else {
-                    Alert.alert('Missing Prescription', 'Please upload your prescription first before browsing for extra items.');
-                  }
-                  return;
-                }
-                setAttachedPrescription({
-                  image,
-                  note,
-                  pharmacyId: targetPharmacyId,
-                  pharmacyName: targetPharmacyName!,
-                });
-                navigation.navigate('AIQualityCheck', {
-                  clarityScore: 94,
-                  pharmacyId: targetPharmacyId,
-                  pharmacyName: targetPharmacyName,
-                  nextScreen: 'Tabs',
-                  nextParams: { screen: 'Browse', params: { storeId: targetPharmacyId, initialMode: 'meds' } }
-                });
-              }}
-            >
-              <ShoppingBag color={COLORS.midTeal} size={18} strokeWidth={2.5} />
-              <Text style={s.browseStoreBtnText}>Browse {targetPharmacyName}</Text>
-            </TouchableOpacity>
+            <View style={{ flex: 1, gap: 3 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              </View>
+              <Text style={s.catchyTitle}>Need anything else?</Text>
+              <Text style={s.catchySub}>
+                {targetPharmacyName 
+                  ? `Add OTC essentials straight from ${targetPharmacyName}'s shelves to your pickup order!`
+                  : "Add everyday essentials to get quotes for everything in one go!"}
+              </Text>
+            </View>
           </View>
-        ) : (
-          <View style={s.extraItemsContainer}>
-            <View style={s.extraHeaderBanner}>
-              <View style={s.catchyIconBox}>
-                <ShoppingBag color={COLORS.midTeal} size={22} strokeWidth={2.5} />
-              </View>
-              <View style={{ flex: 1, gap: 3 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={s.needMedsBadge}>
-                    <Text style={s.needMedsBadgeText}>ADD-ON REQUEST</Text>
-                  </View>
-                  {totalSelectedItemsCount > 0 && (
-                    <View style={s.selectedCountPill}>
-                      <Text style={s.selectedCountText}>{totalSelectedItemsCount} added</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={s.catchyTitle}>Need everyday wellness items?</Text>
-                <Text style={s.catchySub}>Add items below to get quotes for everything in one go!</Text>
-              </View>
-            </View>
 
             {/* Search Bar */}
             <View style={s.extraSearchBar}>
@@ -407,7 +387,7 @@ export const UploadPrescriptionScreen = () => {
                       {item.image ? (
                         <Image source={item.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
                       ) : (
-                        <ShoppingBag color={COLORS.midTeal} size={28} strokeWidth={2} />
+                        <Image source={FUN_3D_BAG} style={{ width: 44, height: 44 }} resizeMode="contain" />
                       )}
                       {/* Info overlay top-right */}
                       <TouchableOpacity
@@ -426,8 +406,8 @@ export const UploadPrescriptionScreen = () => {
                     {/* Footer: Price + Stepper */}
                     <View style={s.gridCardFooter}>
                       <View style={{ gap: 1 }}>
-                        <Text style={s.gridProdPricePrefix}>Starting from</Text>
-                        <Text style={s.gridProdPrice}>{item.price?.replace('Estimated ', '')}</Text>
+                        <Text style={s.gridProdPricePrefix}>Price</Text>
+                        <Text style={s.gridProdPrice}>{item.price}</Text>
                       </View>
                       {isSelected ? (
                         <View style={s.gridStepperBox}>
@@ -503,7 +483,6 @@ export const UploadPrescriptionScreen = () => {
               </View>
             )}
           </View>
-        )}
 
         <Button
           title="Continue to Quality Check"
@@ -525,7 +504,7 @@ export const UploadPrescriptionScreen = () => {
               <>
                 <View style={s.modalImgBox}>
                   {detailModalItem.image ? (
-                    <Image source={detailModalItem.image} style={s.modalImg} resizeMode="contain" />
+                    <Image source={detailModalItem.image} style={s.modalImg} resizeMode="cover" />
                   ) : (
                     <ShoppingBag color={COLORS.midTeal} size={48} strokeWidth={2} />
                   )}
@@ -667,11 +646,15 @@ const s = StyleSheet.create({
   needMedsBadgeText: { fontFamily: FONTS.extrabold, fontSize: 8, color: '#EA580C', letterSpacing: 0.5 },
   catchyTitle: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.peacockBlue, letterSpacing: -0.3 },
   catchySub: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, lineHeight: 16 },
-  selectedCountPill: {
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
-    borderWidth: 1, borderColor: '#D6EDA0',
+
+  totalBanner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 16, paddingVertical: 14,
+    borderRadius: 12, borderWidth: 1, borderColor: '#D6EDA0',
+    marginTop: 4, marginBottom: 4,
   },
-  selectedCountText: { fontFamily: FONTS.bold, fontSize: 9, color: COLORS.midTeal },
+  totalBannerText: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.deepTeal },
+  totalBannerPrice: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.peacockBlue },
 
   extraSearchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -780,10 +763,11 @@ const s = StyleSheet.create({
     backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
   modalImgBox: {
-    height: 140, backgroundColor: COLORS.limeWhisper, borderRadius: 16,
+    height: 180, backgroundColor: COLORS.limeWhisper, borderRadius: 16,
     justifyContent: 'center', alignItems: 'center', marginVertical: 6,
+    overflow: 'hidden', borderWidth: 1, borderColor: '#D6EDA0',
   },
-  modalImg: { width: 120, height: 120 },
+  modalImg: { width: '100%', height: '100%' },
   modalTitle: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark },
   modalDosage: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textMuted },
   modalPriceBadge: {

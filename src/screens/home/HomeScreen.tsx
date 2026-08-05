@@ -261,7 +261,7 @@ export const HomeScreen = () => {
         {/* Prescription Hero Banner Card */}
         <TouchableOpacity
           style={s.heroBannerCard}
-          onPress={() => navigation.navigate('UploadPrescription')}
+          onPress={() => navigation.navigate('SelectPharmacy')}
           activeOpacity={0.92}
         >
           <View style={s.heroContent}>
@@ -329,10 +329,12 @@ export const HomeScreen = () => {
                   </View>
                 )}
 
-                {/* Live Open / NMRA Badge */}
+                {/* Live Open / Closed Badge */}
                 <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: COLORS.surfaceWhite, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' }} />
-                  <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: COLORS.textDark }}>Open Now</Text>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: p.isOpen ? '#10B981' : '#EF4444' }} />
+                  <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: COLORS.textDark }}>
+                    {p.isOpen ? 'Open Now' : 'Closed'}
+                  </Text>
                 </View>
 
                 <View style={s.storeDistanceTag}>

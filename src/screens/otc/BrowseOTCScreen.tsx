@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Animated, TextInput, StatusBar, Pressable, Modal,
-  KeyboardAvoidingView, Platform, Image,
+  KeyboardAvoidingView, Platform, Image, Linking,
 } from 'react-native';
-import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, ChevronRight, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock, Heart } from 'lucide-react-native';
+import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, ChevronRight, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock, Heart, Navigation, Phone, Camera } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '../../theme/colors';
@@ -14,6 +14,8 @@ import { MedicineItem as Medicine, Pharmacy } from '../../types';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MapPreview } from '../../components/MapPreview';
 import { useCart } from '../../context/CartContext';
+
+const FUN_3D_BAG = require('../../../assets/fun_3d_bag.png');
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type BrowseRoute = RouteProp<MainStackParamList, 'Browse'>;
@@ -96,7 +98,9 @@ export const BrowseOTCScreen = () => {
   });
 
   const storeMeds = MOCK_MEDICINES.filter((m) => {
-    return m.name.toLowerCase().includes(storeQuery.toLowerCase()) || m.genericName.toLowerCase().includes(storeQuery.toLowerCase());
+    const matchQ = m.name.toLowerCase().includes(storeQuery.toLowerCase()) || m.genericName.toLowerCase().includes(storeQuery.toLowerCase());
+    const matchC = medCategory === 'All' || m.category === medCategory;
+    return matchQ && matchC;
   }).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
 
   const totalMedPages = Math.max(1, Math.ceil(filteredMeds.length / ITEMS_PER_PAGE));
@@ -284,6 +288,14 @@ export const BrowseOTCScreen = () => {
                 <Store color={COLORS.midTeal} size={40} strokeWidth={2.5} />
               </View>
             )}
+
+            {/* Live Open / Closed Badge */}
+            <View style={[s.mapBadgeOpen, !activeStore.isOpen && { backgroundColor: COLORS.surfaceWhite }]}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: activeStore.isOpen ? '#10B981' : '#EF4444' }} />
+              <Text style={[s.mapBadgeOpenText, !activeStore.isOpen && { color: COLORS.textDark }]}>
+                {activeStore.isOpen ? 'Open Now' : 'Closed'}
+              </Text>
+            </View>
           </View>
 
           {/* Store Info Card Overlapping the Cover */}
@@ -293,13 +305,6 @@ export const BrowseOTCScreen = () => {
             <View style={s.storeMetaBadgeRow}>
               <Star color="#F59E0B" size={14} fill="#F59E0B" />
               <Text style={s.metaPillText}>{activeStore.rating} (120+ ratings) • {activeStore.distance} • {activeStore.estimatedResponseTime}</Text>
-            </View>
-
-            <View style={s.storeMetaBadgeRow}>
-              <View style={s.mapBadgeOpen}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981' }} />
-                <Text style={s.mapBadgeOpenText}>Open Now · Closes 10 PM</Text>
-              </View>
             </View>
 
             {/* Clickable Info & Map Button */}
@@ -369,6 +374,20 @@ export const BrowseOTCScreen = () => {
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Categories Horizontal List (Store Specific) */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8, gap: 10, marginTop: 14 }}>
+            {MED_CATEGORIES.map(cat => (
+              <TouchableOpacity
+                key={cat}
+                style={[s.chip, medCategory === cat && s.chipActive]}
+                onPress={() => setMedCategory(cat)}
+                activeOpacity={0.8}
+              >
+                <Text style={[s.chipText, medCategory === cat && s.chipTextActive]}>{cat}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
           {/* Store Available Medicines Grid */}
           <Text style={s.sectionTitleText}>Available In Store ({storeMeds.length})</Text>
@@ -456,7 +475,7 @@ export const BrowseOTCScreen = () => {
                   {selectedMedModal.image ? (
                     <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="contain" />
                   ) : (
-                    <ShoppingBag color={COLORS.midTeal} size={48} strokeWidth={2} />
+                    <Image source={FUN_3D_BAG} style={{ width: 64, height: 64 }} resizeMode="contain" />
                   )}
                 </View>
 
@@ -501,45 +520,106 @@ export const BrowseOTCScreen = () => {
             <View style={s.modalOverlay}>
               <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setStoreInfoModal(false)} />
               <View style={[s.modalCard, { gap: 14 }]}>
-                <TouchableOpacity style={s.closeModalBtn} onPress={() => setStoreInfoModal(false)}>
-                  <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
-                </TouchableOpacity>
-
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}>
-                    <Store color={COLORS.midTeal} size={22} strokeWidth={2} />
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                  <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+                    {activeStore.image ? (
+                      <Image source={activeStore.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                    ) : (
+                      <Text style={{ fontSize: 18, fontFamily: FONTS.black, color: COLORS.midTeal }}>{activeStore.name.charAt(0)}</Text>
+                    )}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark }}>{activeStore.name}</Text>
-                    <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Verified Partner Pharmacy</Text>
+                    <Text style={{ fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark }} numberOfLines={1}>{activeStore.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <Star color="#F59E0B" size={12} fill="#F59E0B" />
+                      <Text style={{ fontSize: 13, fontFamily: FONTS.semiBold, color: COLORS.textDark }}>{activeStore.rating}</Text>
+                      <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.borderSoft }} />
+                      <Text style={{ fontSize: 12, fontFamily: FONTS.medium, color: COLORS.textMuted }}>{activeStore.distance} • {activeStore.estimatedResponseTime || '15 mins'}</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity onPress={() => { togglePharmacyFavorite(activeStore.id); setActiveStore({ ...activeStore, isFavorite: !activeStore.isFavorite }); }} style={{ width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}>
+                      <Heart color={activeStore.isFavorite ? "#EF4444" : COLORS.textMuted} size={16} fill={activeStore.isFavorite ? "#EF4444" : "transparent"} strokeWidth={activeStore.isFavorite ? 0 : 2.5} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setStoreInfoModal(false)} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.bgWarm, justifyContent: 'center', alignItems: 'center' }}>
+                      <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+                    </TouchableOpacity>
                   </View>
                 </View>
 
                 {/* Map Component with Web Fallback */}
-                <MapPreview
-                  latitude={activeStore.latitude}
-                  longitude={activeStore.longitude}
-                  name={activeStore.name}
-                  address={activeStore.address}
-                />
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={{ borderRadius: 12, overflow: 'hidden' }}
+                  onPress={() => {
+                    const url = `https://www.google.com/maps/dir/?api=1&destination=${activeStore.latitude},${activeStore.longitude}`;
+                    Linking.openURL(url);
+                  }}
+                >
+                  <MapPreview
+                    latitude={activeStore.latitude}
+                    longitude={activeStore.longitude}
+                    name={activeStore.name}
+                    address={activeStore.address}
+                  />
+                  <View style={{
+                    position: 'absolute', bottom: 12, right: 12,
+                    backgroundColor: COLORS.peacockBlue, paddingHorizontal: 12, paddingVertical: 8,
+                    borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6,
+                    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 3,
+                  }}>
+                    <Navigation color="#FFF" size={14} strokeWidth={2.5} />
+                    <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: '#FFF' }}>Get Directions</Text>
+                  </View>
+                </TouchableOpacity>
 
                 {/* Key Store Specs */}
-                <View style={{ backgroundColor: COLORS.bgWarm, borderRadius: 14, padding: 12, gap: 8 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Pharmacy License</Text>
-                    <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark }}>{activeStore.nmraLicense || 'PH-2024-8891'}</Text>
+                <View style={{ gap: 12 }}>
+                  {/* Action Buttons */}
+                  <View style={{ flexDirection: 'row', gap: 12 }}>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: COLORS.limeWhisper, padding: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
+                      <Phone color={COLORS.midTeal} size={16} strokeWidth={2.5} />
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.deepTeal }}>Call Store</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: COLORS.bgWarm, padding: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
+                      <Clock color={COLORS.textDark} size={16} strokeWidth={2.5} />
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark }}>8 AM - 10 PM</Text>
+                    </TouchableOpacity>
                   </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Supervising Pharmacist</Text>
-                    <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark }}>{activeStore.pharmacistName || 'SLMC Verified'}</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Hours</Text>
-                    <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: '#10B981' }}>Open 8:00 AM - 10:00 PM</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Fulfillment Mode</Text>
-                    <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.midTeal }}>Counter Pickup & Rx Quote Matching</Text>
+
+                  {/* Uber Eats Style Info Rows */}
+                  <View style={{ gap: 0, backgroundColor: '#FFF', borderRadius: 14, borderWidth: 1, borderColor: '#F1F5F9', overflow: 'hidden' }}>
+                    
+                    {/* Prep Time & Distance Row */}
+                    <View style={{ flexDirection: 'row', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
+                      <View style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#F8FAFC' }}>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginBottom: 4 }}>Prep Time</Text>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark }}>{activeStore.estimatedResponseTime || '15 mins'}</Text>
+                      </View>
+                      <View style={{ flex: 1, paddingLeft: 16 }}>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginBottom: 4 }}>Distance</Text>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark }}>{activeStore.distance}</Text>
+                      </View>
+                    </View>
+
+                    {/* Address Row */}
+                    <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
+                      <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginBottom: 4 }}>Location</Text>
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark }}>{activeStore.address}</Text>
+                    </View>
+
+                    {/* Legal Credentials (Folded) */}
+                    <View style={{ padding: 16, backgroundColor: '#F8FAF7' }}>
+                      <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginBottom: 8 }}>STORE CREDENTIALS</Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textDark }}>NMRA License</Text>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark }}>{activeStore.nmraLicense || 'PH-2024-8891'}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textDark }}>Pharmacist</Text>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark }}>{activeStore.pharmacistName || 'SLMC Verified'}</Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
 
