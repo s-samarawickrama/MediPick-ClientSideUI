@@ -17,6 +17,8 @@ import { AppNavigator } from './src/navigation/AppNavigator';
 import { COLORS } from './src/theme/colors';
 
 import { CartProvider } from './src/context/CartContext';
+import { AuthProvider } from './src/context/AuthContext';
+import { OrderProvider } from './src/context/OrderContext';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -39,8 +41,12 @@ export default function App() {
   }
 
   return (
-    <CartProvider>
-      <AppNavigator />
-    </CartProvider>
+    <AuthProvider>
+      <OrderProvider>
+        <CartProvider>
+          <AppNavigator />
+        </CartProvider>
+      </OrderProvider>
+    </AuthProvider>
   );
 }

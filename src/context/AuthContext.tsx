@@ -7,6 +7,7 @@ interface AuthContextType {
   verifyOtp: (otp: string) => boolean;
   changePhoneNumber: (newPhone: string) => void;
   logout: () => void;
+  addStrike: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     surname: 'Perera',
     email: 'perera@gmail.com',
     isLoggedIn: true,
+    strikes: 0,
   });
 
   const login = (phoneNumber: string, surname: string, email?: string) => {
@@ -25,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       surname,
       email,
       isLoggedIn: false, // Pending OTP
+      strikes: 0,
     });
   };
 
@@ -49,11 +52,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       surname: '',
       email: '',
       isLoggedIn: false,
+      strikes: 0,
     });
   };
 
+  const addStrike = () => setUser(prev => ({ ...prev, strikes: prev.strikes + 1 }));
+
   return (
-    <AuthContext.Provider value={{ user, login, verifyOtp, changePhoneNumber, logout }}>
+    <AuthContext.Provider value={{ user, login, verifyOtp, changePhoneNumber, logout, addStrike }}>
       {children}
     </AuthContext.Provider>
   );

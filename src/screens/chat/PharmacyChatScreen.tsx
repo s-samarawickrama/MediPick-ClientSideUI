@@ -11,51 +11,30 @@ import {
   StatusBar,
   Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, Send, ShieldCheck } from 'lucide-react-native';
+import { ChevronLeft, Send, ShieldCheck, Clock } from 'lucide-react-native';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { useOrders } from '../../context/OrderContext';
 import { MOCK_PHARMACIES } from '../../mock/demoData';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
-
-interface ChatMessage {
-  id: string;
-  role: 'pharmacist' | 'customer';
-  text: string;
-  time: string;
-}
-
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: '1',
-    role: 'pharmacist',
-    text: 'Hello! Your order #MP123456 has been verified and is ready at counter 2.',
-    time: '2:10 PM',
-  },
-  {
-    id: '2',
-    role: 'customer',
-    text: 'Thank you! Can I collect it around 5:30 PM today?',
-    time: '2:14 PM',
-  },
-  {
-    id: '3',
-    role: 'pharmacist',
-    text: 'Yes, we are open until 8:00 PM. Just show your 6-digit OTP code when you arrive.',
-    time: '2:15 PM',
-  },
-];
+type ChatRouteProp = RouteProp<MainStackParamList, 'PharmacyChat'>;
 
 export const PharmacyChatScreen = () => {
   const navigation = useNavigation<Nav>();
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+  const route = useRoute<ChatRouteProp>();
+  const orderId = route.params?.orderId || 'ord-101'; // Fallback for safety
+
+  const { chatMessages, addChatMessage } = useOrders();
+  const messages = chatMessages[orderId] || [];
+
   const [input, setInput] = useState('');
   const scrollRef = useRef<ScrollView>(null);
 
-  const pharmacy = MOCK_PHARMACIES[0]; // MediCare Central Pharmacy
+  const pharmacy = MOCK_PHARMACIES[0]; // Could be dynamic based on order
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
@@ -64,22 +43,22 @@ export const PharmacyChatScreen = () => {
   const sendMessage = () => {
     const text = input.trim();
     if (!text) return;
-    const now = new Date();
-    const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
-    setMessages((prev) => [...prev, { id: String(Date.now()), role: 'customer', text, time }]);
+    
+    addChatMessage(orderId, {
+      senderRole: 'CUSTOMER',
+      senderName: 'You',
+      text,
+    });
+    
     setInput('');
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
 
     setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: String(Date.now() + 1),
-          role: 'pharmacist',
-          text: 'Got it! Your items are safely stored until you arrive.',
-          time,
-        },
-      ]);
+      addChatMessage(orderId, {
+        senderRole: 'PHARMACIST',
+        senderName: 'Pharmacist',
+        text: 'Got it! Your items are safely stored until you arrive.',
+      });
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
     }, 1200);
   };
@@ -118,7 +97,7 @@ export const PharmacyChatScreen = () => {
 
       {/* Order Context Banner */}
       <View style={s.contextBanner}>
-        <Text style={s.contextText}>Order #MP123456 · Pickup Code Ready</Text>
+        <Text style={s.contextText}>Order {orderId} · Pickup Code Ready</Text>
       </View>
 
       {/* Message List */}
@@ -129,7 +108,21 @@ export const PharmacyChatScreen = () => {
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
       >
         {messages.map((msg) => {
-          const isCustomer = msg.role === 'customer';
+          const isCustomer = msg.senderRole === 'CUSTOMER';
+          const isSystem = msg.senderRole === 'SYSTEM';
+
+          if (isSystem) {
+            return (
+              <View key={msg.id} style={s.systemBubbleWrap}>
+                <View style={s.systemBubble}>
+                  <Clock color={COLORS.textMuted} size={12} strokeWidth={2.5} style={{ marginTop: 1 }} />
+                  <Text style={s.systemText}>{msg.text}</Text>
+                </View>
+                <Text style={s.msgTimeCenter}>{msg.timestamp}</Text>
+              </View>
+            );
+          }
+
           return (
             <View key={msg.id} style={[s.bubbleWrap, isCustomer && s.bubbleWrapCustomer]}>
               <View style={[s.bubble, isCustomer ? s.bubbleCustomer : s.bubblePharmacy]}>
@@ -138,7 +131,7 @@ export const PharmacyChatScreen = () => {
                 </Text>
               </View>
               <Text style={[s.msgTime, isCustomer && { textAlign: 'right' }]}>
-                {msg.time}
+                {msg.timestamp}
               </Text>
             </View>
           );
@@ -207,6 +200,16 @@ const s = StyleSheet.create({
   },
 
   msgList: { padding: 16, paddingBottom: 20, gap: 12 },
+  
+  systemBubbleWrap: { alignItems: 'center', marginVertical: 10 },
+  systemBubble: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#F1F5F9', paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 999,
+  },
+  systemText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textMuted },
+  msgTimeCenter: { fontFamily: FONTS.medium, fontSize: 10, color: COLORS.borderSoft, marginTop: 4 },
+
   bubbleWrap: { maxWidth: '82%', alignSelf: 'flex-start' },
   bubbleWrapCustomer: { alignSelf: 'flex-end' },
   bubble: { borderRadius: 16, padding: 13 },

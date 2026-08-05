@@ -8,8 +8,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Store, Clock, Package, Navigation2, FileText, Pill, Receipt, Camera, Star, ChevronRight, Phone, MessageCircle } from 'lucide-react-native';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
-import { MOCK_ORDERS } from '../../mock/demoData';
+import { useOrders } from '../../context/OrderContext';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { Order } from '../../types';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -52,7 +53,7 @@ const ActiveOrderCard = ({
   onPress,
   onAction,
 }: {
-  order: typeof MOCK_ORDERS[0];
+  order: Order;
   onPress: () => void;
   onAction: () => void;
 }) => {
@@ -78,11 +79,7 @@ const ActiveOrderCard = ({
   }
 
   return (
-    <TouchableOpacity 
-      style={[s.activeCard, { backgroundColor: cardBg, borderColor: cardBorder }]} 
-      onPress={onPress} 
-      activeOpacity={0.92} 
-    >
+    <View style={[s.activeCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
       {/* Header Row: Pharmacy info + Live badge */}
       <View style={s.activeCardHeaderRow}>
         <View style={s.pharmAvatar}>
@@ -114,7 +111,6 @@ const ActiveOrderCard = ({
             <Text style={[s.liveBadgeText, { color: COLORS.error }]}>Declined</Text>
           </View>
         )}
-        <ChevronRight color={COLORS.borderSoft} size={20} style={{ marginLeft: 8 }} />
       </View>
 
       {/* Status headline */}
@@ -129,56 +125,54 @@ const ActiveOrderCard = ({
 
       {/* Footer */}
       <View style={s.activeCardFooter}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.footerLabel}>Total</Text>
-            <Text style={s.footerPrice}>LKR {order.totalAmount.toLocaleString()}</Text>
-          </View>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <Text style={s.footerLabel}>Total</Text>
+          <Text style={s.footerPrice}>LKR {(order.totalAmount || 0).toLocaleString()}</Text>
         </View>
 
-        {isReady ? (
-          <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={onAction}>
-            <Text style={[s.footerBtnText, s.btnTealText]}>Show Pickup Code</Text>
-          </TouchableOpacity>
-        ) : isQuote ? (
-          <View style={{ alignItems: 'flex-end', gap: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {/* Always show Details button unless in a state where the primary action is already Details */}
+          {order.state !== 'WAITING_PHARMACY_CONFIRMATION' && order.state !== 'REUPLOAD_REQUESTED' && (
+            <TouchableOpacity style={[s.footerBtn, s.btnLightGray]} onPress={onPress}>
+              <Text style={[s.footerBtnText, s.btnLightGrayText]}>Details</Text>
+            </TouchableOpacity>
+          )}
+
+          {isReady ? (
+            <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={onAction}>
+              <Text style={[s.footerBtnText, s.btnTealText]}>Show Pickup Code</Text>
+            </TouchableOpacity>
+          ) : isQuote ? (
             <TouchableOpacity style={[s.footerBtn, s.btnPurple]} onPress={onAction}>
               <Text style={[s.footerBtnText, s.btnPurpleText]}>Review Quote</Text>
             </TouchableOpacity>
-            <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: '#D97706' }}>Expires in 23h 59m</Text>
-          </View>
-        ) : isCompleted ? (
-          <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={() => showAlert('Added to Cart', 'Items have been added to your cart for reorder.')}>
-            <Text style={[s.footerBtnText, s.btnTealText]}>Reorder</Text>
-          </TouchableOpacity>
-        ) : isCancelled ? (
-          <View />
-        ) : order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
-          <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onPress}>
-            <Text style={[s.footerBtnText, s.btnGrayText]}>View Details</Text>
-          </TouchableOpacity>
-        ) : order.state === 'REUPLOAD_REQUESTED' ? (
-          <View style={{ alignItems: 'flex-end', gap: 4 }}>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onPress}>
-                <Text style={[s.footerBtnText, s.btnGrayText]}>Details</Text>
+          ) : isCompleted ? (
+            <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={() => showAlert('Added to Cart', 'Items have been added to your cart for reorder.')}>
+              <Text style={[s.footerBtnText, s.btnTealText]}>Reorder</Text>
+            </TouchableOpacity>
+          ) : isCancelled ? (
+            <View />
+          ) : order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
+            <TouchableOpacity style={[s.footerBtn, s.btnLightGray]} onPress={onPress}>
+              <Text style={[s.footerBtnText, s.btnLightGrayText]}>Details</Text>
+            </TouchableOpacity>
+          ) : order.state === 'REUPLOAD_REQUESTED' ? (
+            <>
+              <TouchableOpacity style={[s.footerBtn, s.btnLightGray]} onPress={onPress}>
+                <Text style={[s.footerBtnText, s.btnLightGrayText]}>Details</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[s.footerBtn, { backgroundColor: '#EF4444', borderColor: '#EF4444', borderWidth: 1 }]} 
-                onPress={onAction}
-              >
+              <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444', borderColor: '#EF4444', borderWidth: 1 }]} onPress={onAction}>
                 <Text style={[s.footerBtnText, { color: '#FFFFFF' }]}>Re-upload</Text>
               </TouchableOpacity>
-            </View>
-            <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: '#EF4444' }}>Expires in 23h 59m</Text>
-          </View>
-        ) : (
-          <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onAction}>
-            <Text style={[s.footerBtnText, s.btnGrayText]}>Track Order</Text>
-          </TouchableOpacity>
-        )}
+            </>
+          ) : (
+            <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onAction}>
+              <Text style={[s.footerBtnText, s.btnGrayText]}>Track Order</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -193,20 +187,21 @@ export const OrdersScreen = () => {
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
-  const activeOrders    = MOCK_ORDERS.filter((o) => !['COMPLETED', 'CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state));
-  const completedOrders = MOCK_ORDERS.filter((o) => o.state === 'COMPLETED');
-  const cancelledOrders = MOCK_ORDERS.filter((o) => ['CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state));
+  const { orders } = useOrders();
+  const activeOrders    = orders.filter((o) => !['COMPLETED', 'CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state));
+  const completedOrders = orders.filter((o) => o.state === 'COMPLETED');
+  const cancelledOrders = orders.filter((o) => ['CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state));
 
   const displayed =
     tab === 'active' ? activeOrders :
     tab === 'completed' ? completedOrders :
     cancelledOrders;
 
-  const goToOrderDetails = (o: typeof MOCK_ORDERS[0]) => {
+  const goToOrderDetails = (o: Order) => {
     navigation.navigate('OrderDetails', { orderId: o.id });
   };
 
-  const goToTracker = (o: typeof MOCK_ORDERS[0]) => {
+  const goToTracker = (o: Order) => {
     if (['READY_FOR_PICKUP', 'PREPARING', 'CONFIRMED', 'SUBMITTED'].includes(o.state)) {
       navigation.navigate('ReadyForPickup', { orderId: o.id });
     } else if (o.state === 'WAITING_CUSTOMER_CONFIRMATION') {
@@ -384,6 +379,8 @@ const s = StyleSheet.create({
   btnPurpleText: { color: '#FFFFFF' },
   btnGray: { backgroundColor: '#0F172A' },
   btnGrayText: { color: '#FFFFFF' },
+  btnLightGray: { backgroundColor: '#E2E8F0' },
+  btnLightGrayText: { color: COLORS.textDark },
 
   // ── History Cards ─────────────────────────────────────────────
   historyCard: {

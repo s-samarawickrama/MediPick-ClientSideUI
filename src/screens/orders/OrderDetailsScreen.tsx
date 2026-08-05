@@ -11,16 +11,27 @@ import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Button } from '../../components/common/Button';
 import { AlertTriangle } from 'lucide-react-native';
 
+import { useAuth } from '../../context/AuthContext';
+
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'OrderDetails'>;
 
-const showAlert = (title: string, message: string) => {
+const showAlert = (title: string, message: string, buttons?: any[]) => {
   if (Platform.OS === 'web') {
-    window.alert(`${title}\n\n${message}`);
+    if (buttons && buttons.length > 1) {
+       const destructive = buttons.find(b => b.style === 'destructive');
+       if (destructive && destructive.onPress) {
+         if (window.confirm(`${title}\n\n${message}`)) {
+           destructive.onPress();
+         }
+       }
+    } else {
+      window.alert(`${title}\n\n${message}`);
+    }
   } else {
     // @ts-ignore - dynamic require for native Alert
     const { Alert } = require('react-native');
-    Alert.alert(title, message);
+    Alert.alert(title, message, buttons);
   }
 };
 
@@ -28,6 +39,7 @@ export const OrderDetailsScreen = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const opacity = useRef(new Animated.Value(0)).current;
+  const { addStrike } = useAuth();
 
   const orderId = route.params?.orderId;
   const order = MOCK_ORDERS.find((o) => o.id === orderId) ?? MOCK_ORDERS[0];
@@ -42,6 +54,46 @@ export const OrderDetailsScreen = () => {
   const isReupload  = order.state === 'REUPLOAD_REQUESTED';
   const isQuote     = order.state === 'WAITING_CUSTOMER_CONFIRMATION';
   const isActive = !isCompleted && !isCancelled;
+
+  const handleCancelOrder = () => {
+    if (['PREPARING', 'READY_FOR_PICKUP'].includes(order.state)) {
+      showAlert(
+        'Late Cancellation Warning',
+        'You are cancelling an order after the pharmacy has already accepted and started processing it. Proceeding will add 1 Strike to your account. 3 Strikes will limit your ability to pay at the counter.\n\nDo you want to proceed?',
+        [
+          { text: 'Keep Order', style: 'cancel' },
+          { 
+            text: 'Cancel Order (Add Strike)', 
+            style: 'destructive',
+            onPress: () => {
+              if (order) order.state = 'CANCELLED';
+              addStrike();
+              showAlert('Order Cancelled', 'Your order has been cancelled and 1 Strike has been recorded.');
+              navigation.goBack();
+            }
+          }
+        ]
+      );
+    } else {
+      // Normal cancellation
+      showAlert(
+        'Cancel Order',
+        'Are you sure you want to cancel this order? No strike will be recorded.',
+        [
+          { text: 'No', style: 'cancel' },
+          { 
+            text: 'Yes, Cancel', 
+            style: 'destructive',
+            onPress: () => {
+              if (order) order.state = 'CANCELLED';
+              showAlert('Order Cancelled', 'Your order was successfully cancelled.');
+              navigation.goBack();
+            }
+          }
+        ]
+      );
+    }
+  };
 
   return (
     <View style={s.screen}>
@@ -240,26 +292,36 @@ export const OrderDetailsScreen = () => {
         {/* Actions */}
         <View style={s.actionsWrapper}>
           {isActive ? (
-            order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
-              <Button 
-                title="Waiting for Pharmacy Quote..." 
-                variant="secondary" 
-                onPress={() => {}} 
-                disabled 
+            <>
+              {order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
+                <Button 
+                  title="Waiting for Pharmacy Quote..." 
+                  variant="secondary" 
+                  onPress={() => {}} 
+                  disabled 
+                />
+              ) : (
+                <Button 
+                  title={order.state === 'WAITING_CUSTOMER_CONFIRMATION' ? "Review Quotation" : "Track Order Status"}
+                  variant="primary" 
+                  onPress={() => {
+                    if (order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
+                      navigation.navigate('Quotation', { orderId: order.id });
+                    } else {
+                      navigation.navigate('ReadyForPickup', { orderId: order.id });
+                    }
+                  }} 
+                />
+              )}
+              
+              <Button
+                title="Cancel Order"
+                variant="ghost"
+                onPress={handleCancelOrder}
+                textStyle={{ color: COLORS.error }}
+                style={{ marginTop: 12 }}
               />
-            ) : (
-              <Button 
-                title={order.state === 'WAITING_CUSTOMER_CONFIRMATION' ? "Review Quotation" : "Track Order Status"}
-                variant="primary" 
-                onPress={() => {
-                  if (order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
-                    navigation.navigate('Quotation', { orderId: order.id });
-                  } else {
-                    navigation.navigate('ReadyForPickup', { orderId: order.id });
-                  }
-                }} 
-              />
-            )
+            </>
           ) : isCompleted ? (
             <Button title="Reorder Items" variant="primary" onPress={() => {}} />
           ) : null}

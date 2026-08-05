@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Animated, StatusBar, Alert
+  TouchableOpacity, Animated, StatusBar, Alert, Platform
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +16,23 @@ import { MainStackParamList } from '../../navigation/MainNavigator';
 
 type Nav   = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'Quotation'>;
+
+const showAlert = (title: string, message: string, buttons?: any[]) => {
+  if (Platform.OS === 'web') {
+    if (buttons && buttons.length > 1) {
+       const destructive = buttons.find(b => b.style === 'destructive');
+       if (destructive && destructive.onPress) {
+         if (window.confirm(`${title}\n\n${message}`)) {
+           destructive.onPress();
+         }
+       }
+    } else {
+      window.alert(`${title}\n\n${message}`);
+    }
+  } else {
+    Alert.alert(title, message, buttons);
+  }
+};
 
 export const QuotationScreen = () => {
   const navigation = useNavigation<Nav>();
@@ -40,11 +57,24 @@ export const QuotationScreen = () => {
   };
 
   const handleDeclineOrder = () => {
-    if (order && order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
-      order.state = 'REJECTED';
-      order.rejectReason = 'Customer declined the quotation offer.';
-    }
-    navigation.goBack();
+    showAlert(
+      'Decline Offer',
+      'Are you sure you want to decline this quote? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Decline Quote', 
+          style: 'destructive',
+          onPress: () => {
+            if (order && order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
+              order.state = 'REJECTED';
+              order.rejectReason = 'Customer declined the quotation offer.';
+            }
+            navigation.goBack();
+          }
+        }
+      ]
+    );
   };
 
   // Create an offer dynamically from the order data

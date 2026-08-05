@@ -6,17 +6,19 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ShieldCheck, Phone, Mail, ChevronRight, LogOut, Bell, HelpCircle, FileText, Lock, Heart, MapPin, CreditCard, X } from 'lucide-react-native';
+import { ShieldCheck, Phone, Mail, ChevronRight, LogOut, Bell, HelpCircle, FileText, Lock, Heart, MapPin, CreditCard, X, AlertTriangle } from 'lucide-react-native';
 import { Button } from '../../components/common/Button';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { useAuth } from '../../context/AuthContext';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
 export const ProfileScreen = () => {
   const navigation = useNavigation<Nav>();
   const opacity = useRef(new Animated.Value(0)).current;
+  const { user } = useAuth();
 
   const [phone, setPhone]                 = useState('+1 (555) 019-2834');
   const [newPhone, setNewPhone]           = useState('');
@@ -78,13 +80,21 @@ export const ProfileScreen = () => {
 
             <View style={{ flex: 1 }}>
               <View style={s.nameRow}>
-                <Text style={s.userName}>Perera</Text>
+                <Text style={s.userName}>{user.surname || 'Perera'}</Text>
                 <View style={s.verifiedTag}>
                   <ShieldCheck color={COLORS.midTeal} size={13} strokeWidth={2.5} />
                   <Text style={s.verifiedText}>Verified</Text>
                 </View>
               </View>
-              <Text style={s.userPhone}>{phone}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                <Text style={s.userPhone}>{user.phoneNumber || phone}</Text>
+                {user.strikes > 0 && (
+                  <View style={s.strikeTag}>
+                    <AlertTriangle color={COLORS.error} size={12} strokeWidth={2.5} />
+                    <Text style={s.strikeText}>{user.strikes} Strike{user.strikes > 1 ? 's' : ''}</Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
         </View>
@@ -312,6 +322,12 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: '#D6EDA0',
   },
   verifiedText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  strikeTag: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
+    borderWidth: 1, borderColor: '#FECACA',
+  },
+  strikeText: { fontFamily: FONTS.bold, fontSize: 10, color: COLORS.error },
 
   sectionWrap: { gap: 8 },
   sectionTitle: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textMuted, letterSpacing: 0.8 },

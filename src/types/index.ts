@@ -3,6 +3,7 @@ export interface CustomerUser {
   surname: string;
   email?: string;
   isLoggedIn: boolean;
+  strikes: number;
 }
 
 export type FSMOrderState =

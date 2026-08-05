@@ -14,10 +14,13 @@ import { RateExperienceScreen } from '../../components/common/RateExperienceScre
 import { StripePaymentModal } from '../../components/common/StripePaymentModal';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
+import { useOrders } from '../../context/OrderContext';
 import { MOCK_ORDERS } from '../../mock/demoData';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 
 import { PaymentMethodSelector } from '../../components/common/PaymentMethodSelector';
+
+import { useAuth } from '../../context/AuthContext';
 
 type Nav   = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'ReadyForPickup'>;
@@ -28,7 +31,8 @@ export const ReadyForPickupScreen = () => {
   
   console.log('[ReadyForPickupScreen] Rendered. route params:', route.params);
   
-  const order      = MOCK_ORDERS.find((o) => o.id === route.params?.orderId) ?? MOCK_ORDERS[1];
+  const { orders, requestPickupExtension } = useOrders();
+  const order      = orders.find((o) => o.id === route.params?.orderId) ?? orders[1];
   
   console.log('[ReadyForPickupScreen] Found order:', order?.id);
 
@@ -38,6 +42,8 @@ export const ReadyForPickupScreen = () => {
   const [isPaidOnline, setIsPaidOnline]       = useState<boolean>(route.params?.isPaidOnline ?? false);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [showRateModal, setShowRateModal]     = useState(false);
+
+  const { addStrike } = useAuth();
 
   const opacity   = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.95)).current;
@@ -75,6 +81,7 @@ export const ReadyForPickupScreen = () => {
           style: 'destructive',
           onPress: () => {
             if (order) order.state = 'CANCELLED';
+            addStrike();
             Alert.alert('Order Cancelled', 'Your order has been cancelled and 1 Strike has been recorded.', [
               { text: 'OK', onPress: () => navigation.goBack() }
             ]);
@@ -85,7 +92,8 @@ export const ReadyForPickupScreen = () => {
   };
 
   const handleExtendPickup = () => {
-    Alert.alert('Extension Requested', 'Your 24-hour pickup window has been successfully extended.');
+    requestPickupExtension(order.id);
+    navigation.navigate('PharmacyChat', { orderId: order.id });
   };
 
   const otp = order.pickupOtp ?? '849201';
@@ -275,6 +283,16 @@ export const ReadyForPickupScreen = () => {
             </>
           )}
         </View>
+
+        {/* Actions */}
+        {orderState === 'READY' && (
+          <Button
+            title="Request Time Extension"
+            variant="secondary"
+            onPress={handleExtendPickup}
+            style={{ marginTop: 6 }}
+          />
+        )}
 
         {/* Rate & Report */}
         <Button
