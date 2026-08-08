@@ -24,6 +24,7 @@ import {
 } from 'lucide-react-native';
 import { PrescriptionHeroGraphic, CategoryTileGraphic } from '../../components/common/HeroIllustrations';
 import { useCart } from '../../context/CartContext';
+import { MedicineCard } from '../../components/common/MedicineCard';
 import { Button } from '../../components/common/Button';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
@@ -379,53 +380,13 @@ export const HomeScreen = () => {
             const qty = cartItems.find(c => c.medicine.id === med.id)?.quantity || 0;
 
             return (
-              <Pressable
+              <MedicineCard
                 key={med.id}
-                style={({ pressed }) => [s.productCard, pressed && { opacity: 0.94 }]}
+                med={med}
                 onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: med.category || 'All' } })}
-              >
-                <View style={s.productImgBox}>
-                  {med.image ? (
-                    <Image source={med.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
-                  ) : (
-                    <View style={s.productPillGraphic}>
-                      <ShoppingBag color={COLORS.midTeal} size={24} strokeWidth={2} />
-                    </View>
-                  )}
-                  {disc > 0 && (
-                    <View style={s.discBadge}>
-                      <Text style={s.discText}>{disc}% OFF</Text>
-                    </View>
-                  )}
-                  {med.isRxRequired && (
-                    <View style={s.rxBadge}>
-                      <Text style={s.rxBadgeText}>Prescription Needed</Text>
-                    </View>
-                  )}
-                </View>
-
-                <Text style={s.prodName} numberOfLines={1}>{med.name}</Text>
-                <Text style={s.prodGeneric} numberOfLines={1}>{med.genericName}</Text>
-
-                <View style={s.prodFooter}>
-                  <View>
-                    <Text style={s.fromText}>From</Text>
-                    <Text style={s.prodPrice}>LKR {med.pharmacyPrice}</Text>
-                  </View>
-
-                  {/* Uber Eats Rule: Must Select Pharmacy Store First */}
-                  <TouchableOpacity
-                    style={s.storeCountBadge}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } });
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={s.storeCountText}>Select Store</Text>
-                  </TouchableOpacity>
-                </View>
-              </Pressable>
+                isGlobal={true}
+                onStoreSelectPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}
+              />
             );
           })}
         </View>

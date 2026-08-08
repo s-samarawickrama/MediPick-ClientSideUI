@@ -6,12 +6,12 @@ import { ChevronLeft, MapPin, Receipt, ShieldCheck, CheckCircle2, XCircle, Clock
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
+import { useAuth } from '../../context/AuthContext';
+import { useOrders } from '../../context/OrderContext';
 import { MOCK_ORDERS } from '../../mock/demoData';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Button } from '../../components/common/Button';
 import { AlertTriangle } from 'lucide-react-native';
-
-import { useAuth } from '../../context/AuthContext';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'OrderDetails'>;
@@ -40,9 +40,10 @@ export const OrderDetailsScreen = () => {
   const route = useRoute<Route>();
   const opacity = useRef(new Animated.Value(0)).current;
   const { addStrike } = useAuth();
+  const { orders, cancelOrder } = useOrders();
 
   const orderId = route.params?.orderId;
-  const order = MOCK_ORDERS.find((o) => o.id === orderId) ?? MOCK_ORDERS[0];
+  const order = orders.find((o) => o.id === orderId) ?? orders[0];
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
@@ -53,6 +54,7 @@ export const OrderDetailsScreen = () => {
   const isCancelled = ['CANCELLED', 'CLOSED', 'REJECTED'].includes(order.state);
   const isReupload  = order.state === 'REUPLOAD_REQUESTED';
   const isQuote     = order.state === 'WAITING_CUSTOMER_CONFIRMATION';
+  const isIssue     = order.state === 'ISSUE_REPORTED';
   const isActive = !isCompleted && !isCancelled;
 
   const handleCancelOrder = () => {
@@ -66,7 +68,7 @@ export const OrderDetailsScreen = () => {
             text: 'Cancel Order (Add Strike)', 
             style: 'destructive',
             onPress: () => {
-              if (order) order.state = 'CANCELLED';
+              if (order) cancelOrder(order.id);
               addStrike();
               showAlert('Order Cancelled', 'Your order has been cancelled and 1 Strike has been recorded.');
               navigation.goBack();
@@ -85,7 +87,7 @@ export const OrderDetailsScreen = () => {
             text: 'Yes, Cancel', 
             style: 'destructive',
             onPress: () => {
-              if (order) order.state = 'CANCELLED';
+              if (order) cancelOrder(order.id);
               showAlert('Order Cancelled', 'Your order was successfully cancelled.');
               navigation.goBack();
             }
@@ -121,6 +123,25 @@ export const OrderDetailsScreen = () => {
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Issue Reported Banner */}
+        {isIssue && (
+          <View style={{
+            flexDirection: 'row', alignItems: 'center', gap: 12,
+            backgroundColor: '#FEF2F2', borderRadius: 16, padding: 14,
+            borderWidth: 1, borderColor: '#FECACA', marginBottom: 16,
+          }}>
+            <AlertTriangle color="#EF4444" size={24} strokeWidth={2} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: '#B91C1C' }}>
+                Issue Reported
+              </Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginTop: 1, opacity: 0.9 }}>
+                The pharmacy is reviewing your issue and will respond shortly via chat.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Rejection / Reupload Banner */}
         {(isCancelled || isReupload) && order.rejectReason && (
           <View style={{
@@ -300,6 +321,13 @@ export const OrderDetailsScreen = () => {
                   onPress={() => {}} 
                   disabled 
                 />
+              ) : isIssue ? (
+                <Button 
+                  title="Message Pharmacy"
+                  variant="primary" 
+                  onPress={() => navigation.navigate('PharmacyChat', { orderId: order.id })} 
+                  style={{ backgroundColor: '#EF4444' }}
+                />
               ) : (
                 <Button 
                   title={order.state === 'WAITING_CUSTOMER_CONFIRMATION' ? "Review Quotation" : "Track Order Status"}
@@ -314,16 +342,28 @@ export const OrderDetailsScreen = () => {
                 />
               )}
               
-              <Button
-                title="Cancel Order"
-                variant="ghost"
-                onPress={handleCancelOrder}
-                textStyle={{ color: COLORS.error }}
-                style={{ marginTop: 12 }}
-              />
+              {!isIssue && (
+                <Button
+                  title="Cancel Order"
+                  variant="ghost"
+                  onPress={handleCancelOrder}
+                  textStyle={{ color: COLORS.error }}
+                  style={{ marginTop: 12 }}
+                />
+              )}
             </>
           ) : isCompleted ? (
-            <Button title="Reorder Items" variant="primary" onPress={() => {}} />
+            <>
+              <Button title="Reorder Items" variant="primary" onPress={() => {}} />
+              <Button
+                title="Report an Issue"
+                variant="ghost"
+                icon={<AlertTriangle color={COLORS.error} size={16} strokeWidth={2} />}
+                onPress={() => navigation.navigate('ReportIssue', { orderId: order.id })}
+                textStyle={{ color: COLORS.error }}
+                style={{ marginTop: 8 }}
+              />
+            </>
           ) : null}
         </View>
 

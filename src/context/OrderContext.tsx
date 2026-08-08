@@ -12,6 +12,8 @@ interface OrderContextType {
   reportIssue: (orderId: string, issueType: string, description: string) => void;
   setActiveOrder: (order: Order | null) => void;
   addChatMessage: (orderId: string, message: Omit<ChatMessage, 'id' | 'orderId' | 'timestamp'>) => void;
+  completeOrder: (orderId: string) => void;
+  cancelOrder: (orderId: string) => void;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -148,6 +150,28 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const completeOrder = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((ord) => {
+        if (ord.id === orderId) {
+          return { ...ord, state: 'COMPLETED' };
+        }
+        return ord;
+      })
+    );
+  };
+
+  const cancelOrder = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((ord) => {
+        if (ord.id === orderId) {
+          return { ...ord, state: 'CANCELLED' };
+        }
+        return ord;
+      })
+    );
+  };
+
   return (
     <OrderContext.Provider
       value={{
@@ -160,6 +184,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         reportIssue,
         setActiveOrder,
         addChatMessage,
+        completeOrder,
+        cancelOrder,
       }}
     >
       {children}

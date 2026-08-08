@@ -8,24 +8,35 @@ import { FONTS } from '../../theme/typography';
 export const PrescriptionHeroGraphic = () => (
   <View style={s.rxGraphicWrap}>
     <View style={s.rxGlowBg} />
-    <View style={s.rxDocTile}>
-      <View style={s.rxHeaderRow}>
-        <View style={s.rxBadgeCircle}>
-          <Pill color={COLORS.midTeal} size={20} strokeWidth={2.2} />
-        </View>
-        <Sparkles color="#F59E0B" size={16} strokeWidth={2.5} />
+    
+    {/* High-end 3D Clay Prescription Icon */}
+    <View style={s.clayIconWrap}>
+      <Image 
+        source={require('../../../assets/images/user_clay_rx_latest.jpg')} 
+        style={{ width: '100%', height: '100%', transform: [{ scale: 1.45 }] }} 
+        resizeMode="cover" 
+      />
+    </View>
+
+    {/* Floating 3D AI Verified Badge overlapping bottom-right corner */}
+    <View style={s.rxCheckBadgeFloating}>
+      {/* Real Clay Texture Background */}
+      <Image 
+        source={require('../../../assets/images/clay_pill_blank.png')} 
+        style={[StyleSheet.absoluteFillObject, { transform: [{ scale: 1.5 }] }]} 
+        resizeMode="cover" 
+      />
+      
+      <View style={s.clayShieldWrap}>
+        <Image 
+          source={require('../../../assets/images/clay_shield.png')} 
+          style={{ width: '100%', height: '100%', transform: [{ scale: 1.4 }] }} 
+          resizeMode="cover" 
+        />
       </View>
-
-      <View style={s.rxLineLong} />
-      <View style={s.rxLineMedium} />
-
-      {/* Floating 3D AI Verified Badge overlapping bottom-right corner */}
-      <View style={s.rxCheckBadgeFloating}>
-        <Shield color={COLORS.midTeal} size={11} strokeWidth={2.8} />
-        <View>
-          <Text style={s.badgeLabelTop}>AI</Text>
-          <Text style={s.badgeLabelBottom}>Verified</Text>
-        </View>
+      <View>
+        <Text style={s.badgeLabelTop}>AI</Text>
+        <Text style={s.badgeLabelBottom}>Verified</Text>
       </View>
     </View>
   </View>
@@ -63,79 +74,52 @@ const s = StyleSheet.create({
     backgroundColor: COLORS.limeWhisper,
     opacity: 0.9,
   },
-  rxDocTile: {
-    width: 76,
+  clayIconWrap: {
+    width: 86,
     height: 86,
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 10,
-    gap: 7,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    position: 'relative',
-  },
-  rxHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  rxBadgeCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: COLORS.limeWhisper,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rxLineLong: {
-    height: 4,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 2,
-    width: '100%',
-  },
-  rxLineMedium: {
-    height: 4,
-    backgroundColor: '#CBD5E1',
-    borderRadius: 2,
-    width: '65%',
+    backgroundColor: '#EDF4DE',
+    overflow: 'hidden',
   },
 
   // Floating Glassmorphic AI Verified Pill Badge
   rxCheckBadgeFloating: {
     position: 'absolute',
-    bottom: -10,
-    right: -10,
+    bottom: -8,
+    right: -8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#F0FDF4',
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
+    gap: 4,
+    backgroundColor: '#F0FDF4', 
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF', 
     shadowColor: '#059669',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
     elevation: 5,
+  },
+  clayShieldWrap: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    overflow: 'hidden',
   },
   badgeLabelTop: {
     fontFamily: 'Outfit_900Black',
-    fontSize: 9,
+    fontSize: 8,
     color: COLORS.midTeal,
-    lineHeight: 10,
+    lineHeight: 9,
   },
   badgeLabelBottom: {
     fontFamily: 'PlusJakartaSans_700Bold',
-    fontSize: 9,
+    fontSize: 8,
     color: COLORS.midTeal,
-    lineHeight: 10,
+    lineHeight: 9,
   },
 
   // Category Tiles

@@ -31,7 +31,7 @@ export const ReadyForPickupScreen = () => {
   
   console.log('[ReadyForPickupScreen] Rendered. route params:', route.params);
   
-  const { orders, requestPickupExtension } = useOrders();
+  const { orders, requestPickupExtension, cancelOrder, completeOrder } = useOrders();
   const order      = orders.find((o) => o.id === route.params?.orderId) ?? orders[1];
   
   console.log('[ReadyForPickupScreen] Found order:', order?.id);
@@ -80,7 +80,7 @@ export const ReadyForPickupScreen = () => {
           text: 'Cancel Order (Add Strike)', 
           style: 'destructive',
           onPress: () => {
-            if (order) order.state = 'CANCELLED';
+            cancelOrder(order.id);
             addStrike();
             Alert.alert('Order Cancelled', 'Your order has been cancelled and 1 Strike has been recorded.', [
               { text: 'OK', onPress: () => navigation.goBack() }
@@ -286,12 +286,31 @@ export const ReadyForPickupScreen = () => {
 
         {/* Actions */}
         {orderState === 'READY' && (
-          <Button
-            title="Request Time Extension"
-            variant="secondary"
-            onPress={handleExtendPickup}
-            style={{ marginTop: 6 }}
-          />
+          <>
+            {isPaidOnline ? (
+              <Button
+                title="Request Time Extension"
+                variant="secondary"
+                onPress={handleExtendPickup}
+                style={{ marginTop: 6 }}
+              />
+            ) : (
+              <Text style={{ textAlign: 'center', marginTop: 12, marginBottom: 12, fontSize: 12, color: COLORS.textMuted, paddingHorizontal: 10 }}>
+                Cannot extend pickup time automatically for unpaid orders. Message the pharmacy to request an extension.
+              </Text>
+            )}
+            
+            {/* Dev Mock Complete Button */}
+            <Button
+              title="(Dev) Mock Pickup Complete"
+              variant="primary"
+              onPress={() => {
+                completeOrder(order.id);
+                navigation.navigate('Orders');
+              }}
+              style={{ marginTop: 12 }}
+            />
+          </>
         )}
 
         {/* Rate & Report */}
@@ -303,38 +322,14 @@ export const ReadyForPickupScreen = () => {
           style={{ marginTop: 6 }}
         />
 
-        <Button
-          title="Report an Issue"
-          variant="ghost"
-          icon={<AlertTriangle color={COLORS.error} size={16} strokeWidth={2} />}
-          onPress={() => navigation.navigate('ReportIssue', { orderId: order.id })}
-          textStyle={{ color: COLORS.error }}
-        />
-
-        {orderState === 'PREPARING' && (
+        {(orderState === 'PREPARING' || orderState === 'READY') && (
           <Button
             title="Cancel Order"
             variant="ghost"
             onPress={handleCancelOrder}
             textStyle={{ color: COLORS.error }}
-            style={{ marginTop: 24, borderColor: COLORS.error, borderWidth: 1 }}
-          />
-        )}
-
-        {orderState === 'READY' && isPaidOnline && (
-          <Button
-            title="Extend Pickup Time (24h)"
-            variant="outline"
-            icon={<Clock color={COLORS.midTeal} size={16} strokeWidth={2} />}
-            onPress={handleExtendPickup}
             style={{ marginTop: 24 }}
           />
-        )}
-
-        {orderState === 'READY' && !isPaidOnline && (
-          <Text style={{ textAlign: 'center', marginTop: 32, fontSize: 12, color: COLORS.textMuted, paddingHorizontal: 20 }}>
-            Cannot extend pickup time automatically for unpaid orders. Please message the pharmacy if you need an extension.
-          </Text>
         )}
       </Animated.ScrollView>
 

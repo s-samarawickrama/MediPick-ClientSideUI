@@ -1,0 +1,209 @@
+import React from 'react';
+import { View, Text, StyleSheet, Image, Pressable, TouchableOpacity } from 'react-native';
+import { ShoppingBag, Store } from 'lucide-react-native';
+import { COLORS } from '../../theme/colors';
+import { FONTS } from '../../theme/typography';
+import { MedicineItem as Medicine } from '../../types';
+
+interface MedicineCardProps {
+  med: Medicine;
+  onPress: () => void;
+  
+  // If true, shows "Starting from" and the "Available at X stores" button
+  isGlobal?: boolean;
+  onStoreSelectPress?: () => void;
+  
+  // If provided, renders in place of the store select button (e.g. for qty stepper)
+  actionComponent?: React.ReactNode;
+}
+
+export const MedicineCard: React.FC<MedicineCardProps> = ({
+  med,
+  onPress,
+  isGlobal = true,
+  onStoreSelectPress,
+  actionComponent
+}) => {
+  const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
+
+  return (
+    <Pressable
+      style={({ pressed }) => [s.productCard, pressed && { opacity: 0.94 }]}
+      onPress={onPress}
+    >
+      <View style={s.productImgBox}>
+        {med.image ? (
+          <Image source={med.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
+        ) : (
+          <ShoppingBag color={COLORS.midTeal} size={28} strokeWidth={2} />
+        )}
+        {disc > 0 && (
+          <View style={s.discTag}>
+            <Text style={s.discTagText}>{disc}% OFF</Text>
+          </View>
+        )}
+        <View style={{ position: 'absolute', bottom: 8, left: 8, gap: 4, alignItems: 'flex-start' }}>
+          {med.isRxRequired && (
+            <View style={s.rxBadge}>
+              <Text style={s.rxBadgeText}>Prescription Needed</Text>
+            </View>
+          )}
+          {!med.inStock && (
+            <View style={s.oosBadge}>
+              <Text style={s.oosBadgeText}>Out of Stock</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      <Text style={s.prodName} numberOfLines={1}>{med.name}</Text>
+      <Text style={s.prodGeneric} numberOfLines={1}>
+        {med.genericName && med.genericName !== 'N/A' ? `${med.genericName} · ` : ''}{med.dosage}
+      </Text>
+
+      {isGlobal ? (
+        <>
+          <View style={[s.cardFooter, { marginTop: 4 }]}>
+            <View style={{ gap: 2 }}>
+              <Text style={s.prodPricePrefix}>Starting from</Text>
+              <Text style={s.prodPrice}>LKR {med.pharmacyPrice}</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={s.selectStoreBadgeBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              onStoreSelectPress?.();
+            }}
+            activeOpacity={0.85}
+          >
+            <Store color={COLORS.midTeal} size={12} strokeWidth={2.2} />
+            <Text style={s.selectStoreBadgeText}>
+              {med.availableAtPharmacyIds?.length ? `Available at ${med.availableAtPharmacyIds.length} stores` : 'Unavailable'}
+            </Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <View style={s.cardFooter}>
+          <View>
+            <Text style={s.prodPrice}>LKR {med.pharmacyPrice}</Text>
+            {med.mrpPrice > med.pharmacyPrice && (
+              <Text style={s.prodMrp}>LKR {med.mrpPrice}</Text>
+            )}
+          </View>
+
+          {actionComponent}
+        </View>
+      )}
+    </Pressable>
+  );
+};
+
+const s = StyleSheet.create({
+  productCard: {
+    width: '47.5%',
+    backgroundColor: COLORS.surfaceWhite,
+    borderRadius: 20,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: COLORS.borderSoft,
+    gap: 4,
+  },
+  productImgBox: {
+    height: 140,
+    backgroundColor: COLORS.limeWhisper,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    marginBottom: 6,
+    padding: 6,
+  },
+  discTag: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: COLORS.midTeal,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  discTagText: {
+    fontFamily: FONTS.extrabold,
+    fontSize: 9,
+    color: '#FFFFFF',
+  },
+  rxBadge: {
+    backgroundColor: '#F5D7FF',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  rxBadgeText: {
+    fontFamily: FONTS.bold,
+    fontSize: 9,
+    color: COLORS.deepPlum,
+  },
+  oosBadge: {
+    backgroundColor: COLORS.borderSoft,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  oosBadgeText: {
+    fontFamily: FONTS.bold,
+    fontSize: 9,
+    color: COLORS.textMuted,
+  },
+  prodName: {
+    fontFamily: FONTS.bold,
+    fontSize: 14,
+    color: COLORS.textDark,
+  },
+  prodGeneric: {
+    fontFamily: FONTS.medium,
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginTop: 4,
+  },
+  prodPricePrefix: {
+    fontFamily: FONTS.medium,
+    fontSize: 10,
+    color: COLORS.textMuted,
+  },
+  prodPrice: {
+    fontFamily: FONTS.black,
+    fontSize: 14,
+    color: COLORS.textDark,
+  },
+  prodMrp: {
+    fontFamily: FONTS.regular,
+    fontSize: 11,
+    color: COLORS.textMuted,
+    textDecorationLine: 'line-through',
+  },
+  selectStoreBadgeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: COLORS.limeWhisper,
+    borderRadius: 10,
+    paddingVertical: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#D6EDA0',
+  },
+  selectStoreBadgeText: {
+    fontFamily: FONTS.bold,
+    fontSize: 11,
+    color: COLORS.midTeal,
+  },
+});

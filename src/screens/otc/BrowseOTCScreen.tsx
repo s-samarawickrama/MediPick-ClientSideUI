@@ -14,6 +14,7 @@ import { MedicineItem as Medicine, Pharmacy } from '../../types';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MapPreview } from '../../components/MapPreview';
 import { useCart } from '../../context/CartContext';
+import { MedicineCard } from '../../components/common/MedicineCard';
 
 const FUN_3D_BAG = require('../../../assets/fun_3d_bag.png');
 
@@ -412,48 +413,13 @@ export const BrowseOTCScreen = () => {
               const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
 
               return (
-                <Pressable
+                <MedicineCard
                   key={med.id}
-                  style={({ pressed }) => [s.productCard, pressed && { opacity: 0.94 }]}
+                  med={med}
                   onPress={() => setSelectedMedModal(med)}
-                >
-                  <View style={s.productImgBox}>
-                    {med.image ? (
-                      <Image source={med.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
-                    ) : (
-                      <ShoppingBag color={COLORS.midTeal} size={28} strokeWidth={2} />
-                    )}
-                    {disc > 0 && (
-                      <View style={s.discTag}>
-                        <Text style={s.discTagText}>{disc}% OFF</Text>
-                      </View>
-                    )}
-                    <View style={{ position: 'absolute', bottom: 8, left: 8, gap: 4, alignItems: 'flex-start' }}>
-                      {med.isRxRequired && (
-                        <View style={s.rxBadge}>
-                          <Text style={s.rxBadgeText}>Prescription Needed</Text>
-                        </View>
-                      )}
-                      {!med.inStock && (
-                        <View style={s.oosBadge}>
-                          <Text style={s.oosBadgeText}>Out of Stock</Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-
-                  <Text style={s.prodName} numberOfLines={1}>{med.name}</Text>
-                  <Text style={s.prodGeneric} numberOfLines={1}>{med.genericName} · {med.dosage}</Text>
-
-                  <View style={s.cardFooter}>
-                    <View>
-                      <Text style={s.prodPrice}>LKR {med.pharmacyPrice}</Text>
-                      <Text style={s.prodMrp}>LKR {med.mrpPrice}</Text>
-                    </View>
-
-                    {renderQtyStepper(med)}
-                  </View>
-                </Pressable>
+                  isGlobal={false}
+                  actionComponent={renderQtyStepper(med)}
+                />
               );
             })}
           </View>
@@ -513,9 +479,16 @@ export const BrowseOTCScreen = () => {
                     <Text style={[s.modalAddBtnText, { color: COLORS.textMuted }]}>Out of Stock</Text>
                   </View>
                 ) : selectedMedModal.isRxRequired ? (
-                  <View style={[s.modalAddBtn, { backgroundColor: COLORS.limeWhisper }]}>
-                    <Text style={[s.modalAddBtnText, { color: COLORS.midTeal }]}>Prescription Required</Text>
-                  </View>
+                  <TouchableOpacity
+                    style={[s.modalAddBtn, { backgroundColor: COLORS.limeWhisper }]}
+                    onPress={() => {
+                      navigation.navigate('UploadPrescription', { pharmacyId: activeStore.id, pharmacyName: activeStore.name });
+                      setSelectedMedModal(null);
+                    }}
+                    activeOpacity={0.88}
+                  >
+                    <Text style={[s.modalAddBtnText, { color: COLORS.midTeal }]}>Prescription Required - Upload</Text>
+                  </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
                     style={s.modalAddBtn}
@@ -768,62 +741,16 @@ export const BrowseOTCScreen = () => {
               const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
 
               return (
-                <Pressable
+                <MedicineCard
                   key={med.id}
-                  style={({ pressed }) => [s.productCard, pressed && { opacity: 0.94 }]}
+                  med={med}
                   onPress={() => setSelectedMedModal(med)}
-                >
-                  <View style={s.productImgBox}>
-                    {med.image ? (
-                      <Image source={med.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
-                    ) : (
-                      <ShoppingBag color={COLORS.midTeal} size={28} strokeWidth={2} />
-                    )}
-                    {disc > 0 && (
-                      <View style={s.discTag}>
-                        <Text style={s.discTagText}>{disc}% OFF</Text>
-                      </View>
-                    )}
-                    <View style={{ position: 'absolute', bottom: 8, left: 8, gap: 4, alignItems: 'flex-start' }}>
-                      {med.isRxRequired && (
-                        <View style={s.rxBadge}>
-                          <Text style={s.rxBadgeText}>Prescription Needed</Text>
-                        </View>
-                      )}
-                      {!med.inStock && (
-                        <View style={s.oosBadge}>
-                          <Text style={s.oosBadgeText}>Out of Stock</Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-
-                  <Text style={s.prodName} numberOfLines={1}>{med.name}</Text>
-                  <Text style={s.prodGeneric} numberOfLines={1}>
-                    {med.genericName && med.genericName !== 'N/A' ? `${med.genericName} · ` : ''}{med.dosage}
-                  </Text>
-
-                  <View style={s.cardFooter}>
-                    <View style={{ gap: 2 }}>
-                      <Text style={s.prodPricePrefix}>Starting from</Text>
-                      <Text style={s.prodPrice}>LKR {med.pharmacyPrice}</Text>
-                    </View>
-                  </View>
-
-                  <TouchableOpacity
-                    style={s.selectStoreBadgeBtn}
-                    onPress={() => {
-                      setSelectedMedForStores(med);
-                      setMode('pharmacies');
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <Store color={COLORS.midTeal} size={12} strokeWidth={2.2} />
-                    <Text style={s.selectStoreBadgeText}>
-                      {med.availableAtPharmacyIds?.length ? `Available at ${med.availableAtPharmacyIds.length} stores` : 'Unavailable'}
-                    </Text>
-                  </TouchableOpacity>
-                </Pressable>
+                  isGlobal={true}
+                  onStoreSelectPress={() => {
+                    setSelectedMedForStores(med);
+                    setMode('pharmacies');
+                  }}
+                />
               );
             })}
             </View>
@@ -918,7 +845,18 @@ export const BrowseOTCScreen = () => {
               <Text style={s.descBody}>{(selectedMedModal as any).description || 'Fast-acting medicine supplied by licensed partner pharmacies.'}</Text>
 
               {/* Modal Action Button */}
-              {!activeStore ? (
+              {selectedMedModal.isRxRequired ? (
+                <TouchableOpacity
+                  style={[s.modalAddBtn, { backgroundColor: COLORS.limeWhisper }]}
+                  onPress={() => {
+                    navigation.navigate('SelectPharmacy');
+                    setSelectedMedModal(null);
+                  }}
+                  activeOpacity={0.88}
+                >
+                  <Text style={[s.modalAddBtnText, { color: COLORS.midTeal }]}>Prescription Required - Select Store</Text>
+                </TouchableOpacity>
+              ) : !activeStore ? (
                 <TouchableOpacity
                   style={s.modalAddBtn}
                   onPress={() => {
@@ -933,10 +871,6 @@ export const BrowseOTCScreen = () => {
               ) : !selectedMedModal.inStock ? (
                 <View style={[s.modalAddBtn, { backgroundColor: COLORS.borderSoft }]}>
                   <Text style={[s.modalAddBtnText, { color: COLORS.textMuted }]}>Out of Stock</Text>
-                </View>
-              ) : selectedMedModal.isRxRequired ? (
-                <View style={[s.modalAddBtn, { backgroundColor: COLORS.limeWhisper }]}>
-                  <Text style={[s.modalAddBtnText, { color: COLORS.midTeal }]}>Prescription Required</Text>
                 </View>
               ) : (
                 <TouchableOpacity

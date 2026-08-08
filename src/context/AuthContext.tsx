@@ -18,7 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     surname: 'Perera',
     email: 'perera@gmail.com',
     isLoggedIn: true,
-    strikes: 0,
+    strikes: 1, // ADDED DEMO STRIKE HERE
   });
 
   const login = (phoneNumber: string, surname: string, email?: string) => {

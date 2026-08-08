@@ -23,6 +23,7 @@ function getStatusHeadline(state: string): string {
   if (state === 'WAITING_CUSTOMER_CONFIRMATION') return 'Quote Ready to Review';
   if (state === 'WAITING_PHARMACY_CONFIRMATION') return 'Under Pharmacist Review';
   if (state === 'REUPLOAD_REQUESTED')            return 'Action Required';
+  if (state === 'ISSUE_REPORTED')                return 'Issue Reported';
   return 'Order Confirmed';
 }
 
@@ -34,6 +35,7 @@ function getStatusSub(state: string): string {
   if (state === 'WAITING_CUSTOMER_CONFIRMATION') return 'Tap to view and confirm your quote';
   if (state === 'WAITING_PHARMACY_CONFIRMATION') return 'Waiting for pharmacy to send a quote';
   if (state === 'REUPLOAD_REQUESTED')            return 'The pharmacist requested a clearer photo';
+  if (state === 'ISSUE_REPORTED')                return 'Pharmacy is reviewing your reported issue';
   return 'Your prescription has been received';
 }
 
@@ -165,6 +167,10 @@ const ActiveOrderCard = ({
                 <Text style={[s.footerBtnText, { color: '#FFFFFF' }]}>Re-upload</Text>
               </TouchableOpacity>
             </>
+          ) : order.state === 'ISSUE_REPORTED' ? (
+            <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444' }]} onPress={onAction}>
+              <Text style={[s.footerBtnText, { color: '#FFF' }]}>Message Pharmacy</Text>
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onAction}>
               <Text style={[s.footerBtnText, s.btnGrayText]}>Track Order</Text>
@@ -208,6 +214,8 @@ export const OrdersScreen = () => {
       navigation.navigate('Quotation', { orderId: o.id });
     } else if (o.state === 'REUPLOAD_REQUESTED') {
       navigation.navigate('UploadPrescription', { pharmacyId: o.pharmacy?.id, pharmacyName: o.pharmacy?.name });
+    } else if (o.state === 'ISSUE_REPORTED') {
+      navigation.navigate('PharmacyChat', { orderId: o.id });
     }
   };
 
@@ -374,7 +382,7 @@ const s = StyleSheet.create({
   footerBtn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   footerBtnText: { fontFamily: FONTS.bold, fontSize: 13 },
   btnTeal: { backgroundColor: COLORS.midTeal },
-  btnTealText: { color: '#fff' },
+  btnTealText: { color: '#FFFFFF' },
   btnPurple: { backgroundColor: COLORS.deepPlum },
   btnPurpleText: { color: '#FFFFFF' },
   btnGray: { backgroundColor: '#0F172A' },

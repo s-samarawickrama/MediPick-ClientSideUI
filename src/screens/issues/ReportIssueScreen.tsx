@@ -12,8 +12,9 @@ import {
   Image,
   Modal,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useOrders } from '../../context/OrderContext';
 import {
   ChevronLeft,
   AlertTriangle,
@@ -34,6 +35,7 @@ import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
+type Route = RouteProp<MainStackParamList, 'ReportIssue'>;
 
 const ISSUE_TYPES = [
   'Missing medicine',
@@ -52,6 +54,9 @@ const SAMPLE_EVIDENCE_PHOTOS = [
 
 export const ReportIssueScreen = () => {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<Route>();
+  const { reportIssue } = useOrders();
+  const orderId = route.params?.orderId;
   const [issueType, setIssueType] = useState('');
   const [description, setDescription] = useState('');
   const [attachedPhotos, setAttachedPhotos] = useState<string[]>([]);
@@ -128,6 +133,9 @@ export const ReportIssueScreen = () => {
     if (!issueType || !description.trim()) return;
     setIsLoading(true);
     setTimeout(() => {
+      if (orderId) {
+        reportIssue(orderId, issueType, description);
+      }
       setIsLoading(false);
       setSubmitted(true);
     }, 1200);
@@ -153,9 +161,9 @@ export const ReportIssueScreen = () => {
             Your issue and {attachedPhotos.length > 0 ? `${attachedPhotos.length} photo evidence(s)` : 'details'} have been sent directly to the pharmacy team for review. You will receive a response within 24 hours.
           </Text>
           <Button
-            title="Back to Home"
+            title="Go to Orders"
             variant="primary"
-            onPress={() => navigation.navigate('Tabs')}
+            onPress={() => navigation.navigate('Orders')}
             style={{ marginTop: 24 }}
           />
         </View>

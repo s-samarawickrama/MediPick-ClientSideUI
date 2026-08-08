@@ -90,8 +90,8 @@ export const ProfileScreen = () => {
                 <Text style={s.userPhone}>{user.phoneNumber || phone}</Text>
                 {user.strikes > 0 && (
                   <View style={s.strikeTag}>
-                    <AlertTriangle color={COLORS.error} size={12} strokeWidth={2.5} />
-                    <Text style={s.strikeText}>{user.strikes} Strike{user.strikes > 1 ? 's' : ''}</Text>
+                    <AlertTriangle color={COLORS.warning} size={12} strokeWidth={2.5} />
+                    <Text style={s.strikeText}>{user.strikes}</Text>
                   </View>
                 )}
               </View>
@@ -324,10 +324,10 @@ const s = StyleSheet.create({
   verifiedText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
   strikeTag: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
-    borderWidth: 1, borderColor: '#FECACA',
+    backgroundColor: COLORS.warningLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
+    borderWidth: 1, borderColor: '#FDE68A',
   },
-  strikeText: { fontFamily: FONTS.bold, fontSize: 10, color: COLORS.error },
+  strikeText: { fontFamily: FONTS.bold, fontSize: 10, color: COLORS.warning },
 
   sectionWrap: { gap: 8 },
   sectionTitle: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textMuted, letterSpacing: 0.8 },
