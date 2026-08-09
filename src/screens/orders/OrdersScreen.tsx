@@ -54,16 +54,19 @@ const ActiveOrderCard = ({
   order,
   onPress,
   onAction,
+  onReportIssue,
 }: {
   order: Order;
   onPress: () => void;
   onAction: () => void;
+  onReportIssue?: () => void;
 }) => {
   const isReady = order.state === 'READY_FOR_PICKUP';
   const isQuote = order.state === 'WAITING_CUSTOMER_CONFIRMATION';
   const isCompleted = order.state === 'COMPLETED';
   const isCancelled = ['CANCELLED', 'CLOSED', 'REJECTED'].includes(order.state);
   const isActive = !isCompleted && !isCancelled;
+  const isRecentCompleted = isCompleted && new Date(order.createdAt).getTime() > Date.now() - 24 * 3600 * 1000;
 
   // Dynamic Card Styles
   let cardBg = COLORS.surfaceWhite;
@@ -81,7 +84,11 @@ const ActiveOrderCard = ({
   }
 
   return (
-    <View style={[s.activeCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      style={[s.activeCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
+    >
       {/* Header Row: Pharmacy info + Live badge */}
       <View style={s.activeCardHeaderRow}>
         <View style={s.pharmAvatar}>
@@ -123,6 +130,7 @@ const ActiveOrderCard = ({
           </Text>
           <Text style={s.statusSub}>{getStatusSub(order.state)}</Text>
         </View>
+        <ChevronRight color={COLORS.textMuted} size={20} strokeWidth={2.5} style={{ opacity: 0.5 }} />
       </View>
 
       {/* Footer */}
@@ -133,13 +141,6 @@ const ActiveOrderCard = ({
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {/* Always show Details button unless in a state where the primary action is already Details */}
-          {order.state !== 'WAITING_PHARMACY_CONFIRMATION' && order.state !== 'REUPLOAD_REQUESTED' && (
-            <TouchableOpacity style={[s.footerBtn, s.btnLightGray]} onPress={onPress}>
-              <Text style={[s.footerBtnText, s.btnLightGrayText]}>Details</Text>
-            </TouchableOpacity>
-          )}
-
           {isReady ? (
             <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={onAction}>
               <Text style={[s.footerBtnText, s.btnTealText]}>Show Pickup Code</Text>
@@ -149,24 +150,22 @@ const ActiveOrderCard = ({
               <Text style={[s.footerBtnText, s.btnPurpleText]}>Review Quote</Text>
             </TouchableOpacity>
           ) : isCompleted ? (
-            <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={() => showAlert('Added to Cart', 'Items have been added to your cart for reorder.')}>
-              <Text style={[s.footerBtnText, s.btnTealText]}>Reorder</Text>
-            </TouchableOpacity>
-          ) : isCancelled ? (
-            <View />
-          ) : order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
-            <TouchableOpacity style={[s.footerBtn, s.btnLightGray]} onPress={onPress}>
-              <Text style={[s.footerBtnText, s.btnLightGrayText]}>Details</Text>
-            </TouchableOpacity>
-          ) : order.state === 'REUPLOAD_REQUESTED' ? (
             <>
-              <TouchableOpacity style={[s.footerBtn, s.btnLightGray]} onPress={onPress}>
-                <Text style={[s.footerBtnText, s.btnLightGrayText]}>Details</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444', borderColor: '#EF4444', borderWidth: 1 }]} onPress={onAction}>
-                <Text style={[s.footerBtnText, { color: '#FFFFFF' }]}>Re-upload</Text>
+              {isRecentCompleted && onReportIssue && (
+                <TouchableOpacity style={[s.footerBtn, s.btnLightGray, { marginRight: 'auto' }]} onPress={onReportIssue}>
+                  <Text style={[s.footerBtnText, s.btnLightGrayText]}>Report Issue</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={() => showAlert('Added to Cart', 'Items have been added to your cart for reorder.')}>
+                <Text style={[s.footerBtnText, s.btnTealText]}>Reorder</Text>
               </TouchableOpacity>
             </>
+          ) : isCancelled || order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
+            <View />
+          ) : order.state === 'REUPLOAD_REQUESTED' ? (
+            <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444', borderColor: '#EF4444', borderWidth: 1 }]} onPress={onAction}>
+              <Text style={[s.footerBtnText, { color: '#FFFFFF' }]}>Re-upload</Text>
+            </TouchableOpacity>
           ) : order.state === 'ISSUE_REPORTED' ? (
             <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444' }]} onPress={onAction}>
               <Text style={[s.footerBtnText, { color: '#FFF' }]}>Message Pharmacy</Text>
@@ -178,7 +177,7 @@ const ActiveOrderCard = ({
           )}
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -270,6 +269,7 @@ export const OrdersScreen = () => {
             order={o} 
             onPress={() => goToOrderDetails(o)} 
             onAction={() => goToTracker(o)} 
+            onReportIssue={() => navigation.navigate('ReportIssue', { orderId: o.id })}
           />
         ))}
 
