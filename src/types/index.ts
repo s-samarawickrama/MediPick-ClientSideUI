@@ -101,6 +101,7 @@ export interface Order {
   paymentMethod?: 'ONLINE' | 'PAY_AT_COUNTER';
   isPaid: boolean;
   rejectReason?: string;
+  refundStatus?: 'REFUNDED';
   pickupOtp?: string;
   pickupOtpVerified?: boolean;
   pickupDeadline?: string;

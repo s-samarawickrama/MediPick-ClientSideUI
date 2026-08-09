@@ -163,7 +163,7 @@ export const ReportIssueScreen = () => {
           <Button
             title="Go to Orders"
             variant="primary"
-            onPress={() => navigation.navigate('Orders')}
+            onPress={() => navigation.navigate('Tabs', { screen: 'Orders' })}
             style={{ marginTop: 24 }}
           />
         </View>

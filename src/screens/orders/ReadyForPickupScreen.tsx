@@ -306,7 +306,7 @@ export const ReadyForPickupScreen = () => {
               variant="primary"
               onPress={() => {
                 completeOrder(order.id);
-                navigation.navigate('Orders');
+                navigation.navigate('Tabs', { screen: 'Orders' });
               }}
               style={{ marginTop: 12 }}
             />

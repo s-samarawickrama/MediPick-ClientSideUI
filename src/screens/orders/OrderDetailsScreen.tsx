@@ -56,6 +56,7 @@ export const OrderDetailsScreen = () => {
   const isQuote     = order.state === 'WAITING_CUSTOMER_CONFIRMATION';
   const isIssue     = order.state === 'ISSUE_REPORTED';
   const isActive = !isCompleted && !isCancelled;
+  const isRecentCompleted = isCompleted && !order.refundStatus && !order.rejectReason && new Date(order.createdAt).getTime() > Date.now() - 24 * 3600 * 1000;
 
   const handleCancelOrder = () => {
     if (['PREPARING', 'READY_FOR_PICKUP'].includes(order.state)) {
@@ -142,23 +143,23 @@ export const OrderDetailsScreen = () => {
           </View>
         )}
 
-        {/* Rejection / Reupload Banner */}
-        {(isCancelled || isReupload) && order.rejectReason && (
+        {/* Rejection / Reupload / Refund Banner */}
+        {(isCancelled || isReupload || order.rejectReason || order.refundStatus) && (
           <View style={{
             flexDirection: 'row', alignItems: 'center', gap: 12,
-            backgroundColor: isCancelled ? '#FEF2F2' : '#E6DFE8', 
+            backgroundColor: (isCancelled || order.rejectReason) ? '#FEF2F2' : '#E6DFE8', 
             borderRadius: 16, padding: 14,
-            borderWidth: 1, borderColor: isCancelled ? '#FECACA' : '#D4C9D6', 
+            borderWidth: 1, borderColor: (isCancelled || order.rejectReason) ? '#FECACA' : '#D4C9D6', 
             marginBottom: 16,
           }}>
-            <FileText color={isCancelled ? '#EF4444' : COLORS.deepPlum} size={24} strokeWidth={2} />
+            <FileText color={(isCancelled || order.rejectReason) ? '#EF4444' : COLORS.deepPlum} size={24} strokeWidth={2} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: isCancelled ? '#B91C1C' : COLORS.deepPlum }}>
-                {isReupload ? 'Action Required: Image Unclear' : 'Order Declined'}
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: (isCancelled || order.rejectReason) ? '#B91C1C' : COLORS.deepPlum }}>
+                {isReupload ? 'Action Required: Image Unclear' : order.refundStatus === 'REFUNDED' ? 'Refund Issued' : order.rejectReason ? 'Refund Request Declined' : 'Order Declined'}
               </Text>
-              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: isCancelled ? COLORS.textMuted : COLORS.deepPlum, marginTop: 1, opacity: 0.9 }}>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: (isCancelled || order.rejectReason) ? COLORS.textMuted : COLORS.deepPlum, marginTop: 1, opacity: 0.9 }}>
                 {isReupload && <Text style={{ color: '#EF4444', fontFamily: FONTS.bold }}>23h 59m remaining to re-upload. </Text>}
-                {order.rejectReason}
+                {order.rejectReason || (order.refundStatus === 'REFUNDED' ? 'The pharmacy has reviewed your issue and processed a full refund.' : '')}
               </Text>
             </View>
             {isReupload && (
@@ -355,14 +356,16 @@ export const OrderDetailsScreen = () => {
           ) : isCompleted ? (
             <>
               <Button title="Reorder Items" variant="primary" onPress={() => {}} />
-              <Button
-                title="Report an Issue"
-                variant="ghost"
-                icon={<AlertTriangle color={COLORS.error} size={16} strokeWidth={2} />}
-                onPress={() => navigation.navigate('ReportIssue', { orderId: order.id })}
-                textStyle={{ color: COLORS.error }}
-                style={{ marginTop: 8 }}
-              />
+              {isRecentCompleted && (
+                <Button
+                  title="Report an Issue"
+                  variant="ghost"
+                  icon={<AlertTriangle color={COLORS.error} size={16} strokeWidth={2} />}
+                  onPress={() => navigation.navigate('ReportIssue', { orderId: order.id })}
+                  textStyle={{ color: COLORS.error }}
+                  style={{ marginTop: 8 }}
+                />
+              )}
             </>
           ) : null}
         </View>

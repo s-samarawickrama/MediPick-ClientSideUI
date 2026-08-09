@@ -66,7 +66,7 @@ const ActiveOrderCard = ({
   const isCompleted = order.state === 'COMPLETED';
   const isCancelled = ['CANCELLED', 'CLOSED', 'REJECTED'].includes(order.state);
   const isActive = !isCompleted && !isCancelled;
-  const isRecentCompleted = isCompleted && new Date(order.createdAt).getTime() > Date.now() - 24 * 3600 * 1000;
+  const isRecentCompleted = isCompleted && !order.refundStatus && !order.rejectReason && new Date(order.createdAt).getTime() > Date.now() - 24 * 3600 * 1000;
 
   // Dynamic Card Styles
   let cardBg = COLORS.surfaceWhite;
@@ -112,8 +112,20 @@ const ActiveOrderCard = ({
             <Text style={s.liveBadgeText}>{isReady ? 'Ready' : 'Live'}</Text>
           </View>
         ) : isCompleted ? (
-          <View style={[s.liveBadgePill, { backgroundColor: '#ECFDF5' }]}>
-            <Text style={[s.liveBadgeText, { color: COLORS.midTeal }]}>Completed</Text>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {order.refundStatus === 'REFUNDED' && (
+              <View style={[s.liveBadgePill, { backgroundColor: '#F1F5F9' }]}>
+                <Text style={[s.liveBadgeText, { color: COLORS.textMuted }]}>Refunded</Text>
+              </View>
+            )}
+            {!!order.rejectReason && (
+              <View style={[s.liveBadgePill, { backgroundColor: '#FEF2F2' }]}>
+                <Text style={[s.liveBadgeText, { color: COLORS.error }]}>Rejected</Text>
+              </View>
+            )}
+            <View style={[s.liveBadgePill, { backgroundColor: '#ECFDF5' }]}>
+              <Text style={[s.liveBadgeText, { color: COLORS.midTeal }]}>Completed</Text>
+            </View>
           </View>
         ) : (
           <View style={[s.liveBadgePill, { backgroundColor: '#FEF2F2' }]}>
