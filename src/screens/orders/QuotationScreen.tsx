@@ -9,7 +9,7 @@ import {
   ChevronLeft, CheckCircle2, ShieldCheck, FileText, ShoppingBag, Clock, Phone, MessageCircle
 } from 'lucide-react-native';
 import { Button } from '../../components/common/Button';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MOCK_ORDERS } from '../../mock/demoData';
 import { MainStackParamList } from '../../navigation/MainNavigator';
@@ -35,6 +35,8 @@ const showAlert = (title: string, message: string, buttons?: any[]) => {
 };
 
 export const QuotationScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const route      = useRoute<Route>();
   const order      = MOCK_ORDERS.find((o) => o.id === route.params?.orderId) ?? MOCK_ORDERS[1];
@@ -87,7 +89,7 @@ export const QuotationScreen = () => {
     items: order.items && order.items.length > 0 
       ? order.items.map(i => ({
           name: i.medicine.name + ' x ' + i.quantity,
-          mrp: (i.medicine.price || i.price) * i.quantity,
+          mrp: (i.medicine.mrpPrice || i.price) * i.quantity,
           offered: i.price * i.quantity
         }))
       : [
@@ -98,11 +100,11 @@ export const QuotationScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
       <View style={s.nav}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={s.navTitle}>Review Quote</Text>
         <View style={{ width: 36 }} />
@@ -117,14 +119,14 @@ export const QuotationScreen = () => {
         {order?.state === 'WAITING_CUSTOMER_CONFIRMATION' && (
           <View style={{
             flexDirection: 'row', alignItems: 'center', gap: 12,
-            backgroundColor: '#E6DFE8', borderRadius: 16, padding: 14,
-            borderWidth: 1, borderColor: '#D4C9D6', marginBottom: 20,
+            backgroundColor: 'rgba(122, 35, 143, 0.18)', borderRadius: 16, padding: 14,
+            borderWidth: 1, borderColor: 'rgba(168, 85, 199, 0.5)', marginBottom: 20,
           }}>
-            <Clock color={COLORS.deepPlum} size={24} strokeWidth={2} />
+            <Clock color={colors.deepPlum} size={24} strokeWidth={2} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.deepPlum }}>Quote Ready for Review</Text>
-              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: COLORS.deepPlum, marginTop: 1, opacity: 0.9 }}>
-                <Text style={{ color: '#EF4444', fontFamily: FONTS.bold }}>23h 59m remaining </Text>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: '#F5D6FF' }}>Quote Ready for Review</Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: '#E7C4F4', marginTop: 1, opacity: 0.95 }}>
+                <Text style={{ color: '#FFB4A2', fontFamily: FONTS.bold }}>23h 59m remaining </Text>
                 to confirm before auto-cancellation.
               </Text>
             </View>
@@ -137,22 +139,22 @@ export const QuotationScreen = () => {
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={s.offerPharmName}>{offer.name}</Text>
-                <ShieldCheck color={COLORS.midTeal} size={13} strokeWidth={2.5} />
+                <ShieldCheck color={colors.midTeal} size={13} strokeWidth={2.5} />
               </View>
               <Text style={s.offerPharmAddr}>{offer.address} · {offer.distance}</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginRight: 4 }}>
               <TouchableOpacity 
-                style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
+                style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
                 onPress={(e) => { e.stopPropagation(); Alert.alert('Call', 'Calling pharmacy...'); }}
               >
-                <Phone color={COLORS.midTeal} size={16} strokeWidth={2.5} />
+                <Phone color={colors.midTeal} size={16} strokeWidth={2.5} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
+                style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
                 onPress={(e) => { e.stopPropagation(); Alert.alert('Chat', 'Opening chat...'); }}
               >
-                <MessageCircle color={COLORS.midTeal} size={16} strokeWidth={2.5} />
+                <MessageCircle color={colors.midTeal} size={16} strokeWidth={2.5} />
               </TouchableOpacity>
             </View>
           </View>
@@ -163,7 +165,7 @@ export const QuotationScreen = () => {
           <Text style={s.itemsHeader}>Quote Breakdown</Text>
 
           <View style={s.breakdownSectionHeader}>
-            <FileText color={COLORS.midTeal} size={13} strokeWidth={2} />
+            <FileText color={colors.midTeal} size={13} strokeWidth={2} />
             <Text style={s.breakdownSectionTitle}>Prescription Medicines</Text>
           </View>
 
@@ -178,7 +180,7 @@ export const QuotationScreen = () => {
           ))}
 
           <View style={[s.breakdownSectionHeader, { marginTop: 6 }]}>
-            <ShoppingBag color={COLORS.midTeal} size={13} strokeWidth={2} />
+            <ShoppingBag color={colors.midTeal} size={13} strokeWidth={2} />
             <Text style={s.breakdownSectionTitle}>Additional Pharmacy Items</Text>
           </View>
 
@@ -195,7 +197,7 @@ export const QuotationScreen = () => {
           <View style={s.totalRow}>
             <Text style={s.totalAmount}>LKR {offer.totalOffered}</Text>
             <View style={s.savingBadge}>
-              <CheckCircle2 color="#F97316" size={12} strokeWidth={2.5} />
+              <CheckCircle2 color="#FDBA74" size={12} strokeWidth={2.5} />
               <Text style={s.savingBadgeText}>LKR {offer.totalMrp - offer.totalOffered} saved</Text>
             </View>
           </View>
@@ -214,12 +216,12 @@ export const QuotationScreen = () => {
               title="Decline Offer"
               variant="ghost"
               onPress={handleDeclineOrder}
-              textStyle={{ color: COLORS.error }}
+              textStyle={{ color: colors.error }}
             />
           </>
         ) : (
           <View style={{ marginTop: 12, alignItems: 'center' }}>
-            <Text style={{ fontFamily: FONTS.medium, color: COLORS.textMuted }}>
+            <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted }}>
               This quote is no longer active.
             </Text>
           </View>
@@ -229,49 +231,49 @@ export const QuotationScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   nav: {
     flexDirection: 'row', alignItems: 'center',
     paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20,
-    backgroundColor: COLORS.bgWarm,
-    borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: COLORS.surfaceWhite,
+    backgroundColor: colors.surfaceWhite,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
-  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.bold, fontSize: 16, color: COLORS.textDark },
+  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.bold, fontSize: 16, color: colors.textDark },
   scroll: { padding: 16, paddingBottom: 60, gap: 12 },
 
   offerCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, padding: 14,
-    borderWidth: 1.5, borderColor: COLORS.borderSoft, gap: 10,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 14,
+    borderWidth: 1.5, borderColor: colors.borderSoft, gap: 10,
   },
   offerHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  offerPharmName: { fontFamily: FONTS.bold, fontSize: 16, color: COLORS.textDark },
-  offerPharmAddr: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textMuted, marginTop: 1 },
+  offerPharmName: { fontFamily: FONTS.bold, fontSize: 16, color: colors.textDark },
+  offerPharmAddr: { fontFamily: FONTS.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
 
   itemsCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 4,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 4,
   },
-  itemsHeader: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark, marginBottom: 4 },
+  itemsHeader: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark, marginBottom: 4 },
   breakdownSectionHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6,
     marginVertical: 4,
   },
-  breakdownSectionTitle: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  breakdownSectionTitle: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 7 },
-  itemBorder: { borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft },
-  itemName: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textDark, flex: 1 },
-  itemMrp: { fontFamily: FONTS.regular, fontSize: 11, color: COLORS.textMuted, textDecorationLine: 'line-through' },
-  itemOffer: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.midTeal },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTopWidth: 1, borderTopColor: COLORS.borderSoft },
-  totalAmount: { fontFamily: FONTS.black, fontSize: 20, color: COLORS.textDark },
-  savingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFF7ED', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  savingBadgeText: { fontFamily: FONTS.bold, fontSize: 12, color: '#EA580C' },
+  itemBorder: { borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  itemName: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textDark, flex: 1 },
+  itemMrp: { fontFamily: FONTS.regular, fontSize: 11, color: colors.textMuted, textDecorationLine: 'line-through' },
+  itemOffer: { fontFamily: FONTS.bold, fontSize: 13, color: colors.midTeal },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.borderSoft },
+  totalAmount: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark },
+  savingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(249, 115, 22, 0.14)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(251, 146, 60, 0.45)' },
+  savingBadgeText: { fontFamily: FONTS.bold, fontSize: 12, color: '#FED7AA' },
 });

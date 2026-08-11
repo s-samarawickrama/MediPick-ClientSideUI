@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { Layers, ChevronRight, X } from 'lucide-react-native';
 
 interface ScreenSwitcherProps {
@@ -30,6 +30,8 @@ const ALL_SCREENS = [
 ];
 
 export const ScreenJumperDrawer: React.FC<ScreenSwitcherProps> = ({ currentScreen, onSelectScreen }) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
@@ -40,9 +42,9 @@ export const ScreenJumperDrawer: React.FC<ScreenSwitcherProps> = ({ currentScree
         activeOpacity={0.8}
         accessibilityLabel="Open Developer Screen Switcher Bar"
       >
-        <Layers color={COLORS.deepIndigo} size={18} />
+        <Layers color={colors.deepIndigo} size={18} />
         <Text style={styles.triggerText}>Screen: {currentScreen}</Text>
-        <ChevronRight color={COLORS.deepIndigo} size={16} />
+        <ChevronRight color={colors.deepIndigo} size={16} />
       </TouchableOpacity>
 
       <Modal visible={isOpen} animationType="slide" transparent>
@@ -51,7 +53,7 @@ export const ScreenJumperDrawer: React.FC<ScreenSwitcherProps> = ({ currentScree
             <View style={styles.header}>
               <Text style={styles.headerTitle}>MediPick Demo Screen Switcher</Text>
               <TouchableOpacity onPress={() => setIsOpen(false)} style={styles.closeBtn}>
-                <X color={COLORS.deepIndigo} size={22} />
+                <X color={colors.deepIndigo} size={22} />
               </TouchableOpacity>
             </View>
             <Text style={styles.subtitle}>Tap any screen below to preview instantly without navigating through steps:</Text>
@@ -83,10 +85,10 @@ export const ScreenJumperDrawer: React.FC<ScreenSwitcherProps> = ({ currentScree
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   triggerButton: {
-    backgroundColor: COLORS.limeWhisper,
-    borderColor: COLORS.softLime,
+    backgroundColor: colors.limeWhisper,
+    borderColor: colors.softLime,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   triggerText: {
-    color: COLORS.deepIndigo,
+    color: colors.deepIndigo,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -109,7 +111,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -123,11 +125,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: COLORS.deepIndigo,
+    color: colors.deepIndigo,
   },
   subtitle: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 4,
     marginBottom: 12,
   },
@@ -144,24 +146,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: colors.border,
   },
   screenItemSelected: {
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     borderRadius: 8,
   },
   screenText: {
     fontSize: 14,
-    color: COLORS.textDark,
+    color: colors.textDark,
     fontWeight: '600',
   },
   screenTextSelected: {
-    color: COLORS.deepTeal,
+    color: colors.deepTeal,
     fontWeight: '800',
   },
   categoryBadge: {
     fontSize: 11,
-    color: COLORS.deepTeal,
+    color: colors.deepTeal,
     backgroundColor: '#E0F2FE',
     paddingHorizontal: 8,
     paddingVertical: 2,

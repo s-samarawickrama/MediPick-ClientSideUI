@@ -7,7 +7,7 @@ import {
 import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, ChevronRight, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock, Heart, Navigation, Phone, Camera } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MOCK_MEDICINES, MOCK_PHARMACIES, togglePharmacyFavorite } from '../../mock/demoData';
 import { MedicineItem as Medicine, Pharmacy } from '../../types';
@@ -23,6 +23,8 @@ type BrowseRoute = RouteProp<MainStackParamList, 'Browse'>;
 const MED_CATEGORIES = ['All', 'Vitamins', 'First Aid', 'Supplements', 'Skincare', 'Chronic'];
 
 export const BrowseOTCScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const route = useRoute<BrowseRoute>();
   const { cartItems: globalCart, addToCart, updateQuantity, subtotal } = useCart();
@@ -174,7 +176,7 @@ export const BrowseOTCScreen = () => {
           onPress={(e) => { e.stopPropagation(); decrementQty(med.id); }}
           activeOpacity={0.8}
         >
-          <Minus color={COLORS.midTeal} size={14} strokeWidth={3} />
+          <Minus color={colors.midTeal} size={14} strokeWidth={3} />
         </TouchableOpacity>
 
         <Text style={s.stepperQtyText}>{qty}</Text>
@@ -184,7 +186,7 @@ export const BrowseOTCScreen = () => {
           onPress={(e) => { e.stopPropagation(); incrementQty(med); }}
           activeOpacity={0.8}
         >
-          <Plus color={COLORS.midTeal} size={14} strokeWidth={3} />
+          <Plus color={colors.midTeal} size={14} strokeWidth={3} />
         </TouchableOpacity>
       </View>
     );
@@ -205,7 +207,7 @@ export const BrowseOTCScreen = () => {
             onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
             activeOpacity={0.7}
           >
-            <ChevronLeft color={currentPage === 1 ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+            <ChevronLeft color={currentPage === 1 ? '#94A3B8' : colors.midTeal} size={16} strokeWidth={2.5} />
           </TouchableOpacity>
 
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -227,7 +229,7 @@ export const BrowseOTCScreen = () => {
             onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             activeOpacity={0.7}
           >
-            <ChevronRight color={currentPage === totalPages ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+            <ChevronRight color={currentPage === totalPages ? '#94A3B8' : colors.midTeal} size={16} strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
       </View>
@@ -238,7 +240,7 @@ export const BrowseOTCScreen = () => {
   if (activeStore) {
     return (
       <View style={s.screen}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+        <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
         {/* Store Header */}
         <View style={s.storeHeader}>
@@ -251,7 +253,7 @@ export const BrowseOTCScreen = () => {
             }} 
             activeOpacity={0.75}
           >
-            <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+            <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={s.storeHeaderTitle} numberOfLines={1}>{activeStore.name}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -269,7 +271,7 @@ export const BrowseOTCScreen = () => {
             >
               <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                 <Heart 
-                  color={activeStore.isFavorite ? '#EF4444' : COLORS.textDark} 
+                  color={activeStore.isFavorite ? '#EF4444' : colors.textDark} 
                   size={22} 
                   strokeWidth={2} 
                   fill={activeStore.isFavorite ? '#EF4444' : 'transparent'} 
@@ -281,7 +283,7 @@ export const BrowseOTCScreen = () => {
               onPress={() => navigation.navigate('MultiStoreCart')}
               activeOpacity={0.8}
             >
-              <ShoppingCart color={COLORS.textDark} size={20} strokeWidth={2} />
+              <ShoppingCart color={colors.textDark} size={20} strokeWidth={2} />
               {totalCartCount > 0 && (
                 <View style={s.cartBadgeTop}>
                   <Text style={s.cartBadgeTopText}>{totalCartCount}</Text>
@@ -298,14 +300,14 @@ export const BrowseOTCScreen = () => {
               <Image source={activeStore.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             ) : (
               <View style={s.mapGridGraphic}>
-                <Store color={COLORS.midTeal} size={40} strokeWidth={2.5} />
+                <Store color={colors.midTeal} size={40} strokeWidth={2.5} />
               </View>
             )}
 
             {/* Live Open / Closed Badge */}
-            <View style={[s.mapBadgeOpen, !activeStore.isOpen && { backgroundColor: COLORS.surfaceWhite }]}>
+            <View style={[s.mapBadgeOpen, !activeStore.isOpen && { backgroundColor: colors.surfaceWhite }]}>
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: activeStore.isOpen ? '#10B981' : '#EF4444' }} />
-              <Text style={[s.mapBadgeOpenText, !activeStore.isOpen && { color: COLORS.textDark }]}>
+              <Text style={[s.mapBadgeOpenText, !activeStore.isOpen && { color: colors.textDark }]}>
                 {activeStore.isOpen ? 'Open Now' : 'Closed'}
               </Text>
             </View>
@@ -327,12 +329,12 @@ export const BrowseOTCScreen = () => {
               onPress={() => setStoreInfoModal(true)}
               activeOpacity={0.8}
             >
-              <MapPin color={COLORS.textDark} size={18} strokeWidth={2} />
+              <MapPin color={colors.textDark} size={18} strokeWidth={2} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={s.infoMapBtnTitle}>Store Info & Details</Text>
                 <Text style={s.infoMapBtnSub} numberOfLines={1}>{activeStore.address}</Text>
               </View>
-              <ChevronRight color={COLORS.borderSoft} size={20} />
+              <ChevronRight color={colors.borderSoft} size={20} />
             </TouchableOpacity>
           </View>
 
@@ -344,12 +346,12 @@ export const BrowseOTCScreen = () => {
                 onPress={() => navigation.navigate('PharmacyChat', { orderId: 'ord-1' })}
                 activeOpacity={0.8}
               >
-                <MessageSquare color={COLORS.midTeal} size={16} strokeWidth={2} />
+                <MessageSquare color={colors.midTeal} size={16} strokeWidth={2} />
                 <Text style={s.contactBtnText}>Chat with Store</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={s.contactBtn} activeOpacity={0.8}>
-                <PhoneCall color={COLORS.midTeal} size={16} strokeWidth={2} />
+                <PhoneCall color={colors.midTeal} size={16} strokeWidth={2} />
                 <Text style={s.contactBtnText}>Call Pharmacy</Text>
               </TouchableOpacity>
             </View>
@@ -363,7 +365,7 @@ export const BrowseOTCScreen = () => {
               })}
               activeOpacity={0.88}
             >
-              <FileText color={COLORS.midTeal} size={20} strokeWidth={2} />
+              <FileText color={colors.midTeal} size={20} strokeWidth={2} />
               <View style={{ flex: 1 }}>
                 <Text style={s.attachRxTitle}>Have a Prescription for this Pharmacy?</Text>
                 <Text style={s.attachRxSub}>Attach your prescription image directly to this store's order</Text>
@@ -375,17 +377,17 @@ export const BrowseOTCScreen = () => {
             </TouchableOpacity>
           {/* Search Store's Medicine Stock */}
           <View style={s.storeSearchBar}>
-            <Search color={COLORS.textMuted} size={18} strokeWidth={2.5} />
+            <Search color={colors.textMuted} size={18} strokeWidth={2.5} />
             <TextInput
               style={s.searchInput}
               placeholder={`Search in ${activeStore.name}...`}
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={storeQuery}
               onChangeText={setStoreQuery}
             />
             {storeQuery.length > 0 && (
               <TouchableOpacity onPress={() => setStoreQuery('')}>
-                <X color={COLORS.textMuted} size={15} strokeWidth={2} />
+                <X color={colors.textMuted} size={15} strokeWidth={2} />
               </TouchableOpacity>
             )}
           </View>
@@ -452,7 +454,7 @@ export const BrowseOTCScreen = () => {
               <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setSelectedMedModal(null)} />
               <View style={s.modalCard}>
                 <TouchableOpacity style={s.closeModalBtn} onPress={() => setSelectedMedModal(null)}>
-                  <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+                  <X color={colors.textDark} size={18} strokeWidth={2.5} />
                 </TouchableOpacity>
 
                 <View style={s.modalHeroImg}>
@@ -475,19 +477,19 @@ export const BrowseOTCScreen = () => {
                 <Text style={s.descBody}>{(selectedMedModal as any).description || 'Fast-acting medicine supplied by licensed partner pharmacies.'}</Text>
 
                 {!selectedMedModal.inStock ? (
-                  <View style={[s.modalAddBtn, { backgroundColor: COLORS.borderSoft }]}>
-                    <Text style={[s.modalAddBtnText, { color: COLORS.textMuted }]}>Out of Stock</Text>
+                  <View style={[s.modalAddBtn, { backgroundColor: colors.borderSoft }]}>
+                    <Text style={[s.modalAddBtnText, { color: colors.textMuted }]}>Out of Stock</Text>
                   </View>
                 ) : selectedMedModal.isRxRequired ? (
                   <TouchableOpacity
-                    style={[s.modalAddBtn, { backgroundColor: COLORS.limeWhisper }]}
+                    style={[s.modalAddBtn, { backgroundColor: colors.limeWhisper }]}
                     onPress={() => {
                       navigation.navigate('UploadPrescription', { pharmacyId: activeStore.id, pharmacyName: activeStore.name });
                       setSelectedMedModal(null);
                     }}
                     activeOpacity={0.88}
                   >
-                    <Text style={[s.modalAddBtnText, { color: COLORS.midTeal }]}>Prescription Required - Upload</Text>
+                    <Text style={[s.modalAddBtnText, { color: colors.midTeal }]}>Prescription Required - Upload</Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
@@ -512,28 +514,28 @@ export const BrowseOTCScreen = () => {
               <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setStoreInfoModal(false)} />
               <View style={[s.modalCard, { gap: 14 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                  <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+                  <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
                     {activeStore.image ? (
                       <Image source={activeStore.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                     ) : (
-                      <Text style={{ fontSize: 18, fontFamily: FONTS.black, color: COLORS.midTeal }}>{activeStore.name.charAt(0)}</Text>
+                      <Text style={{ fontSize: 18, fontFamily: FONTS.black, color: colors.midTeal }}>{activeStore.name.charAt(0)}</Text>
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark }} numberOfLines={1}>{activeStore.name}</Text>
+                    <Text style={{ fontFamily: FONTS.black, fontSize: 18, color: colors.textDark }} numberOfLines={1}>{activeStore.name}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
                       <Star color="#F59E0B" size={12} fill="#F59E0B" />
-                      <Text style={{ fontSize: 13, fontFamily: FONTS.semiBold, color: COLORS.textDark }}>{activeStore.rating}</Text>
-                      <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.borderSoft }} />
-                      <Text style={{ fontSize: 12, fontFamily: FONTS.medium, color: COLORS.textMuted }}>{activeStore.distance} • {activeStore.estimatedResponseTime || '15 mins'}</Text>
+                      <Text style={{ fontSize: 13, fontFamily: FONTS.semibold, color: colors.textDark }}>{activeStore.rating}</Text>
+                      <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: colors.borderSoft }} />
+                      <Text style={{ fontSize: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>{activeStore.distance} • {activeStore.estimatedResponseTime || '15 mins'}</Text>
                     </View>
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <TouchableOpacity onPress={() => { togglePharmacyFavorite(activeStore.id); setActiveStore({ ...activeStore, isFavorite: !activeStore.isFavorite }); }} style={{ width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}>
-                      <Heart color={activeStore.isFavorite ? "#EF4444" : COLORS.textMuted} size={16} fill={activeStore.isFavorite ? "#EF4444" : "transparent"} strokeWidth={activeStore.isFavorite ? 0 : 2.5} />
+                      <Heart color={activeStore.isFavorite ? "#EF4444" : colors.textMuted} size={16} fill={activeStore.isFavorite ? "#EF4444" : "transparent"} strokeWidth={activeStore.isFavorite ? 0 : 2.5} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setStoreInfoModal(false)} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.bgWarm, justifyContent: 'center', alignItems: 'center' }}>
-                      <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+                    <TouchableOpacity onPress={() => setStoreInfoModal(false)} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.bgWarm, justifyContent: 'center', alignItems: 'center' }}>
+                      <X color={colors.textDark} size={18} strokeWidth={2.5} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -555,7 +557,7 @@ export const BrowseOTCScreen = () => {
                   />
                   <View style={{
                     position: 'absolute', bottom: 12, right: 12,
-                    backgroundColor: COLORS.peacockBlue, paddingHorizontal: 12, paddingVertical: 8,
+                    backgroundColor: colors.peacockBlue, paddingHorizontal: 12, paddingVertical: 8,
                     borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6,
                     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 3,
                   }}>
@@ -568,13 +570,13 @@ export const BrowseOTCScreen = () => {
                 <View style={{ gap: 12 }}>
                   {/* Action Buttons */}
                   <View style={{ flexDirection: 'row', gap: 12 }}>
-                    <TouchableOpacity style={{ flex: 1, backgroundColor: COLORS.limeWhisper, padding: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
-                      <Phone color={COLORS.midTeal} size={16} strokeWidth={2.5} />
-                      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.deepTeal }}>Call Store</Text>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: colors.limeWhisper, padding: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
+                      <Phone color={colors.midTeal} size={16} strokeWidth={2.5} />
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.deepTeal }}>Call Store</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={{ flex: 1, backgroundColor: COLORS.bgWarm, padding: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
-                      <Clock color={COLORS.textDark} size={16} strokeWidth={2.5} />
-                      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark }}>8 AM - 10 PM</Text>
+                    <TouchableOpacity style={{ flex: 1, backgroundColor: colors.bgWarm, padding: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
+                      <Clock color={colors.textDark} size={16} strokeWidth={2.5} />
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark }}>8 AM - 10 PM</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -584,31 +586,31 @@ export const BrowseOTCScreen = () => {
                     {/* Prep Time & Distance Row */}
                     <View style={{ flexDirection: 'row', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
                       <View style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#F8FAFC' }}>
-                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginBottom: 4 }}>Prep Time</Text>
-                        <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark }}>{activeStore.estimatedResponseTime || '15 mins'}</Text>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>Prep Time</Text>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>{activeStore.estimatedResponseTime || '15 mins'}</Text>
                       </View>
                       <View style={{ flex: 1, paddingLeft: 16 }}>
-                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginBottom: 4 }}>Distance</Text>
-                        <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark }}>{activeStore.distance}</Text>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>Distance</Text>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>{activeStore.distance}</Text>
                       </View>
                     </View>
 
                     {/* Address Row */}
                     <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
-                      <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginBottom: 4 }}>Location</Text>
-                      <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark }}>{activeStore.address}</Text>
+                      <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>Location</Text>
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>{activeStore.address}</Text>
                     </View>
 
                     {/* Legal Credentials (Folded) */}
                     <View style={{ padding: 16, backgroundColor: '#F8FAF7' }}>
-                      <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginBottom: 8 }}>STORE CREDENTIALS</Text>
+                      <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginBottom: 8 }}>STORE CREDENTIALS</Text>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textDark }}>NMRA License</Text>
-                        <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark }}>{activeStore.nmraLicense || 'PH-2024-8891'}</Text>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark }}>NMRA License</Text>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark }}>{activeStore.nmraLicense || 'PH-2024-8891'}</Text>
                       </View>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textDark }}>Pharmacist</Text>
-                        <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark }}>{activeStore.pharmacistName || 'SLMC Verified'}</Text>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark }}>Pharmacist</Text>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark }}>{activeStore.pharmacistName || 'SLMC Verified'}</Text>
                       </View>
                     </View>
                   </View>
@@ -631,7 +633,7 @@ export const BrowseOTCScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
       {/* Header */}
       <View style={s.header}>
@@ -641,7 +643,7 @@ export const BrowseOTCScreen = () => {
           onPress={() => navigation.navigate('MultiStoreCart')}
           activeOpacity={0.8}
         >
-          <ShoppingCart color={COLORS.textDark} size={20} strokeWidth={2} />
+          <ShoppingCart color={colors.textDark} size={20} strokeWidth={2} />
           {totalCartCount > 0 && (
             <View style={s.cartBadgeTop}>
               <Text style={s.cartBadgeTopText}>{totalCartCount}</Text>
@@ -658,7 +660,7 @@ export const BrowseOTCScreen = () => {
             onPress={() => setMode('meds')}
             activeOpacity={0.85}
           >
-            <Pill color={mode === 'meds' ? COLORS.midTeal : COLORS.textMuted} size={16} strokeWidth={2.2} />
+            <Pill color={mode === 'meds' ? colors.midTeal : colors.textMuted} size={16} strokeWidth={2.2} />
             <Text style={[s.modeText, mode === 'meds' && s.modeTextActive]}>Medicines</Text>
           </TouchableOpacity>
 
@@ -667,7 +669,7 @@ export const BrowseOTCScreen = () => {
             onPress={() => setMode('pharmacies')}
             activeOpacity={0.85}
           >
-            <Store color={mode === 'pharmacies' ? COLORS.midTeal : COLORS.textMuted} size={16} strokeWidth={2.2} />
+            <Store color={mode === 'pharmacies' ? colors.midTeal : colors.textMuted} size={16} strokeWidth={2.2} />
             <Text style={[s.modeText, mode === 'pharmacies' && s.modeTextActive]}>Pharmacies</Text>
           </TouchableOpacity>
         </View>
@@ -675,17 +677,17 @@ export const BrowseOTCScreen = () => {
 
       {/* Search Input */}
       <View style={s.searchBar}>
-        <Search color={COLORS.textMuted} size={18} strokeWidth={2.5} />
+        <Search color={colors.textMuted} size={18} strokeWidth={2.5} />
         <TextInput
           style={s.searchInput}
           placeholder={mode === 'meds' ? "Search medicines across all stores..." : "Search pharmacies & locations..."}
-          placeholderTextColor={COLORS.textMuted}
+          placeholderTextColor={colors.textMuted}
           value={query}
           onChangeText={setQuery}
         />
         {query.length > 0 && (
           <TouchableOpacity onPress={() => setQuery('')}>
-            <X color={COLORS.textMuted} size={15} strokeWidth={2} />
+            <X color={colors.textMuted} size={15} strokeWidth={2} />
           </TouchableOpacity>
         )}
       </View>
@@ -713,7 +715,7 @@ export const BrowseOTCScreen = () => {
             style={[s.sortTag, pharmacySort === 'distance' && s.sortTagActive]}
             onPress={() => setPharmacySort('distance')}
           >
-            <MapPin color={pharmacySort === 'distance' ? COLORS.midTeal : COLORS.textMuted} size={13} strokeWidth={2.2} />
+            <MapPin color={pharmacySort === 'distance' ? colors.midTeal : colors.textMuted} size={13} strokeWidth={2.2} />
             <Text style={[s.sortText, pharmacySort === 'distance' && s.sortTextActive]}>Nearest Distance</Text>
           </TouchableOpacity>
 
@@ -721,7 +723,7 @@ export const BrowseOTCScreen = () => {
             style={[s.sortTag, pharmacySort === 'rating' && s.sortTagActive]}
             onPress={() => setPharmacySort('rating')}
           >
-            <Star color={pharmacySort === 'rating' ? '#F59E0B' : COLORS.textMuted} size={13} strokeWidth={2.2} fill={pharmacySort === 'rating' ? '#F59E0B' : 'transparent'} />
+            <Star color={pharmacySort === 'rating' ? '#F59E0B' : colors.textMuted} size={13} strokeWidth={2.2} fill={pharmacySort === 'rating' ? '#F59E0B' : 'transparent'} />
             <Text style={[s.sortText, pharmacySort === 'rating' && s.sortTextActive]}>Highest Rated</Text>
           </TouchableOpacity>
         </View>
@@ -782,7 +784,7 @@ export const BrowseOTCScreen = () => {
                     <Star color="#F59E0B" size={12} fill="#F59E0B" />
                     <Text style={s.metaText}>{p.rating}</Text>
                     <Text style={s.sep}>·</Text>
-                    <MapPin color={COLORS.textMuted} size={11} strokeWidth={2} />
+                    <MapPin color={colors.textMuted} size={11} strokeWidth={2} />
                     <Text style={s.metaText}>{p.distance}</Text>
                   </View>
                 </View>
@@ -822,14 +824,14 @@ export const BrowseOTCScreen = () => {
             <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setSelectedMedModal(null)} />
             <View style={s.modalCard}>
               <TouchableOpacity style={s.closeModalBtn} onPress={() => setSelectedMedModal(null)}>
-                <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+                <X color={colors.textDark} size={18} strokeWidth={2.5} />
               </TouchableOpacity>
 
               <View style={s.modalHeroImg}>
                 {selectedMedModal.image ? (
                   <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="contain" />
                 ) : (
-                  <ShoppingBag color={COLORS.midTeal} size={48} strokeWidth={2} />
+                  <ShoppingBag color={colors.midTeal} size={48} strokeWidth={2} />
                 )}
               </View>
 
@@ -847,14 +849,14 @@ export const BrowseOTCScreen = () => {
               {/* Modal Action Button */}
               {selectedMedModal.isRxRequired ? (
                 <TouchableOpacity
-                  style={[s.modalAddBtn, { backgroundColor: COLORS.limeWhisper }]}
+                  style={[s.modalAddBtn, { backgroundColor: colors.limeWhisper }]}
                   onPress={() => {
                     navigation.navigate('SelectPharmacy');
                     setSelectedMedModal(null);
                   }}
                   activeOpacity={0.88}
                 >
-                  <Text style={[s.modalAddBtnText, { color: COLORS.midTeal }]}>Prescription Required - Select Store</Text>
+                  <Text style={[s.modalAddBtnText, { color: colors.midTeal }]}>Prescription Required - Select Store</Text>
                 </TouchableOpacity>
               ) : !activeStore ? (
                 <TouchableOpacity
@@ -869,8 +871,8 @@ export const BrowseOTCScreen = () => {
                   <Text style={s.modalAddBtnText}>View Available Stores</Text>
                 </TouchableOpacity>
               ) : !selectedMedModal.inStock ? (
-                <View style={[s.modalAddBtn, { backgroundColor: COLORS.borderSoft }]}>
-                  <Text style={[s.modalAddBtnText, { color: COLORS.textMuted }]}>Out of Stock</Text>
+                <View style={[s.modalAddBtn, { backgroundColor: colors.borderSoft }]}>
+                  <Text style={[s.modalAddBtnText, { color: colors.textMuted }]}>Out of Stock</Text>
                 </View>
               ) : (
                 <TouchableOpacity
@@ -899,43 +901,43 @@ export const BrowseOTCScreen = () => {
             <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setStoreInfoModal(false)} />
             <View style={[s.modalCard, { gap: 14 }]}>
               <TouchableOpacity style={s.closeModalBtn} onPress={() => setStoreInfoModal(false)}>
-                <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+                <X color={colors.textDark} size={18} strokeWidth={2.5} />
               </TouchableOpacity>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}>
-                  <Store color={COLORS.midTeal} size={22} strokeWidth={2} />
+                <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' }}>
+                  <Store color={colors.midTeal} size={22} strokeWidth={2} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark }}>{store.name}</Text>
-                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Verified Partner Pharmacy</Text>
+                  <Text style={{ fontFamily: FONTS.black, fontSize: 18, color: colors.textDark }}>{store.name}</Text>
+                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted }}>Verified Partner Pharmacy</Text>
                 </View>
               </View>
 
               {/* Map Preview Graphic */}
               <View style={{ height: 140, borderRadius: 16, backgroundColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-                <MapPin color={COLORS.midTeal} size={36} strokeWidth={2.5} />
-                <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark, marginTop: 6 }}>{store.address}</Text>
-                <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted }}>Google Maps Location · {store.distance} away</Text>
+                <MapPin color={colors.midTeal} size={36} strokeWidth={2.5} />
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark, marginTop: 6 }}>{store.address}</Text>
+                <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted }}>Google Maps Location · {store.distance} away</Text>
               </View>
 
               {/* Key Store Specs */}
-              <View style={{ backgroundColor: COLORS.bgWarm, borderRadius: 14, padding: 12, gap: 8 }}>
+              <View style={{ backgroundColor: colors.bgWarm, borderRadius: 14, padding: 12, gap: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Pharmacy License</Text>
-                  <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark }}>{store.nmraLicense || 'PH-2024-8891'}</Text>
+                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted }}>Pharmacy License</Text>
+                  <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark }}>{store.nmraLicense || 'PH-2024-8891'}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Supervising Pharmacist</Text>
-                  <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark }}>{store.pharmacistName || 'SLMC Verified'}</Text>
+                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted }}>Supervising Pharmacist</Text>
+                  <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark }}>{store.pharmacistName || 'SLMC Verified'}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Hours</Text>
+                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted }}>Hours</Text>
                   <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: '#10B981' }}>Open 8:00 AM - 10:00 PM</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted }}>Fulfillment Mode</Text>
-                  <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.midTeal }}>Counter Pickup & Rx Quote Matching</Text>
+                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted }}>Fulfillment Mode</Text>
+                  <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.midTeal }}>Counter Pickup & Rx Quote Matching</Text>
                 </View>
               </View>
 
@@ -955,48 +957,48 @@ export const BrowseOTCScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: COLORS.bgWarm, paddingTop: 52, paddingBottom: 10, paddingHorizontal: 20,
+    backgroundColor: colors.bgWarm, paddingTop: 52, paddingBottom: 10, paddingHorizontal: 20,
   },
-  title: { fontFamily: FONTS.black, fontSize: 24, color: COLORS.textDark, letterSpacing: -0.5 },
+  title: { fontFamily: FONTS.black, fontSize: 24, color: colors.textDark, letterSpacing: -0.5 },
   headerCartBtn: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: COLORS.surfaceWhite,
+    backgroundColor: colors.surfaceWhite,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    borderWidth: 1, borderColor: colors.borderSoft,
     position: 'relative',
   },
   cartBadgeTop: {
     position: 'absolute', top: -3, right: -3,
-    backgroundColor: COLORS.midTeal, width: 18, height: 18, borderRadius: 9,
+    backgroundColor: colors.midTeal, width: 18, height: 18, borderRadius: 9,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1.5, borderColor: COLORS.surfaceWhite,
+    borderWidth: 1.5, borderColor: colors.surfaceWhite,
   },
   cartBadgeTopText: { fontFamily: FONTS.black, fontSize: 9, color: '#FFFFFF' },
 
   modeSwitcherWrap: { paddingHorizontal: 20, marginBottom: 10 },
   modeSwitcher: {
-    flexDirection: 'row', backgroundColor: COLORS.surfaceWhite, borderRadius: 14,
-    padding: 4, borderWidth: 1, borderColor: COLORS.borderSoft,
+    flexDirection: 'row', backgroundColor: colors.surfaceWhite, borderRadius: 14,
+    padding: 4, borderWidth: 1, borderColor: colors.borderSoft,
   },
   modeBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     height: 38, borderRadius: 10,
   },
-  modeBtnActive: { backgroundColor: COLORS.limeWhisper, borderWidth: 1, borderColor: '#D6EDA0' },
-  modeText: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textMuted },
-  modeTextActive: { color: COLORS.midTeal },
+  modeBtnActive: { backgroundColor: colors.limeWhisper, borderWidth: 1, borderColor: '#D6EDA0' },
+  modeText: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textMuted },
+  modeTextActive: { color: colors.midTeal },
 
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, marginBottom: 12,
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSoft,
     paddingHorizontal: 16, height: 48,
   },
   searchInput: {
-    flex: 1, fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textDark,
+    flex: 1, fontFamily: FONTS.medium, fontSize: 14, color: colors.textDark,
     outlineStyle: 'none' as any, outlineWidth: 0 as any,
   },
 
@@ -1004,38 +1006,38 @@ const s = StyleSheet.create({
   chipsContainer: { paddingHorizontal: 20, gap: 8, alignItems: 'center' },
   chip: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: COLORS.surfaceWhite, borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, borderWidth: 1, borderColor: colors.borderSoft,
   },
-  chipActive: { backgroundColor: COLORS.midTeal, borderColor: COLORS.midTeal },
-  chipText: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textMuted },
+  chipActive: { backgroundColor: colors.midTeal, borderColor: colors.midTeal },
+  chipText: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textMuted },
   chipTextActive: { color: '#FFFFFF' },
 
   pharmacyFilterRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingBottom: 12 },
-  filterLabel: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textMuted },
+  filterLabel: { fontFamily: FONTS.bold, fontSize: 12, color: colors.textMuted },
   sortTag: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12,
-    backgroundColor: COLORS.surfaceWhite, borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, borderWidth: 1, borderColor: colors.borderSoft,
   },
-  sortTagActive: { backgroundColor: COLORS.midTealLight, borderColor: COLORS.midTeal },
-  sortText: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textMuted },
-  sortTextActive: { color: COLORS.midTeal },
+  sortTagActive: { backgroundColor: colors.midTealLight, borderColor: colors.midTeal },
+  sortText: { fontFamily: FONTS.bold, fontSize: 12, color: colors.textMuted },
+  sortTextActive: { color: colors.midTeal },
 
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
 
   // Product Grid
   productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   productCard: {
-    width: '47.5%', backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 12,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 4,
+    width: '47.5%', backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 12,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 4,
   },
   productImgBox: {
-    height: 140, backgroundColor: COLORS.limeWhisper, borderRadius: 14,
+    height: 140, backgroundColor: colors.limeWhisper, borderRadius: 14,
     justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: 6,
     padding: 6,
   },
   discTag: {
-    position: 'absolute', top: 8, left: 8, backgroundColor: COLORS.midTeal,
+    position: 'absolute', top: 8, left: 8, backgroundColor: colors.midTeal,
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
   },
   discTagText: { fontFamily: FONTS.extrabold, fontSize: 9, color: '#FFFFFF' },
@@ -1043,74 +1045,74 @@ const s = StyleSheet.create({
     backgroundColor: '#F5D7FF',
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
   },
-  rxBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: COLORS.deepPlum },
+  rxBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: colors.deepPlum },
   oosBadge: {
-    backgroundColor: COLORS.borderSoft,
+    backgroundColor: colors.borderSoft,
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
     alignSelf: 'flex-start',
   },
-  oosBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: COLORS.textMuted },
-  prodName: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  prodGeneric: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
+  oosBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: colors.textMuted },
+  prodName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  prodGeneric: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 4 },
-  prodPricePrefix: { fontFamily: FONTS.medium, fontSize: 10, color: COLORS.textMuted },
-  prodPrice: { fontFamily: FONTS.black, fontSize: 14, color: COLORS.textDark },
-  prodMrp: { fontFamily: FONTS.regular, fontSize: 11, color: COLORS.textMuted, textDecorationLine: 'line-through' },
+  prodPricePrefix: { fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted },
+  prodPrice: { fontFamily: FONTS.black, fontSize: 14, color: colors.textDark },
+  prodMrp: { fontFamily: FONTS.regular, fontSize: 11, color: colors.textMuted, textDecorationLine: 'line-through' },
   
   // Uber Eats Quantity Stepper Controls (- 1 +)
   addBtnInitial: {
-    width: 32, height: 32, borderRadius: 10, backgroundColor: COLORS.midTeal,
+    width: 32, height: 32, borderRadius: 10, backgroundColor: colors.midTeal,
     justifyContent: 'center', alignItems: 'center',
   },
   stepperBox: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, borderRadius: 10, paddingHorizontal: 6, height: 32,
+    backgroundColor: colors.limeWhisper, borderRadius: 10, paddingHorizontal: 6, height: 32,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
   stepperBtn: { width: 22, height: 22, justifyContent: 'center', alignItems: 'center' },
-  stepperQtyText: { fontFamily: FONTS.black, fontSize: 14, color: COLORS.midTeal, paddingHorizontal: 2 },
+  stepperQtyText: { fontFamily: FONTS.black, fontSize: 14, color: colors.midTeal, paddingHorizontal: 2 },
 
   // Pharmacies List
   pharmacyList: { gap: 12 },
   pharmacyCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 18, padding: 16,
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, borderRadius: 18, padding: 16,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   pharmAvatar: {
-    width: 44, height: 44, borderRadius: 14, backgroundColor: COLORS.limeWhisper,
+    width: 44, height: 44, borderRadius: 14, backgroundColor: colors.limeWhisper,
     justifyContent: 'center', alignItems: 'center',
   },
-  pharmInitial: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.midTeal },
-  pharmName: { fontFamily: FONTS.bold, fontSize: 15, color: COLORS.textDark },
-  pharmAddr: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted },
+  pharmInitial: { fontFamily: FONTS.black, fontSize: 18, color: colors.midTeal },
+  pharmName: { fontFamily: FONTS.bold, fontSize: 15, color: colors.textDark },
+  pharmAddr: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted },
   pharmMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  metaText: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark },
-  sep: { color: COLORS.textMuted, fontSize: 10 },
+  metaText: { fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark },
+  sep: { color: colors.textMuted, fontSize: 10 },
   viewStorePill: {
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
-  viewStoreText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  viewStoreText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
   // Store Front Page View
   storeHeader: {
     flexDirection: 'row', alignItems: 'center',
     paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20,
-    backgroundColor: COLORS.bgWarm, borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.surfaceWhite,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.borderSoft,
+    width: 36, height: 36, borderRadius: 10, backgroundColor: colors.surfaceWhite,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSoft,
   },
-  storeHeaderTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark },
+  storeHeaderTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 16, color: colors.textDark },
   storeScroll: { paddingBottom: 100 },
   storeCoverHero: {
-    height: 240, backgroundColor: COLORS.limeWhisper,
+    height: 240, backgroundColor: colors.limeWhisper,
     overflow: 'hidden', justifyContent: 'center', alignItems: 'center', position: 'relative',
   },
   sheetContent: {
-    backgroundColor: COLORS.surfaceWhite, borderTopLeftRadius: 32, borderTopRightRadius: 32,
+    backgroundColor: colors.surfaceWhite, borderTopLeftRadius: 32, borderTopRightRadius: 32,
     marginTop: -32, shadowColor: '#1C1917',
     shadowOpacity: 0.05, shadowRadius: 16, shadowOffset: { width: 0, height: -4 }, elevation: 6,
     paddingBottom: 40, minHeight: Dimensions.get('window').height,
@@ -1122,45 +1124,45 @@ const s = StyleSheet.create({
   mapGridGraphic: { alignItems: 'center', gap: 4 },
   mapBadgeOpen: {
     position: 'absolute', top: 12, left: 12,
-    backgroundColor: COLORS.surfaceWhite, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100,
+    backgroundColor: colors.surfaceWhite, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100,
     flexDirection: 'row', alignItems: 'center', gap: 6,
     shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },
-  mapBadgeOpenText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textDark },
-  storeMainName: { fontFamily: FONTS.black, fontSize: 22, color: COLORS.textDark },
+  mapBadgeOpenText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textDark },
+  storeMainName: { fontFamily: FONTS.black, fontSize: 22, color: colors.textDark },
   storeMetaBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  metaPillText: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textDark },
+  metaPillText: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textDark },
   infoMapBtn: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent',
-    paddingVertical: 14, borderTopWidth: 1, borderTopColor: COLORS.borderSoft, marginTop: 4,
+    paddingVertical: 14, borderTopWidth: 1, borderTopColor: colors.borderSoft, marginTop: 4,
   },
-  infoMapBtnTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  infoMapBtnSub: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted },
+  infoMapBtnTitle: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  infoMapBtnSub: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted },
   // Store Attach Prescription Card
   attachRxCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: COLORS.limeWhisper, borderRadius: 16, padding: 14,
+    backgroundColor: colors.limeWhisper, borderRadius: 16, padding: 14,
     borderWidth: 1, borderColor: '#D6EDA0', marginTop: 4,
   },
-  attachRxTitle: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.midTeal },
-  attachRxSub: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+  attachRxTitle: { fontFamily: FONTS.bold, fontSize: 13, color: colors.midTeal },
+  attachRxSub: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 1 },
   attachRxBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: COLORS.midTeal, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10,
+    backgroundColor: colors.midTeal, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10,
   },
   attachRxBtnText: { fontFamily: FONTS.bold, fontSize: 12, color: '#FFFFFF' },
   storeSearchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSoft,
     paddingHorizontal: 16, height: 48,
   },
   storeContactRow: { flexDirection: 'row', gap: 10, marginTop: 8, width: '100%' },
   contactBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, height: 42, borderRadius: 12, borderWidth: 1, borderColor: '#D6EDA0',
+    backgroundColor: colors.limeWhisper, height: 42, borderRadius: 12, borderWidth: 1, borderColor: '#D6EDA0',
   },
-  contactBtnText: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.midTeal },
-  sectionTitleText: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark, marginTop: 6 },
+  contactBtnText: { fontFamily: FONTS.bold, fontSize: 12, color: colors.midTeal },
+  sectionTitleText: { fontFamily: FONTS.black, fontSize: 16, color: colors.textDark, marginTop: 6 },
 
   // Floating Uber Eats Bottom Cart Bar
   floatingCartWrap: {
@@ -1169,7 +1171,7 @@ const s = StyleSheet.create({
   },
   floatingCartBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.midTeal, borderRadius: 18, height: 54, paddingHorizontal: 16,
+    backgroundColor: colors.midTeal, borderRadius: 18, height: 54, paddingHorizontal: 16,
   },
   cartCountPill: {
     width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255, 255, 255, 0.25)',
@@ -1182,33 +1184,33 @@ const s = StyleSheet.create({
   // Item Detail Sheet Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)', justifyContent: 'flex-end' },
   modalCard: {
-    backgroundColor: COLORS.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: colors.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, gap: 12, position: 'relative',
   },
   closeModalBtn: {
     position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: 16,
-    backgroundColor: COLORS.bgWarm, justifyContent: 'center', alignItems: 'center', zIndex: 10,
+    backgroundColor: colors.bgWarm, justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
-  modalHeroImg: { height: 120, borderRadius: 16, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' },
-  modalTitle: { fontFamily: FONTS.black, fontSize: 20, color: COLORS.textDark },
-  modalGeneric: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted },
+  modalHeroImg: { height: 120, borderRadius: 16, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' },
+  modalTitle: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark },
+  modalGeneric: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted },
   modalPriceRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },
-  modalPrice: { fontFamily: FONTS.black, fontSize: 22, color: COLORS.midTeal },
-  modalMrp: { fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textMuted, textDecorationLine: 'line-through' },
-  descHeading: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark, marginTop: 4 },
-  descBody: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textSecondary, lineHeight: 18 },
+  modalPrice: { fontFamily: FONTS.black, fontSize: 22, color: colors.midTeal },
+  modalMrp: { fontFamily: FONTS.medium, fontSize: 14, color: colors.textMuted, textDecorationLine: 'line-through' },
+  descHeading: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark, marginTop: 4 },
+  descBody: { fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
   modalAddBtn: {
-    backgroundColor: COLORS.midTeal, borderRadius: 16, height: 50,
+    backgroundColor: colors.midTeal, borderRadius: 16, height: 50,
     justifyContent: 'center', alignItems: 'center', marginTop: 10,
   },
   modalAddBtnText: { fontFamily: FONTS.bold, fontSize: 14, color: '#FFFFFF' },
 
   selectStoreBadgeBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, borderRadius: 10, paddingVertical: 8, marginTop: 8,
+    backgroundColor: colors.limeWhisper, borderRadius: 10, paddingVertical: 8, marginTop: 8,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
-  selectStoreBadgeText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  selectStoreBadgeText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
   paginationContainer: {
     alignItems: 'center',
@@ -1219,7 +1221,7 @@ const s = StyleSheet.create({
   paginationInfoText: {
     fontFamily: FONTS.medium,
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   paginationRow: {
     flexDirection: 'row',
@@ -1230,7 +1232,7 @@ const s = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
@@ -1244,20 +1246,20 @@ const s = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: COLORS.surfaceWhite,
+    backgroundColor: colors.surfaceWhite,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   pageNumberBtnActive: {
-    backgroundColor: COLORS.midTeal,
-    borderColor: COLORS.midTeal,
+    backgroundColor: colors.midTeal,
+    borderColor: colors.midTeal,
   },
   pageNumberText: {
     fontFamily: FONTS.bold,
     fontSize: 13,
-    color: COLORS.textDark,
+    color: colors.textDark,
   },
   pageNumberTextActive: {
     color: '#FFFFFF',

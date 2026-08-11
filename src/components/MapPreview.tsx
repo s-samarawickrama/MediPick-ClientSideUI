@@ -2,15 +2,17 @@ import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { MapPin } from 'lucide-react-native';
-import { COLORS } from '../theme/colors';
+import { useTheme, ThemeColors } from '../context/ThemeContext';
 import { FONTS } from '../theme/typography';
 
 export const MapPreview = ({ latitude, longitude, name, address }: { latitude?: number, longitude?: number, name: string, address: string }) => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   if (!latitude || !longitude) {
     return (
       <View style={[s.container, { backgroundColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center' }]}>
-        <MapPin color={COLORS.midTeal} size={36} strokeWidth={2.5} />
-        <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark, marginTop: 6 }}>Location Unavailable</Text>
+        <MapPin color={colors.midTeal} size={36} strokeWidth={2.5} />
+        <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark, marginTop: 6 }}>Location Unavailable</Text>
       </View>
     );
   }
@@ -36,6 +38,6 @@ export const MapPreview = ({ latitude, longitude, name, address }: { latitude?: 
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { height: 140, borderRadius: 16, overflow: 'hidden' },
 });

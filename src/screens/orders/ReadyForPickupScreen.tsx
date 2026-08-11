@@ -12,7 +12,7 @@ import {
 import { Button } from '../../components/common/Button';
 import { RateExperienceScreen } from '../../components/common/RateExperienceScreen';
 import { StripePaymentModal } from '../../components/common/StripePaymentModal';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { useOrders } from '../../context/OrderContext';
 import { MOCK_ORDERS } from '../../mock/demoData';
@@ -26,6 +26,8 @@ type Nav   = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'ReadyForPickup'>;
 
 export const ReadyForPickupScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const route      = useRoute<Route>();
   
@@ -100,13 +102,13 @@ export const ReadyForPickupScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
       
       {/* Top Header */}
       <View style={s.topZone}>
         <View style={s.nav}>
           <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-            <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+            <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={s.navTitle}>{orderState === 'PREPARING' ? 'Preparing Order...' : 'Ready for Pick Up'}</Text>
           <View style={{ width: 36 }} />
@@ -152,7 +154,7 @@ export const ReadyForPickupScreen = () => {
             {/* Step 1: Confirmed */}
             <View style={s.vStepItem}>
               <View style={[s.vStepDot, s.vStepDotDone]}>
-                <Check color={COLORS.midTeal} size={14} strokeWidth={3} />
+                <Check color={colors.midTeal} size={14} strokeWidth={3} />
               </View>
               <View style={s.vStepTextContainer}>
                 <Text style={s.vStepTitleDone}>Order Confirmed</Text>
@@ -168,7 +170,7 @@ export const ReadyForPickupScreen = () => {
                 </View>
               ) : (
                 <View style={[s.vStepDot, s.vStepDotDone]}>
-                  <Check color={COLORS.midTeal} size={14} strokeWidth={3} />
+                  <Check color={colors.midTeal} size={14} strokeWidth={3} />
                 </View>
               )}
               <View style={s.vStepTextContainer}>
@@ -199,19 +201,19 @@ export const ReadyForPickupScreen = () => {
         {/* Ticket Pass Card */}
         <Animated.View style={[s.ticket, { transform: [{ scale: cardScale }] }]}>
           <View style={s.ticketBadge}>
-            <ShieldCheck color={COLORS.midTeal} size={14} strokeWidth={2.5} />
+            <ShieldCheck color={colors.midTeal} size={14} strokeWidth={2.5} />
             <Text style={s.ticketBadgeText}>Order #{order.orderNumber || 'MP123456'}</Text>
           </View>
 
           {orderState === 'PREPARING' ? (
             <View style={{ alignItems: 'center', paddingVertical: 16, gap: 10 }}>
-              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}>
-                <Clock color={COLORS.midTeal} size={22} strokeWidth={2.2} />
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' }}>
+                <Clock color={colors.midTeal} size={22} strokeWidth={2.2} />
               </View>
-              <Text style={{ fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark, textAlign: 'center' }}>
+              <Text style={{ fontFamily: FONTS.black, fontSize: 16, color: colors.textDark, textAlign: 'center' }}>
                 Pharmacist is Packaging Your Order
               </Text>
-              <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 }}>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 }}>
                 The licensed pharmacy staff is assembling your items. Your 6-digit counter pickup OTP will display automatically once ready (in {prepSecondsLeft}s).
               </Text>
 
@@ -245,11 +247,11 @@ export const ReadyForPickupScreen = () => {
               style={s.chatIconBtn} 
               onPress={() => navigation.navigate('PharmacyChat', { orderId: order.id })}
             >
-              <MessageSquare color={COLORS.midTeal} size={18} strokeWidth={2} />
+              <MessageSquare color={colors.midTeal} size={18} strokeWidth={2} />
             </TouchableOpacity>
 
             <TouchableOpacity style={s.callIconBtn}>
-              <PhoneCall color={COLORS.midTeal} size={18} strokeWidth={2} />
+              <PhoneCall color={colors.midTeal} size={18} strokeWidth={2} />
             </TouchableOpacity>
           </View>
         </View>
@@ -258,7 +260,7 @@ export const ReadyForPickupScreen = () => {
         <View style={s.paySection}>
           {isPaidOnline ? (
             <View style={s.paidCard}>
-              <CheckCircle2 color={COLORS.midTeal} size={22} strokeWidth={2.5} />
+              <CheckCircle2 color={colors.midTeal} size={22} strokeWidth={2.5} />
               <View style={{ flex: 1 }}>
                 <Text style={s.paidTitle}>Payment Completed</Text>
                 <Text style={s.paidSub}>LKR {order.totalAmount || 500} paid via Stripe Online</Text>
@@ -295,7 +297,7 @@ export const ReadyForPickupScreen = () => {
                 style={{ marginTop: 6 }}
               />
             ) : (
-              <Text style={{ textAlign: 'center', marginTop: 12, marginBottom: 12, fontSize: 12, color: COLORS.textMuted, paddingHorizontal: 10 }}>
+              <Text style={{ textAlign: 'center', marginTop: 12, marginBottom: 12, fontSize: 12, color: colors.textMuted, paddingHorizontal: 10 }}>
                 Cannot extend pickup time automatically for unpaid orders. Message the pharmacy to request an extension.
               </Text>
             )}
@@ -327,7 +329,7 @@ export const ReadyForPickupScreen = () => {
             title="Cancel Order"
             variant="ghost"
             onPress={handleCancelOrder}
-            textStyle={{ color: COLORS.error }}
+            textStyle={{ color: colors.error }}
             style={{ marginTop: 24 }}
           />
         )}
@@ -354,104 +356,104 @@ export const ReadyForPickupScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   topZone: {
     paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20,
-    backgroundColor: COLORS.bgWarm,
-    borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   nav: { flexDirection: 'row', alignItems: 'center' },
   backBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: COLORS.surfaceWhite,
+    backgroundColor: colors.surfaceWhite,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
-  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark },
+  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 18, color: colors.textDark },
   scroll: { padding: 20, paddingBottom: 60, gap: 14 },
 
   ticket: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 20,
-    borderWidth: 1.5, borderColor: COLORS.borderSoft, gap: 14, alignItems: 'center',
+    backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 20,
+    borderWidth: 1.5, borderColor: colors.borderSoft, gap: 14, alignItems: 'center',
     shadowColor: '#0F172A', shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04, shadowRadius: 14, elevation: 3,
   },
   ticketBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999,
   },
-  ticketBadgeText: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.midTeal },
-  ticketHint: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted, textAlign: 'center' },
+  ticketBadgeText: { fontFamily: FONTS.bold, fontSize: 12, color: colors.midTeal },
+  ticketHint: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 
   otpContainer: { width: '100%', alignItems: 'center' },
   otpRow: { flexDirection: 'row', gap: 8, justifyContent: 'center' },
   otpCell: {
     width: 44, height: 50, borderRadius: 12,
-    backgroundColor: COLORS.limeWhisper, borderWidth: 1.5, borderColor: '#D6EDA0',
+    backgroundColor: colors.limeWhisper, borderWidth: 1.5, borderColor: '#D6EDA0',
     justifyContent: 'center', alignItems: 'center',
   },
-  otpDigit: { fontFamily: FONTS.black, fontSize: 22, color: COLORS.midTeal },
+  otpDigit: { fontFamily: FONTS.black, fontSize: 22, color: colors.midTeal },
 
   pharmacyBox: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 12,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 12,
   },
-  pharmName: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  pharmSub: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
+  pharmName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  pharmSub: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 },
   contactRow: { flexDirection: 'row', gap: 8 },
   chatIconBtn: {
     width: 38, height: 38, borderRadius: 10,
-    backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center',
   },
   callIconBtn: {
     width: 38, height: 38, borderRadius: 10,
-    backgroundColor: COLORS.midTealLight, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.midTealLight, justifyContent: 'center', alignItems: 'center',
   },
 
   // Payment section
   paySection: { gap: 10 },
-  paySectionTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
+  paySectionTitle: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
   payOption: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 14, padding: 14,
-    borderWidth: 1.5, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, borderRadius: 14, padding: 14,
+    borderWidth: 1.5, borderColor: colors.borderSoft,
   },
-  payOptionSelected: { borderColor: COLORS.midTeal, backgroundColor: COLORS.midTealLight },
-  payOptionTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  payOptionSub: { fontFamily: FONTS.regular, fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+  payOptionSelected: { borderColor: colors.midTeal, backgroundColor: colors.midTealLight },
+  payOptionTitle: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  payOptionSub: { fontFamily: FONTS.regular, fontSize: 11, color: colors.textMuted, marginTop: 1 },
   radioDot: {
     width: 20, height: 20, borderRadius: 10,
-    borderWidth: 2, borderColor: COLORS.borderSoft, backgroundColor: COLORS.surfaceWhite,
+    borderWidth: 2, borderColor: colors.borderSoft, backgroundColor: colors.surfaceWhite,
   },
-  radioDotSelected: { borderColor: COLORS.midTeal, backgroundColor: COLORS.midTeal },
+  radioDotSelected: { borderColor: colors.midTeal, backgroundColor: colors.midTeal },
 
   paidCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: COLORS.limeWhisper, borderRadius: 14, padding: 14,
+    backgroundColor: colors.limeWhisper, borderRadius: 14, padding: 14,
     borderWidth: 1.5, borderColor: '#D6EDA0',
   },
-  paidTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.midTeal },
-  paidSub: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textDark, marginTop: 2 },
+  paidTitle: { fontFamily: FONTS.bold, fontSize: 14, color: colors.midTeal },
+  paidSub: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark, marginTop: 2 },
 
   // Tracker Card
   trackerCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 18, padding: 16,
-    borderWidth: 1.5, borderColor: COLORS.borderSoft, gap: 14,
+    backgroundColor: colors.surfaceWhite, borderRadius: 18, padding: 16,
+    borderWidth: 1.5, borderColor: colors.borderSoft, gap: 14,
   },
   trackerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  trackerTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
+  trackerTitle: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
   liveBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
   },
-  liveDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: COLORS.midTeal },
-  liveText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  liveDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.midTeal },
+  liveText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
   stepperCol: { position: 'relative', marginTop: 10, gap: 20 },
   vStepLine: { position: 'absolute', left: 13, width: 2, height: 20, backgroundColor: '#F1F5F9' },
-  vStepLineDone: { backgroundColor: COLORS.limeWhisper },
+  vStepLineDone: { backgroundColor: colors.limeWhisper },
   vStepLineActiveToFuture: { 
     borderStyle: 'dashed', borderWidth: 1, borderColor: '#CBD5E1', 
     backgroundColor: 'transparent', width: 1, left: 13.5
@@ -462,12 +464,12 @@ const s = StyleSheet.create({
     width: 28, height: 28, borderRadius: 14, backgroundColor: '#F1F5F9', // light gray for future
     justifyContent: 'center', alignItems: 'center', zIndex: 2,
   },
-  vStepDotDone: { backgroundColor: COLORS.limeWhisper },
-  vStepDotActive: { backgroundColor: COLORS.midTeal },
+  vStepDotDone: { backgroundColor: colors.limeWhisper },
+  vStepDotActive: { backgroundColor: colors.midTeal },
 
   vStepTextContainer: { flex: 1, justifyContent: 'center' },
-  vStepTitle: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted },
-  vStepTitleDone: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark },
-  vStepTitleActive: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.midTeal },
-  vStepSub: { fontFamily: FONTS.regular, fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
+  vStepTitle: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted },
+  vStepTitleDone: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark },
+  vStepTitleActive: { fontFamily: FONTS.bold, fontSize: 14, color: colors.midTeal },
+  vStepSub: { fontFamily: FONTS.regular, fontSize: 11, color: colors.textMuted, marginTop: 2 },
 });

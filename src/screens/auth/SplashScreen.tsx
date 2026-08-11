@@ -11,13 +11,15 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowRight, ShoppingBag } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
 export const SplashScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
   const logoOp    = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.9)).current;
   const contentOp = useRef(new Animated.Value(0)).current;
@@ -43,7 +45,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
       {/* Main Center Brand Logo & Title */}
       <Animated.View style={[s.centerBrand, { opacity: logoOp, transform: [{ scale: logoScale }] }]}>
@@ -77,10 +79,10 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: COLORS.bgWarm,
+    backgroundColor: colors.bgWarm,
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingTop: 120,
@@ -100,14 +102,14 @@ const s = StyleSheet.create({
   brandName: {
     fontFamily: FONTS.black,
     fontSize: 40,
-    color: COLORS.midTeal,
+    color: colors.midTeal,
     letterSpacing: -1,
     marginBottom: 6,
   },
   tagline: {
     fontFamily: FONTS.medium,
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   bottomArea: {
@@ -115,7 +117,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
   },
   getStartedBtn: {
-    backgroundColor: COLORS.midTeal,
+    backgroundColor: colors.midTeal,
     height: 54,
     borderRadius: 16,
     width: '100%',
@@ -123,7 +125,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: COLORS.midTeal,
+    shadowColor: colors.midTeal,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -140,13 +142,13 @@ const s = StyleSheet.create({
   termsText: {
     fontFamily: FONTS.regular,
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 18,
   },
   linkText: {
     fontFamily: FONTS.semibold,
-    color: COLORS.midTeal,
+    color: colors.midTeal,
     textDecorationLine: 'underline',
   },
 });

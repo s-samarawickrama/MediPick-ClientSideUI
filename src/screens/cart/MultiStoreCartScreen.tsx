@@ -7,18 +7,21 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ShoppingCart, Plus, Minus, ChevronLeft, Store, CreditCard, Trash2, CheckSquare, Square, MinusSquare } from 'lucide-react-native';
 import { Button } from '../../components/common/Button';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MOCK_PHARMACIES, MOCK_MEDICINES, MOCK_ORDERS } from '../../mock/demoData';
 import { PaymentMethodSelector } from '../../components/common/PaymentMethodSelector';
 import { StripePaymentModal } from '../../components/common/StripePaymentModal';
 import { MainStackParamList } from '../../navigation/MainNavigator';
-import { useCart } from '../../context/CartContext';
+import { useCart, CartPharmacy } from '../../context/CartContext';
 import { FileText } from 'lucide-react-native';
+import { Order, Pharmacy } from '../../types';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
 export const MultiStoreCartScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const opacity = useRef(new Animated.Value(0)).current;
   const [payMethod, setPayMethod] = useState<'counter' | 'stripe'>('counter');
@@ -30,7 +33,7 @@ export const MultiStoreCartScreen = () => {
 
   // Group cart items dynamically by pharmacy
   const cartStoresMap: Record<string, {
-    pharmacy: { id: string; name: string; address: string; distance: string; image?: any };
+    pharmacy: CartPharmacy;
     items: any[];
     hasPrescription: boolean;
   }> = {};
@@ -49,7 +52,14 @@ export const MultiStoreCartScreen = () => {
           id: attachedPrescription.pharmacyId,
           name: attachedPrescription.pharmacyName,
           address: 'See details in store',
-          distance: 'Calculated at checkout'
+          distance: 'Calculated at checkout',
+          rating: 0,
+          nmraLicense: 'Pending',
+          pharmacistName: 'Pending',
+          pharmacistRegNo: 'Pending',
+          estimatedResponseTime: 'TBD',
+          isOpen: true,
+          image: undefined,
         },
         items: [],
         hasPrescription: true
@@ -152,13 +162,27 @@ export const MultiStoreCartScreen = () => {
 
     const orderType = (hasRx && checkedMedicineItems.length > 0) ? 'MIXED' : (hasRx ? 'PRESCRIPTION' : 'OTC');
     const stTotal = checkedMedicineItems.reduce((s, c) => s + c.pharmacyPrice * c.qty, 0);
+    const orderPharmacy: Pharmacy = {
+      id: storeGroup.pharmacy.id,
+      name: storeGroup.pharmacy.name,
+      address: storeGroup.pharmacy.address,
+      distance: storeGroup.pharmacy.distance,
+      rating: storeGroup.pharmacy.rating ?? 4.8,
+      nmraLicense: storeGroup.pharmacy.nmraLicense ?? 'Pending',
+      pharmacistName: storeGroup.pharmacy.pharmacistName ?? 'Pharmacist',
+      pharmacistRegNo: storeGroup.pharmacy.pharmacistRegNo ?? 'Pending',
+      estimatedResponseTime: storeGroup.pharmacy.estimatedResponseTime ?? 'TBD',
+      isOpen: storeGroup.pharmacy.isOpen ?? true,
+      image: storeGroup.pharmacy.image,
+      popularity: 0,
+    };
 
-    const newOrder = {
+    const newOrder: Order = {
       id: `ord-new-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       orderNumber: `#MP${Math.floor(100000 + Math.random() * 900000)}`,
-      orderType: orderType,
+      orderType: orderType as Order['orderType'],
       state: 'WAITING_PHARMACY_CONFIRMATION',
-      pharmacy: storeGroup.pharmacy,
+      pharmacy: orderPharmacy,
       items: checkedMedicineItems.map(item => ({ medicine: item, quantity: item.qty, price: item.pharmacyPrice })),
       totalAmount: stTotal,
       totalMrp: stTotal + 100, // mock MRP
@@ -182,12 +206,12 @@ export const MultiStoreCartScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
       {/* Nav Header */}
       <View style={s.nav}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={s.navTitle}>Order Cart ({totalItemCount})</Text>
         {cartStores.length > 0 ? (
@@ -219,7 +243,7 @@ export const MultiStoreCartScreen = () => {
             }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Trash2 color={COLORS.error} size={18} strokeWidth={2} />
+            <Trash2 color={colors.error} size={18} strokeWidth={2} />
           </TouchableOpacity>
         ) : (
           <View style={{ width: 36, height: 36 }} />
@@ -234,7 +258,7 @@ export const MultiStoreCartScreen = () => {
         {/* Banner Explaining Separate Orders */}
         {cartStores.length > 1 && (
           <View style={s.multiStoreBanner}>
-            <Store color={COLORS.midTeal} size={20} strokeWidth={2} />
+            <Store color={colors.midTeal} size={20} strokeWidth={2} />
             <View style={{ flex: 1 }}>
               <Text style={s.bannerTitle}>Multiple Pharmacies in Cart</Text>
               <Text style={s.bannerSub}>Place your orders individually for each pharmacy below.</Text>
@@ -251,8 +275,8 @@ export const MultiStoreCartScreen = () => {
               {/* Store Header */}
               <View style={s.storeCardHeader}>
                 <TouchableOpacity onPress={() => toggleStoreSelection(storeGroup)} style={{ marginRight: 12 }}>
-                  {getStoreCheckStatus(storeGroup) === 'checked' && <CheckSquare color={COLORS.midTeal} size={22} strokeWidth={2.5} />}
-                  {getStoreCheckStatus(storeGroup) === 'indeterminate' && <MinusSquare color={COLORS.midTeal} size={22} strokeWidth={2.5} />}
+                  {getStoreCheckStatus(storeGroup) === 'checked' && <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />}
+                  {getStoreCheckStatus(storeGroup) === 'indeterminate' && <MinusSquare color={colors.midTeal} size={22} strokeWidth={2.5} />}
                   {getStoreCheckStatus(storeGroup) === 'unchecked' && <Square color="#CBD5E1" size={22} strokeWidth={2.5} />}
                 </TouchableOpacity>
 
@@ -292,7 +316,7 @@ export const MultiStoreCartScreen = () => {
                   }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Trash2 color={COLORS.error} size={16} strokeWidth={2} />
+                  <Trash2 color={colors.error} size={16} strokeWidth={2} />
                 </TouchableOpacity>
               </View>
 
@@ -304,12 +328,12 @@ export const MultiStoreCartScreen = () => {
                   <View style={s.itemRow}>
                     <TouchableOpacity onPress={() => toggleItemSelection(storeGroup.pharmacy.id, 'rx')} style={{ marginRight: 12, marginTop: 4 }}>
                       {selectedItems.has(`${storeGroup.pharmacy.id}_rx`) 
-                        ? <CheckSquare color={COLORS.midTeal} size={22} strokeWidth={2.5} />
+                        ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
                         : <Square color="#CBD5E1" size={22} strokeWidth={2.5} />}
                     </TouchableOpacity>
                     <View style={[s.attachedRxCard, { flex: 1, marginTop: 0 }]}>
                       <View style={s.attachedRxHeader}>
-                        <FileText color={COLORS.peacockBlue} size={20} strokeWidth={2} />
+                        <FileText color={colors.peacockBlue} size={20} strokeWidth={2} />
                         <Text style={s.attachedRxTitle}>Attached Prescription</Text>
                       </View>
                       <Text style={s.attachedRxNote}>{attachedPrescription.note || 'No special instructions.'}</Text>
@@ -321,7 +345,7 @@ export const MultiStoreCartScreen = () => {
                   <View key={item.id} style={s.itemRow}>
                     <TouchableOpacity onPress={() => toggleItemSelection(storeGroup.pharmacy.id, item.id)} style={{ marginRight: 12, marginTop: 4 }}>
                       {selectedItems.has(`${storeGroup.pharmacy.id}_${item.id}`) 
-                        ? <CheckSquare color={COLORS.midTeal} size={22} strokeWidth={2.5} />
+                        ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
                         : <Square color="#CBD5E1" size={22} strokeWidth={2.5} />}
                     </TouchableOpacity>
                     <View style={{ flex: 1 }}>
@@ -335,14 +359,14 @@ export const MultiStoreCartScreen = () => {
                         style={s.stepperBtn}
                         onPress={() => updateQuantity(item.id, storeGroup.pharmacy.id, -1)}
                       >
-                        <Minus color={COLORS.midTeal} size={13} strokeWidth={3} />
+                        <Minus color={colors.midTeal} size={13} strokeWidth={3} />
                       </TouchableOpacity>
                       <Text style={s.stepperQty}>{item.qty}</Text>
                       <TouchableOpacity
                         style={s.stepperBtn}
                         onPress={() => updateQuantity(item.id, storeGroup.pharmacy.id, 1)}
                       >
-                        <Plus color={COLORS.midTeal} size={13} strokeWidth={3} />
+                        <Plus color={colors.midTeal} size={13} strokeWidth={3} />
                       </TouchableOpacity>
                     </View>
 
@@ -385,7 +409,7 @@ export const MultiStoreCartScreen = () => {
 
         {cartStores.length === 0 && (
           <View style={s.emptyWrap}>
-            <ShoppingCart color={COLORS.textMuted} size={44} strokeWidth={1.5} />
+            <ShoppingCart color={colors.textMuted} size={44} strokeWidth={1.5} />
             <Text style={s.emptyTitle}>Your Cart is Empty</Text>
             <Text style={s.emptySub}>Add medicines from partner pharmacies to place an order.</Text>
           </View>
@@ -420,17 +444,17 @@ export const MultiStoreCartScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   nav: {
     flexDirection: 'row', alignItems: 'center',
     paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20,
-    backgroundColor: COLORS.bgWarm, borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },  backBtn: {
-    width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.surfaceWhite,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.borderSoft,
+    width: 36, height: 36, borderRadius: 10, backgroundColor: colors.surfaceWhite,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSoft,
   },
-  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark },
+  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 16, color: colors.textDark },
   clearAllBtn: {
     width: 36, height: 36, borderRadius: 10, backgroundColor: '#FEE2E2',
     justifyContent: 'center', alignItems: 'center',
@@ -439,73 +463,73 @@ const s = StyleSheet.create({
 
   multiStoreBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: COLORS.limeWhisper, borderRadius: 16, padding: 14,
+    backgroundColor: colors.limeWhisper, borderRadius: 16, padding: 14,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
-  bannerTitle: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.midTeal },
-  bannerSub: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+  bannerTitle: { fontFamily: FONTS.bold, fontSize: 13, color: colors.midTeal },
+  bannerSub: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 1 },
 
   storeCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 16,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 12,
+    backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 16,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 12,
   },
   storeCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   storeAvatar: {
-    width: 42, height: 42, borderRadius: 12, backgroundColor: COLORS.limeWhisper,
+    width: 42, height: 42, borderRadius: 12, backgroundColor: colors.limeWhisper,
     justifyContent: 'center', alignItems: 'center',
   },
   storeAvatarImage: {
     width: 42, height: 42, borderRadius: 12,
   },
-  storeInitial: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.midTeal },
-  storeName: { fontFamily: FONTS.bold, fontSize: 15, color: COLORS.textDark },
-  storeMeta: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+  storeInitial: { fontFamily: FONTS.black, fontSize: 18, color: colors.midTeal },
+  storeName: { fontFamily: FONTS.bold, fontSize: 15, color: colors.textDark },
+  storeMeta: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 1 },
   removeStoreBtn: {
     width: 32, height: 32, borderRadius: 10, backgroundColor: '#FEE2E2',
     justifyContent: 'center', alignItems: 'center',
   },
-  divider: { height: 1, backgroundColor: COLORS.borderSoft },
+  divider: { height: 1, backgroundColor: colors.borderSoft },
 
   itemList: { gap: 12 },
   itemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  itemName: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark },
-  itemPrice: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+  itemName: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark },
+  itemPrice: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 1 },
   
   stepperBox: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, borderRadius: 8, paddingHorizontal: 6, height: 30,
+    backgroundColor: colors.limeWhisper, borderRadius: 8, paddingHorizontal: 6, height: 30,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
   stepperBtn: { width: 20, height: 20, justifyContent: 'center', alignItems: 'center' },
-  stepperQty: { fontFamily: FONTS.black, fontSize: 13, color: COLORS.midTeal },
-  itemTotal: { fontFamily: FONTS.black, fontSize: 14, color: COLORS.textDark, minWidth: 60, textAlign: 'right' },
+  stepperQty: { fontFamily: FONTS.black, fontSize: 13, color: colors.midTeal },
+  itemTotal: { fontFamily: FONTS.black, fontSize: 14, color: colors.textDark, minWidth: 60, textAlign: 'right' },
 
   storeFooter: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingTop: 12, borderTopWidth: 1, borderTopColor: COLORS.borderSoft,
+    paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderSoft,
   },
-  subtotalLabel: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted },
-  subtotalPrice: { fontFamily: FONTS.bold, fontSize: 16, color: COLORS.textDark },
+  subtotalLabel: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted },
+  subtotalPrice: { fontFamily: FONTS.bold, fontSize: 16, color: colors.textDark },
   checkoutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.midTeal, paddingHorizontal: 16, height: 40, borderRadius: 10,
+    backgroundColor: colors.midTeal, paddingHorizontal: 16, height: 40, borderRadius: 10,
   },
   checkoutBtnDisabled: {
-    backgroundColor: COLORS.borderSoft,
+    backgroundColor: colors.borderSoft,
   },
   checkoutBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF' },
 
   emptyWrap: { alignItems: 'center', paddingTop: 80, gap: 8 },
-  emptyTitle: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark },
-  emptySub: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted, textAlign: 'center' },
+  emptyTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.textDark },
+  emptySub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 
   attachedRxCard: {
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     padding: 12, borderRadius: 12,
     borderWidth: 1, borderColor: '#D6EDA0',
     marginBottom: 8,
   },
   attachedRxHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  attachedRxTitle: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.peacockBlue },
-  attachedRxNote: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textDark },
+  attachedRxTitle: { fontFamily: FONTS.bold, fontSize: 13, color: colors.peacockBlue },
+  attachedRxNote: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark },
 });

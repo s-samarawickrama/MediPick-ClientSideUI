@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Wallet, CreditCard } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 
 interface PaymentMethodSelectorProps {
@@ -15,6 +15,9 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   onSelect,
   title = 'Payment Method',
 }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
+
   return (
     <View style={s.container}>
       {title ? <Text style={s.sectionTitle}>{title}</Text> : null}
@@ -26,7 +29,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           onPress={() => onSelect('counter')}
         >
           <View style={[s.iconBox, selectedMethod === 'counter' && s.iconBoxSelected]}>
-            <Wallet color={selectedMethod === 'counter' ? COLORS.midTeal : COLORS.textMuted} size={20} strokeWidth={2} />
+            <Wallet color={selectedMethod === 'counter' ? colors.midTeal : colors.textMuted} size={20} strokeWidth={2} />
           </View>
 
           <View style={s.textWrap}>
@@ -45,7 +48,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           onPress={() => onSelect('stripe')}
         >
           <View style={[s.iconBox, selectedMethod === 'stripe' && s.iconBoxSelected]}>
-            <CreditCard color={selectedMethod === 'stripe' ? COLORS.midTeal : COLORS.textMuted} size={20} strokeWidth={2} />
+            <CreditCard color={selectedMethod === 'stripe' ? colors.midTeal : colors.textMuted} size={20} strokeWidth={2} />
           </View>
 
           <View style={s.textWrap}>
@@ -62,30 +65,30 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { gap: 10 },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textMuted, letterSpacing: 0.4 },
+  sectionTitle: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textMuted, letterSpacing: 0.4 },
   optionsWrap: { gap: 10 },
   optionCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, padding: 14,
-    borderWidth: 1.5, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 14,
+    borderWidth: 1.5, borderColor: colors.borderSoft,
   },
   optionSelected: {
-    borderColor: COLORS.midTeal, backgroundColor: COLORS.midTealLight,
+    borderColor: colors.midTeal, backgroundColor: colors.midTealLight,
   },
   iconBox: {
-    width: 40, height: 40, borderRadius: 12, backgroundColor: COLORS.bgWarm,
+    width: 40, height: 40, borderRadius: 12, backgroundColor: colors.bgWarm,
     justifyContent: 'center', alignItems: 'center',
   },
-  iconBoxSelected: { backgroundColor: COLORS.surfaceWhite },
+  iconBoxSelected: { backgroundColor: colors.surfaceWhite },
   textWrap: { flex: 1 },
-  optionTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  optionSub: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+  optionTitle: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  optionSub: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 1 },
   radioOuter: {
-    width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: COLORS.borderSoft,
-    justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.surfaceWhite,
+    width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.borderSoft,
+    justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceWhite,
   },
-  radioOuterSelected: { borderColor: COLORS.midTeal },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.midTeal },
+  radioOuterSelected: { borderColor: colors.midTeal },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.midTeal },
 });

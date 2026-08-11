@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { Pill, ShieldCheck, Heart, ShoppingBag, ArrowRight } from 'lucide-react-native';
 
 interface HeroBannerProps {
@@ -9,11 +9,14 @@ interface HeroBannerProps {
 }
 
 export const HeroUploadBanner: React.FC<HeroBannerProps> = ({ onUploadPress, onBrowseOtcPress }) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.headerBadge}>
-          <ShieldCheck color={COLORS.softLime} size={16} />
+          <ShieldCheck color={colors.softLime} size={16} />
           <Text style={styles.headerBadgeText}>Verified Partner Pharmacies Only</Text>
         </View>
         
@@ -23,13 +26,13 @@ export const HeroUploadBanner: React.FC<HeroBannerProps> = ({ onUploadPress, onB
         </Text>
 
         <TouchableOpacity style={styles.uploadBtn} onPress={onUploadPress} activeOpacity={0.85}>
-          <Pill color={COLORS.deepIndigo} size={20} />
+          <Pill color={colors.deepIndigo} size={20} />
           <Text style={styles.uploadBtnText}>Upload Prescription Now</Text>
-          <ArrowRight color={COLORS.deepIndigo} size={18} />
+          <ArrowRight color={colors.deepIndigo} size={18} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.otcBtn} onPress={onBrowseOtcPress} activeOpacity={0.85}>
-          <ShoppingBag color={COLORS.white} size={18} />
+          <ShoppingBag color={colors.white} size={18} />
           <Text style={styles.otcBtnText}>Or Browse OTC Medicines (No Rx needed)</Text>
         </TouchableOpacity>
       </View>
@@ -37,9 +40,9 @@ export const HeroUploadBanner: React.FC<HeroBannerProps> = ({ onUploadPress, onB
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
-    backgroundColor: COLORS.deepTeal,
+    backgroundColor: colors.deepTeal,
     borderRadius: 16,
     padding: 18,
     marginVertical: 12,
@@ -59,14 +62,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   headerBadgeText: {
-    color: COLORS.softLime,
+    color: colors.softLime,
     fontSize: 11,
     fontWeight: '700',
   },
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: COLORS.white,
+    color: colors.white,
     marginTop: 4,
   },
   subtitle: {
@@ -76,7 +79,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   uploadBtn: {
-    backgroundColor: COLORS.softLime,
+    backgroundColor: colors.softLime,
     minHeight: 48,
     borderRadius: 10,
     flexDirection: 'row',
@@ -86,7 +89,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   uploadBtnText: {
-    color: COLORS.deepIndigo,
+    color: colors.deepIndigo,
     fontWeight: '800',
     fontSize: 15,
   },
@@ -99,7 +102,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   otcBtnText: {
-    color: COLORS.white,
+    color: colors.white,
     fontSize: 13,
     fontWeight: '600',
     textDecorationLine: 'underline',

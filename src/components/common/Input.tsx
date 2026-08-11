@@ -9,7 +9,7 @@ import {
   TouchableWithoutFeedback,
   ViewStyle,
 } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 
 interface InputProps extends TextInputProps {
@@ -29,6 +29,8 @@ export const Input: React.FC<InputProps> = ({
   style,
   ...props
 }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const borderAnim = useRef(new Animated.Value(0)).current;
@@ -54,10 +56,10 @@ export const Input: React.FC<InputProps> = ({
   };
 
   const borderColor = error
-    ? COLORS.error
+    ? colors.error
     : borderAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: [COLORS.border, COLORS.primary],
+        outputRange: [colors.border, colors.primary],
       });
 
   return (
@@ -69,7 +71,7 @@ export const Input: React.FC<InputProps> = ({
           <TextInput
             ref={inputRef}
             style={[s.input, icon ? { paddingLeft: 0 } : null, style as any]}
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             onFocus={onFocus}
             onBlur={onBlur}
             {...props}
@@ -85,20 +87,20 @@ export const Input: React.FC<InputProps> = ({
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   wrap: {
     marginBottom: 16,
   },
   label: {
     fontFamily: FONTS.medium,
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 6,
   },
   field: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderRadius: 10,
     overflow: 'hidden',
@@ -115,20 +117,20 @@ const s = StyleSheet.create({
     paddingHorizontal: 13,
     fontFamily: FONTS.regular,
     fontSize: 15,
-    color: COLORS.textPrimary,
+    color: colors.textPrimary,
     outlineStyle: 'none' as any,
     outlineWidth: 0 as any,
   },
   error: {
     fontFamily: FONTS.medium,
     fontSize: 12,
-    color: COLORS.error,
+    color: colors.error,
     marginTop: 5,
   },
   helper: {
     fontFamily: FONTS.regular,
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 5,
     lineHeight: 16,
   },

@@ -1,10 +1,25 @@
 import React, { createContext, useContext, useState } from 'react';
 import { MedicineItem, Pharmacy } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export interface CartPharmacy {
+  id: string;
+  name: string;
+  address: string;
+  distance: string;
+  image?: any;
+  rating?: number;
+  nmraLicense?: string;
+  pharmacistName?: string;
+  pharmacistRegNo?: string;
+  estimatedResponseTime?: string;
+  isOpen?: boolean;
+}
 
 export interface CartItem {
   medicine: MedicineItem;
   quantity: number;
-  pharmacy: { id: string; name: string; address: string; distance: string; image?: any };
+  pharmacy: CartPharmacy;
 }
 
 export interface AttachedPrescription {
@@ -18,7 +33,7 @@ interface CartContextType {
   cartItems: CartItem[];
   selectedPharmacy: Pharmacy | null;
   attachedPrescription: AttachedPrescription | null;
-  addToCart: (medicine: MedicineItem, pharmacy: { id: string; name: string; address: string; distance: string; image?: any }) => void;
+  addToCart: (medicine: MedicineItem, pharmacy: CartPharmacy) => void;
   removeFromCart: (medicineId: string, pharmacyId: string) => void;
   removeStoreFromCart: (storeId: string) => void;
   updateQuantity: (medicineId: string, pharmacyId: string, delta: number) => void;
@@ -35,8 +50,39 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacy | null>(null);
   const [attachedPrescription, setAttachedPrescription] = useState<AttachedPrescription | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const addToCart = (medicine: MedicineItem, pharmacy: { id: string; name: string; address: string; distance: string; image?: any }) => {
+  React.useEffect(() => {
+    const loadCart = async () => {
+      try {
+        const storedCart = await AsyncStorage.getItem('@medipick_cart');
+        const storedRx = await AsyncStorage.getItem('@medipick_rx');
+        if (storedCart) setCartItems(JSON.parse(storedCart));
+        if (storedRx) setAttachedPrescription(JSON.parse(storedRx));
+      } catch (e) {
+        console.warn('Failed to load cart', e);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    loadCart();
+  }, []);
+
+  React.useEffect(() => {
+    if (!isLoaded) return;
+    AsyncStorage.setItem('@medipick_cart', JSON.stringify(cartItems)).catch(e => console.warn(e));
+  }, [cartItems, isLoaded]);
+
+  React.useEffect(() => {
+    if (!isLoaded) return;
+    if (attachedPrescription) {
+      AsyncStorage.setItem('@medipick_rx', JSON.stringify(attachedPrescription)).catch(e => console.warn(e));
+    } else {
+      AsyncStorage.removeItem('@medipick_rx').catch(e => console.warn(e));
+    }
+  }, [attachedPrescription, isLoaded]);
+
+  const addToCart = (medicine: MedicineItem, pharmacy: CartPharmacy) => {
     if (medicine.isRxRequired) {
       alert('Rx Required: Prescription-Only Medicines cannot be added to direct cart. Please use Prescription Upload!');
       return;

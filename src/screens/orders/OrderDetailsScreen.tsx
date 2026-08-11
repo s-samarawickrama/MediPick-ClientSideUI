@@ -4,7 +4,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronLeft, MapPin, Receipt, ShieldCheck, CheckCircle2, XCircle, Clock, ChevronRight, FileText, Plus, Phone, MessageCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { useOrders } from '../../context/OrderContext';
@@ -36,6 +36,8 @@ const showAlert = (title: string, message: string, buttons?: any[]) => {
 };
 
 export const OrderDetailsScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const opacity = useRef(new Animated.Value(0)).current;
@@ -100,17 +102,17 @@ export const OrderDetailsScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
       
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <View style={s.headerCenter}>
           <Text style={s.headerTitle}>Order {order.orderNumber}</Text>
           <View style={s.statusTag}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isCompleted ? COLORS.midTeal : isCancelled ? '#EF4444' : COLORS.midTeal }} />
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isCompleted ? colors.midTeal : isCancelled ? '#EF4444' : colors.midTeal }} />
             <Text style={s.statusTagText}>
               {isCompleted ? 'Completed' : isCancelled ? 'Declined' : 'Live'}
             </Text>
@@ -128,15 +130,15 @@ export const OrderDetailsScreen = () => {
         {isIssue && (
           <View style={{
             flexDirection: 'row', alignItems: 'center', gap: 12,
-            backgroundColor: '#FEF2F2', borderRadius: 16, padding: 14,
-            borderWidth: 1, borderColor: '#FECACA', marginBottom: 16,
+            backgroundColor: colors.errorLight, borderRadius: 16, padding: 14,
+            borderWidth: 1, borderColor: colors.error, marginBottom: 16,
           }}>
-            <AlertTriangle color="#EF4444" size={24} strokeWidth={2} />
+            <AlertTriangle color={colors.error} size={24} strokeWidth={2} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: '#B91C1C' }}>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.error }}>
                 Issue Reported
               </Text>
-              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, marginTop: 1, opacity: 0.9 }}>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textSecondary, marginTop: 1, opacity: 0.9 }}>
                 The pharmacy is reviewing your issue and will respond shortly via chat.
               </Text>
             </View>
@@ -147,18 +149,18 @@ export const OrderDetailsScreen = () => {
         {(isCancelled || isReupload || order.rejectReason || order.refundStatus) && (
           <View style={{
             flexDirection: 'row', alignItems: 'center', gap: 12,
-            backgroundColor: (isCancelled || order.rejectReason) ? '#FEF2F2' : '#E6DFE8', 
+            backgroundColor: (isCancelled || order.rejectReason) ? colors.errorLight : colors.surfaceWhite,
             borderRadius: 16, padding: 14,
-            borderWidth: 1, borderColor: (isCancelled || order.rejectReason) ? '#FECACA' : '#D4C9D6', 
+            borderWidth: 1, borderColor: (isCancelled || order.rejectReason) ? colors.error : colors.borderSoft,
             marginBottom: 16,
           }}>
-            <FileText color={(isCancelled || order.rejectReason) ? '#EF4444' : COLORS.deepPlum} size={24} strokeWidth={2} />
+            <FileText color={(isCancelled || order.rejectReason) ? colors.error : colors.midTeal} size={24} strokeWidth={2} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: (isCancelled || order.rejectReason) ? '#B91C1C' : COLORS.deepPlum }}>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: (isCancelled || order.rejectReason) ? colors.error : colors.textDark }}>
                 {isReupload ? 'Action Required: Image Unclear' : order.refundStatus === 'REFUNDED' ? 'Refund Issued' : order.rejectReason ? 'Refund Request Declined' : 'Order Declined'}
               </Text>
-              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: (isCancelled || order.rejectReason) ? COLORS.textMuted : COLORS.deepPlum, marginTop: 1, opacity: 0.9 }}>
-                {isReupload && <Text style={{ color: '#EF4444', fontFamily: FONTS.bold }}>23h 59m remaining to re-upload. </Text>}
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textSecondary, marginTop: 1, opacity: 0.9 }}>
+                {isReupload && <Text style={{ color: colors.error, fontFamily: FONTS.bold }}>23h 59m remaining to re-upload. </Text>}
                 {order.rejectReason || (order.refundStatus === 'REFUNDED' ? 'The pharmacy has reviewed your issue and processed a full refund.' : '')}
               </Text>
             </View>
@@ -166,7 +168,7 @@ export const OrderDetailsScreen = () => {
               <TouchableOpacity
                 style={{
                   flexDirection: 'row', alignItems: 'center', gap: 4,
-                  backgroundColor: '#EF4444', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+                  backgroundColor: colors.error, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
                 }}
                 onPress={() => navigation.navigate('UploadPrescription', { pharmacyId: order.pharmacy?.id, pharmacyName: order.pharmacy?.name })}
               >
@@ -181,14 +183,14 @@ export const OrderDetailsScreen = () => {
         {isQuote && (
           <View style={{
             flexDirection: 'row', alignItems: 'center', gap: 12,
-            backgroundColor: '#E6DFE8', borderRadius: 16, padding: 14,
-            borderWidth: 1, borderColor: '#D4C9D6', marginBottom: 16,
+            backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 14,
+            borderWidth: 1, borderColor: colors.borderSoft, marginBottom: 16,
           }}>
-            <Clock color={COLORS.deepPlum} size={24} strokeWidth={2} />
+            <Clock color={colors.deepPlum} size={24} strokeWidth={2} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.deepPlum }}>Quote Ready for Review</Text>
-              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: COLORS.deepPlum, marginTop: 1, opacity: 0.9 }}>
-                <Text style={{ color: '#EF4444', fontFamily: FONTS.bold }}>23h 59m remaining </Text>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark }}>Quote Ready for Review</Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textSecondary, marginTop: 1, opacity: 0.9 }}>
+                <Text style={{ color: colors.error, fontFamily: FONTS.bold }}>23h 59m remaining </Text>
                 to confirm before auto-cancellation.
               </Text>
             </View>
@@ -215,7 +217,7 @@ export const OrderDetailsScreen = () => {
             {order.pharmacy?.image ? (
               <Image source={order.pharmacy.image} style={s.pharmAvatar} />
             ) : (
-              <View style={[s.pharmAvatar, { backgroundColor: COLORS.limeWhisper }]} />
+              <View style={[s.pharmAvatar, { backgroundColor: colors.limeWhisper }]} />
             )}
             <View style={{ flex: 1 }}>
               <Text style={s.pharmName}>{order.pharmacy?.name}</Text>
@@ -224,20 +226,20 @@ export const OrderDetailsScreen = () => {
             {isActive ? (
               <View style={{ flexDirection: 'row', gap: 8, marginRight: 4 }}>
                 <TouchableOpacity 
-                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
+                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
                   onPress={(e) => { e.stopPropagation(); showAlert('Call', 'Calling pharmacy...'); }}
                 >
-                  <Phone color={COLORS.midTeal} size={16} strokeWidth={2.5} />
+                  <Phone color={colors.midTeal} size={16} strokeWidth={2.5} />
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
+                  style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' }}
                   onPress={(e) => { e.stopPropagation(); showAlert('Chat', 'Opening chat...'); }}
                 >
-                  <MessageCircle color={COLORS.midTeal} size={16} strokeWidth={2.5} />
+                  <MessageCircle color={colors.midTeal} size={16} strokeWidth={2.5} />
                 </TouchableOpacity>
               </View>
             ) : (
-              <ChevronRight color={COLORS.borderSoft} size={20} />
+              <ChevronRight color={colors.borderSoft} size={20} />
             )}
           </View>
         </TouchableOpacity>
@@ -254,7 +256,7 @@ export const OrderDetailsScreen = () => {
                 activeOpacity={0.7}
                 onPress={() => showAlert('Prescription', 'Opening high-res prescription image viewer...')}
               >
-                <FileText color={COLORS.midTeal} size={28} style={{ opacity: 0.5 }} />
+                <FileText color={colors.midTeal} size={28} style={{ opacity: 0.5 }} />
                 <Text style={s.prescriptionPlaceholderText}>Page 1</Text>
               </TouchableOpacity>
               <TouchableOpacity 
@@ -262,7 +264,7 @@ export const OrderDetailsScreen = () => {
                 activeOpacity={0.7}
                 onPress={() => showAlert('Prescription', 'Opening high-res prescription image viewer...')}
               >
-                <FileText color={COLORS.midTeal} size={28} style={{ opacity: 0.5 }} />
+                <FileText color={colors.midTeal} size={28} style={{ opacity: 0.5 }} />
                 <Text style={s.prescriptionPlaceholderText}>Page 2</Text>
               </TouchableOpacity>
             </View>
@@ -303,7 +305,7 @@ export const OrderDetailsScreen = () => {
           </View>
           <View style={s.totalsRow}>
             <Text style={s.totalsLabel}>Discount</Text>
-            <Text style={[s.totalsValue, { color: COLORS.midTeal }]}>- LKR {order.totalMrp - order.totalAmount}</Text>
+            <Text style={[s.totalsValue, { color: colors.midTeal }]}>- LKR {order.totalMrp - order.totalAmount}</Text>
           </View>
           <View style={[s.totalsRow, { marginTop: 12 }]}>
             <Text style={s.grandTotalLabel}>Total Paid</Text>
@@ -348,7 +350,7 @@ export const OrderDetailsScreen = () => {
                   title="Cancel Order"
                   variant="ghost"
                   onPress={handleCancelOrder}
-                  textStyle={{ color: COLORS.error }}
+                  textStyle={{ color: colors.error }}
                   style={{ marginTop: 12 }}
                 />
               )}
@@ -360,9 +362,9 @@ export const OrderDetailsScreen = () => {
                 <Button
                   title="Report an Issue"
                   variant="ghost"
-                  icon={<AlertTriangle color={COLORS.error} size={16} strokeWidth={2} />}
+                  icon={<AlertTriangle color={colors.error} size={16} strokeWidth={2} />}
                   onPress={() => navigation.navigate('ReportIssue', { orderId: order.id })}
-                  textStyle={{ color: COLORS.error }}
+                  textStyle={{ color: colors.error }}
                   style={{ marginTop: 8 }}
                 />
               )}
@@ -375,65 +377,65 @@ export const OrderDetailsScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingTop: 52, paddingBottom: 14, paddingHorizontal: 20,
-    backgroundColor: COLORS.bgWarm, borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.surfaceWhite,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.borderSoft,
+    width: 36, height: 36, borderRadius: 10, backgroundColor: colors.surfaceWhite,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSoft,
   },
   headerCenter: { alignItems: 'center', gap: 4 },
-  headerTitle: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark },
-  statusTag: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 100, backgroundColor: '#F1F5F9', flexDirection: 'row', alignItems: 'center', gap: 6 },
+  headerTitle: { fontFamily: FONTS.black, fontSize: 16, color: colors.textDark },
+  statusTag: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 100, backgroundColor: colors.surfaceSubtle, flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusTagCompleted: {},
   statusTagCancelled: {},
   statusTagActive: {},
-  statusTagText: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.midTealDark },
+  statusTagText: { fontFamily: FONTS.bold, fontSize: 13, color: colors.midTealDark },
 
   scrollContent: { padding: 16, paddingBottom: 60, gap: 16 },
 
   card: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 15, color: COLORS.textDark },
+  sectionTitle: { fontFamily: FONTS.bold, fontSize: 15, color: colors.textDark },
 
   pharmacyRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   pharmAvatar: { width: 50, height: 50, borderRadius: 12 },
-  pharmName: { fontFamily: FONTS.bold, fontSize: 16, color: COLORS.textDark },
-  pharmAddress: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
+  pharmName: { fontFamily: FONTS.bold, fontSize: 16, color: colors.textDark },
+  pharmAddress: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, marginTop: 2 },
 
   prescriptionGrid: { flexDirection: 'row', gap: 12 },
   prescriptionPlaceholder: {
-    width: 80, height: 100, borderRadius: 12, backgroundColor: COLORS.limeWhisper,
-    borderWidth: 1, borderColor: COLORS.borderSoft, overflow: 'hidden',
+    width: 80, height: 100, borderRadius: 12, backgroundColor: colors.limeWhisper,
+    borderWidth: 1, borderColor: colors.borderSoft, overflow: 'hidden',
     justifyContent: 'center', alignItems: 'center', gap: 8,
   },
-  prescriptionPlaceholderText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  prescriptionPlaceholderText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
   itemsList: { gap: 16 },
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   itemQtyBox: {
-    width: 32, height: 32, borderRadius: 8, backgroundColor: COLORS.limeWhisper,
+    width: 32, height: 32, borderRadius: 8, backgroundColor: colors.limeWhisper,
     justifyContent: 'center', alignItems: 'center',
   },
-  itemQty: { fontFamily: FONTS.black, fontSize: 13, color: COLORS.midTeal },
-  itemName: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  itemSub: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted },
-  itemPrice: { fontFamily: FONTS.black, fontSize: 14, color: COLORS.textDark },
-  noItemsText: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted, fontStyle: 'italic' },
+  itemQty: { fontFamily: FONTS.black, fontSize: 13, color: colors.midTeal },
+  itemName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  itemSub: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted },
+  itemPrice: { fontFamily: FONTS.black, fontSize: 14, color: colors.textDark },
+  noItemsText: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
 
-  totalsDivider: { height: 1, backgroundColor: COLORS.borderSoft, marginVertical: 16 },
+  totalsDivider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: 16 },
   totalsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  totalsLabel: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted },
-  totalsValue: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark },
-  grandTotalLabel: { fontFamily: FONTS.black, fontSize: 15, color: COLORS.textDark },
-  grandTotalValue: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.midTeal },
+  totalsLabel: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted },
+  totalsValue: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark },
+  grandTotalLabel: { fontFamily: FONTS.black, fontSize: 15, color: colors.textDark },
+  grandTotalValue: { fontFamily: FONTS.black, fontSize: 18, color: colors.midTeal },
 
   actionsWrapper: { marginTop: 10, gap: 10 },
 });

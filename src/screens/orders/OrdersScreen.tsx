@@ -6,7 +6,7 @@ import {
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Store, Clock, Package, Navigation2, FileText, Pill, Receipt, Camera, Star, ChevronRight, Phone, MessageCircle } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { useOrders } from '../../context/OrderContext';
 import { MainStackParamList } from '../../navigation/MainNavigator';
@@ -61,6 +61,8 @@ const ActiveOrderCard = ({
   onAction: () => void;
   onReportIssue?: () => void;
 }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
   const isReady = order.state === 'READY_FOR_PICKUP';
   const isQuote = order.state === 'WAITING_CUSTOMER_CONFIRMATION';
   const isCompleted = order.state === 'COMPLETED';
@@ -69,18 +71,18 @@ const ActiveOrderCard = ({
   const isRecentCompleted = isCompleted && !order.refundStatus && !order.rejectReason && new Date(order.createdAt).getTime() > Date.now() - 24 * 3600 * 1000;
 
   // Dynamic Card Styles
-  let cardBg = COLORS.surfaceWhite;
-  let cardBorder = COLORS.borderSoft; // Default gray border
+  let cardBg = colors.surfaceWhite;
+  let cardBorder = colors.borderSoft;
   
   if (isReady) {
-    cardBg = '#F8FAFC';
-    cardBorder = COLORS.softLime; // Dynamic lime pop for ready
+    cardBg = colors.surfaceElevated;
+    cardBorder = colors.softLime;
   } else if (isCompleted) {
     cardBorder = '#D1FAE5';
   } else if (isCancelled) {
     cardBorder = '#FECACA';
   } else if (order.state === 'REUPLOAD_REQUESTED') {
-    cardBorder = COLORS.borderSoft; // Keep it clean, rely on the red button for attention
+    cardBorder = colors.borderSoft;
   }
 
   return (
@@ -95,7 +97,7 @@ const ActiveOrderCard = ({
           {order.pharmacy?.image ? (
             <Image source={order.pharmacy.image} style={s.pharmAvatarImage} />
           ) : (
-            <Store color={COLORS.midTeal} size={20} strokeWidth={2} />
+            <Store color={colors.midTeal} size={20} strokeWidth={2} />
           )}
         </View>
         <View style={{ flex: 1 }}>
@@ -114,22 +116,22 @@ const ActiveOrderCard = ({
         ) : isCompleted ? (
           <View style={{ flexDirection: 'row', gap: 6 }}>
             {order.refundStatus === 'REFUNDED' && (
-              <View style={[s.liveBadgePill, { backgroundColor: '#F1F5F9' }]}>
-                <Text style={[s.liveBadgeText, { color: COLORS.textMuted }]}>Refunded</Text>
+              <View style={[s.liveBadgePill, { backgroundColor: colors.surfaceSubtle }]}>
+                <Text style={[s.liveBadgeText, { color: colors.textMuted }]}>Refunded</Text>
               </View>
             )}
             {!!order.rejectReason && (
-              <View style={[s.liveBadgePill, { backgroundColor: '#FEF2F2' }]}>
-                <Text style={[s.liveBadgeText, { color: COLORS.error }]}>Rejected</Text>
+              <View style={[s.liveBadgePill, { backgroundColor: colors.errorLight }]}>
+                <Text style={[s.liveBadgeText, { color: colors.error }]}>Rejected</Text>
               </View>
             )}
-            <View style={[s.liveBadgePill, { backgroundColor: '#ECFDF5' }]}>
-              <Text style={[s.liveBadgeText, { color: COLORS.midTeal }]}>Completed</Text>
+            <View style={[s.liveBadgePill, { backgroundColor: colors.successLight }]}>
+              <Text style={[s.liveBadgeText, { color: colors.success }]}>Completed</Text>
             </View>
           </View>
         ) : (
-          <View style={[s.liveBadgePill, { backgroundColor: '#FEF2F2' }]}>
-            <Text style={[s.liveBadgeText, { color: COLORS.error }]}>Declined</Text>
+          <View style={[s.liveBadgePill, { backgroundColor: colors.errorLight }]}>
+            <Text style={[s.liveBadgeText, { color: colors.error }]}>Declined</Text>
           </View>
         )}
       </View>
@@ -137,12 +139,12 @@ const ActiveOrderCard = ({
       {/* Status headline */}
       <View style={s.statusBlock}>
         <View style={s.statusTextCol}>
-          <Text style={[s.statusHeadline, isReady && { color: COLORS.midTeal }, (isCancelled || order.state === 'REUPLOAD_REQUESTED') && { color: COLORS.error }]}>
+          <Text style={[s.statusHeadline, isReady && { color: colors.midTeal }, (isCancelled || order.state === 'REUPLOAD_REQUESTED') && { color: colors.error }]}>
             {getStatusHeadline(order.state)}
           </Text>
           <Text style={s.statusSub}>{getStatusSub(order.state)}</Text>
         </View>
-        <ChevronRight color={COLORS.textMuted} size={20} strokeWidth={2.5} style={{ opacity: 0.5 }} />
+        <ChevronRight color={colors.textMuted} size={20} strokeWidth={2.5} style={{ opacity: 0.5 }} />
       </View>
 
       {/* Footer */}
@@ -154,36 +156,36 @@ const ActiveOrderCard = ({
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {isReady ? (
-            <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={onAction}>
+            <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={(e) => { e.stopPropagation(); onAction(); }}>
               <Text style={[s.footerBtnText, s.btnTealText]}>Show Pickup Code</Text>
             </TouchableOpacity>
           ) : isQuote ? (
-            <TouchableOpacity style={[s.footerBtn, s.btnPurple]} onPress={onAction}>
+            <TouchableOpacity style={[s.footerBtn, s.btnPurple]} onPress={(e) => { e.stopPropagation(); onAction(); }}>
               <Text style={[s.footerBtnText, s.btnPurpleText]}>Review Quote</Text>
             </TouchableOpacity>
           ) : isCompleted ? (
             <>
               {isRecentCompleted && onReportIssue && (
-                <TouchableOpacity style={[s.footerBtn, s.btnLightGray, { marginRight: 'auto' }]} onPress={onReportIssue}>
+                <TouchableOpacity style={[s.footerBtn, s.btnLightGray, { marginRight: 'auto' }]} onPress={(e) => { e.stopPropagation(); onReportIssue(); }}>
                   <Text style={[s.footerBtnText, s.btnLightGrayText]}>Report Issue</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={() => showAlert('Added to Cart', 'Items have been added to your cart for reorder.')}>
+              <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={(e) => { e.stopPropagation(); showAlert('Added to Cart', 'Items have been added to your cart for reorder.'); }}>
                 <Text style={[s.footerBtnText, s.btnTealText]}>Reorder</Text>
               </TouchableOpacity>
             </>
           ) : isCancelled || order.state === 'WAITING_PHARMACY_CONFIRMATION' ? (
             <View />
           ) : order.state === 'REUPLOAD_REQUESTED' ? (
-            <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444', borderColor: '#EF4444', borderWidth: 1 }]} onPress={onAction}>
+            <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444', borderColor: '#EF4444', borderWidth: 1 }]} onPress={(e) => { e.stopPropagation(); onAction(); }}>
               <Text style={[s.footerBtnText, { color: '#FFFFFF' }]}>Re-upload</Text>
             </TouchableOpacity>
           ) : order.state === 'ISSUE_REPORTED' ? (
-            <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444' }]} onPress={onAction}>
+            <TouchableOpacity style={[s.footerBtn, { backgroundColor: '#EF4444' }]} onPress={(e) => { e.stopPropagation(); onAction(); }}>
               <Text style={[s.footerBtnText, { color: '#FFF' }]}>Message Pharmacy</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={onAction}>
+            <TouchableOpacity style={[s.footerBtn, s.btnGray]} onPress={(e) => { e.stopPropagation(); onAction(); }}>
               <Text style={[s.footerBtnText, s.btnGrayText]}>Track Order</Text>
             </TouchableOpacity>
           )}
@@ -196,8 +198,10 @@ const ActiveOrderCard = ({
 export const OrdersScreen = () => {
   const navigation = useNavigation<Nav>();
   const isFocused = useIsFocused();
+  const { colors } = useTheme();
   const [tab, setTab] = useState<'active' | 'completed' | 'cancelled'>('active');
   const opacity = useRef(new Animated.Value(0)).current;
+  const s = makeStyles(colors);
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
@@ -232,7 +236,7 @@ export const OrdersScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
       {/* Header */}
       <View style={s.header}>
@@ -287,7 +291,7 @@ export const OrdersScreen = () => {
 
         {displayed.length === 0 && (
           <View style={s.emptyWrap}>
-            <Package color={COLORS.textMuted} size={44} strokeWidth={1.5} />
+            <Package color={colors.textMuted} size={44} strokeWidth={1.5} />
             <Text style={s.emptyTitle}>No {tab} orders</Text>
             <Text style={s.emptySub}>Your pharmacy orders will appear here</Text>
           </View>
@@ -297,44 +301,44 @@ export const OrdersScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
 
   header: {
-    backgroundColor: COLORS.bgWarm, paddingTop: 52, paddingBottom: 14,
+    backgroundColor: colors.bgWarm, paddingTop: 52, paddingBottom: 14,
     paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center',
-    borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
-  headerTitle: { fontFamily: FONTS.black, fontSize: 26, color: COLORS.textDark, letterSpacing: -0.6, flex: 1 },
+  headerTitle: { fontFamily: FONTS.black, fontSize: 26, color: colors.textDark, letterSpacing: -0.6, flex: 1 },
   headerLiveBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: '#ECFDF5', paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 20, borderWidth: 1, borderColor: '#A7F3D0',
+    backgroundColor: colors.successLight, paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 20, borderWidth: 1, borderColor: colors.success,
   },
-  headerLiveDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: COLORS.midTeal },
-  headerLiveText: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.midTeal },
+  headerLiveDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.midTeal },
+  headerLiveText: { fontFamily: FONTS.bold, fontSize: 12, color: colors.midTeal },
 
   // Tabs
   tabsRow: {
     flexDirection: 'row', gap: 8, paddingHorizontal: 20,
-    paddingVertical: 12, backgroundColor: COLORS.surfaceWhite,
-    borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    paddingVertical: 12, backgroundColor: colors.surfaceWhite,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   tabBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 7,
     borderRadius: 20, borderWidth: 1.5,
-    borderColor: COLORS.borderSoft, backgroundColor: COLORS.bgWarm,
+    borderColor: colors.borderSoft, backgroundColor: colors.bgWarm,
   },
-  tabBtnActive: { borderColor: COLORS.midTeal, backgroundColor: COLORS.midTeal },
-  tabText: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textMuted },
+  tabBtnActive: { borderColor: colors.midTeal, backgroundColor: colors.midTeal },
+  tabText: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textMuted },
   tabTextActive: { color: '#fff' },
   tabCountBadge: {
-    backgroundColor: '#E2E8F0', borderRadius: 10,
+    backgroundColor: colors.surfaceSubtle, borderRadius: 10,
     paddingHorizontal: 6, paddingVertical: 1, minWidth: 18, alignItems: 'center',
   },
   tabCountBadgeActive: { backgroundColor: 'rgba(255,255,255,0.25)' },
-  tabCountText: { fontFamily: FONTS.black, fontSize: 10, color: COLORS.textMuted },
+  tabCountText: { fontFamily: FONTS.black, fontSize: 10, color: colors.textMuted },
   tabCountTextActive: { color: '#fff' },
 
   scroll: { padding: 16, paddingBottom: 100, gap: 16 },
@@ -343,7 +347,7 @@ const s = StyleSheet.create({
   activeCard: {
     borderRadius: 18,
     borderWidth: 1.5,
-    shadowColor: '#1C1917', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 2,
     marginBottom: 16, overflow: 'hidden',
   },
   activeCardHeaderRow: {
@@ -352,93 +356,93 @@ const s = StyleSheet.create({
   },
   pharmAvatar: {
     width: 44, height: 44, borderRadius: 14,
-    backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.surfaceSubtle, justifyContent: 'center', alignItems: 'center',
   },
   pharmAvatarImage: { width: '100%', height: '100%', borderRadius: 14 },
-  pharmAvatarText: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.textMuted },
-  pharmName: { fontFamily: FONTS.bold, fontSize: 15, color: COLORS.textDark },
-  pharmType: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
+  pharmAvatarText: { fontFamily: FONTS.black, fontSize: 16, color: colors.textMuted },
+  pharmName: { fontFamily: FONTS.bold, fontSize: 15, color: colors.textDark },
+  pharmType: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 },
   
   liveBadgePill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 4,
+    backgroundColor: colors.surfaceSubtle, paddingHorizontal: 8, paddingVertical: 4,
     borderRadius: 12,
   },
-  liveBadgePillReady: { backgroundColor: COLORS.limeWhisper },
-  liveDotSmall: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.midTeal },
-  liveBadgeText: { fontFamily: FONTS.bold, fontSize: 10, color: COLORS.midTeal },
+  liveBadgePillReady: { backgroundColor: colors.limeWhisper },
+  liveDotSmall: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.midTeal },
+  liveBadgeText: { fontFamily: FONTS.bold, fontSize: 10, color: colors.midTeal },
 
   statusBlock: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingBottom: 20 },
   statusIconWrapper: {
-    width: 48, height: 48, borderRadius: 16, backgroundColor: '#F8FAFC',
+    width: 48, height: 48, borderRadius: 16, backgroundColor: colors.surfaceSubtle,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   statusTextCol: { flex: 1 },
   statusHeadline: {
-    fontFamily: FONTS.extrabold, fontSize: 16, color: COLORS.textDark,
+    fontFamily: FONTS.extrabold, fontSize: 16, color: colors.textDark,
     letterSpacing: -0.3, marginBottom: 2,
   },
-  statusSub: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted },
+  statusSub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted },
 
   activeCardFooter: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 14,
-    borderTopWidth: 1, borderTopColor: COLORS.borderSoft,
-    backgroundColor: '#FAFAFA',
+    borderTopWidth: 1, borderTopColor: colors.borderSoft,
+    backgroundColor: colors.surfaceSubtle,
     borderBottomLeftRadius: 18, borderBottomRightRadius: 18,
   },
-  footerLabel: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted },
-  footerPrice: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark },
+  footerLabel: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted },
+  footerPrice: { fontFamily: FONTS.black, fontSize: 16, color: colors.textDark },
   
   footerBtn: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   footerBtnText: { fontFamily: FONTS.bold, fontSize: 13 },
-  btnTeal: { backgroundColor: COLORS.midTeal },
+  btnTeal: { backgroundColor: colors.midTeal },
   btnTealText: { color: '#FFFFFF' },
-  btnPurple: { backgroundColor: COLORS.deepPlum },
+  btnPurple: { backgroundColor: colors.deepPlum },
   btnPurpleText: { color: '#FFFFFF' },
   btnGray: { backgroundColor: '#0F172A' },
   btnGrayText: { color: '#FFFFFF' },
-  btnLightGray: { backgroundColor: '#E2E8F0' },
-  btnLightGrayText: { color: COLORS.textDark },
+  btnLightGray: { backgroundColor: colors.borderSoft },
+  btnLightGrayText: { color: colors.textDark },
 
   // ── History Cards ─────────────────────────────────────────────
   historyCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 10,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 10,
     shadowColor: '#0F172A', shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.02, shadowRadius: 8, elevation: 1,
   },
   historyCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   historyAvatar: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: COLORS.bgWarm, justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   historyAvatarImage: { width: '100%', height: '100%', borderRadius: 11 },
-  historyPharmName: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  historyMeta: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
+  historyPharmName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  historyMeta: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 },
   doneChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
   },
-  doneChipText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  doneChipText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
   cancelChip: {
-    backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 999, borderWidth: 1, borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceSubtle, paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 999, borderWidth: 1, borderColor: colors.borderSoft,
   },
-  cancelChipText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textMuted },
+  cancelChipText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textMuted },
   reorderBtn: {
-    alignSelf: 'flex-end', backgroundColor: COLORS.bgWarm,
+    alignSelf: 'flex-end', backgroundColor: colors.bgWarm,
     paddingHorizontal: 14, paddingVertical: 7,
-    borderRadius: 10, borderWidth: 1, borderColor: COLORS.borderSoft,
+    borderRadius: 10, borderWidth: 1, borderColor: colors.borderSoft,
   },
-  reorderBtnText: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark },
+  reorderBtnText: { fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark },
 
   // ── Empty ─────────────────────────────────────────────────────
   emptyWrap: { alignItems: 'center', paddingTop: 80, gap: 10 },
-  emptyTitle: { fontFamily: FONTS.bold, fontSize: 17, color: COLORS.textDark },
-  emptySub: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textMuted, textAlign: 'center' },
+  emptyTitle: { fontFamily: FONTS.bold, fontSize: 17, color: colors.textDark },
+  emptySub: { fontFamily: FONTS.regular, fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 });
 
 

@@ -12,11 +12,12 @@ import {
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../components/common/Button';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MOCK_MEDICINES } from '../../mock/demoData';
 import { useCart } from '../../context/CartContext';
+import { MedicineItem } from '../../types';
 
 const FUN_3D_BAG = require('../../../assets/fun_3d_bag.png');
 
@@ -24,6 +25,8 @@ type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'UploadPrescription'>;
 
 export const UploadPrescriptionScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const route      = useRoute<Route>();
   const targetPharmacyId   = route.params?.pharmacyId;
@@ -39,7 +42,15 @@ export const UploadPrescriptionScreen = () => {
   );
 
   const [itemSearchQuery, setItemSearchQuery] = useState('');
-  const [customItems, setCustomItems]       = useState<{ id: string; name: string; price: string; image?: any; dosage?: string; description?: string }[]>([]);
+  const [customItems, setCustomItems] = useState<Array<{
+    id: string;
+    name: string;
+    price: string;
+    image?: any;
+    dosage: string;
+    description?: string;
+    category?: MedicineItem['category'];
+  }>>([]);
   const [detailModalItem, setDetailModalItem] = useState<any | null>(null);
   const [currentPage, setCurrentPage]         = useState(1);
   const ITEMS_PER_PAGE = 4;
@@ -83,10 +94,19 @@ export const UploadPrescriptionScreen = () => {
   const handleAddCustomItem = () => {
     if (!itemSearchQuery.trim()) return;
     const newId = `custom-${Date.now()}`;
-    const newItem = {
+    const newItem: {
+      id: string;
+      name: string;
+      price: string;
+      image?: any;
+      dosage: string;
+      description?: string;
+      category?: MedicineItem['category'];
+    } = {
       id: newId,
       name: itemSearchQuery.trim(),
       dosage: 'Custom Request',
+      category: 'Cold & Flu',
       price: 'Quoted upon request',
       description: 'Custom requested pharmacy item specified by patient.',
     };
@@ -210,12 +230,14 @@ export const UploadPrescriptionScreen = () => {
             addToCart({
               id: item.id,
               name: item.name,
+              genericName: item.name,
               mrpPrice: parseFloat(item.price.replace(/[^\d.]/g, '')) || 0,
               pharmacyPrice: parseFloat(item.price.replace(/[^\d.]/g, '')) || 0,
               isRxRequired: false,
               image: item.image,
               dosage: item.dosage,
-              category: item.category || 'OTC',
+              category: (item.category as MedicineItem['category']) || 'Cold & Flu',
+              inStock: true,
             }, {
               id: targetPharmacyId,
               name: targetPharmacyName,
@@ -253,18 +275,18 @@ export const UploadPrescriptionScreen = () => {
       style={s.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bgWarm} />
       <View style={s.nav}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={COLORS.peacockBlue} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.peacockBlue} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={s.navTitle}>{targetPharmacyName ? `Upload to ${targetPharmacyName}` : 'Upload Prescription'}</Text>
         <View style={{ width: 36 }} />
       </View>
 
       {totalSelectedItemsCount > 0 && (
-        <View style={[s.targetBanner, { justifyContent: 'center', backgroundColor: COLORS.midTeal }]}>
-          <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: COLORS.white }}>
+        <View style={[s.targetBanner, { justifyContent: 'center', backgroundColor: colors.midTeal }]}>
+          <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.white }}>
             Cart Total: <Text style={{ fontFamily: FONTS.black }}>LKR {totalSelectedPrice.toFixed(2)}</Text> ({totalSelectedItemsCount} item{totalSelectedItemsCount !== 1 ? 's' : ''})
           </Text>
         </View>
@@ -294,7 +316,7 @@ export const UploadPrescriptionScreen = () => {
         ) : (
           <>
             <TouchableOpacity style={s.cameraZone} onPress={takePhoto} activeOpacity={0.88}>
-              <View style={[s.cameraCircle, { backgroundColor: '#FFF', overflow: 'hidden', padding: 0 }]}>
+              <View style={[s.cameraCircle, { backgroundColor: colors.surfaceSubtle, overflow: 'hidden', padding: 0 }]}>
                 <Image source={require('../../../assets/prescription_and_camera.png')} style={{ width: 64, height: 64, transform: [{ scale: 1.35 }] }} resizeMode="cover" />
               </View>
               <Text style={s.cameraTitle}>Take Prescription Photo</Text>
@@ -308,7 +330,7 @@ export const UploadPrescriptionScreen = () => {
             </View>
 
             <TouchableOpacity style={s.fileBtn} onPress={pickFromGallery} activeOpacity={0.8}>
-              <ImagePlus color={COLORS.midTeal} size={20} strokeWidth={2.2} />
+              <ImagePlus color={colors.midTeal} size={20} strokeWidth={2.2} />
               <Text style={s.fileBtnText}>Upload from Gallery</Text>
             </TouchableOpacity>
           </>
@@ -317,13 +339,13 @@ export const UploadPrescriptionScreen = () => {
         {/* Prescription Instructions / Notes Card */}
         <View style={s.noteContainer}>
           <View style={s.noteHeaderRow}>
-            <MessageSquare color={COLORS.midTeal} size={16} strokeWidth={2.2} />
+            <MessageSquare color={colors.midTeal} size={16} strokeWidth={2.2} />
             <Text style={s.noteTitle}>Prescription Instructions for Pharmacist</Text>
           </View>
           <TextInput
             style={s.noteInput}
             placeholder="E.g. Only need the first 2 items listed, or 1-week supply..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={2}
             textAlignVertical="top"
@@ -335,7 +357,7 @@ export const UploadPrescriptionScreen = () => {
         {/* Extra OTC Items Card */}
         <View style={s.extraItemsContainer}>
           <View style={s.extraHeaderBanner}>
-            <View style={{ width: 56, height: 56, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
+            <View style={{ width: 56, height: 56, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.borderSoft, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceSubtle }}>
               <Image source={require('../../../assets/clay_3d_bag_white.png')} style={{ width: 56, height: 56, transform: [{ scale: 1.35 }] }} resizeMode="cover" />
             </View>
             <View style={{ flex: 1, gap: 3 }}>
@@ -352,17 +374,17 @@ export const UploadPrescriptionScreen = () => {
 
             {/* Search Bar */}
             <View style={s.extraSearchBar}>
-              <Search color={COLORS.textMuted} size={16} strokeWidth={2} />
+              <Search color={colors.textMuted} size={16} strokeWidth={2} />
               <TextInput
                 style={s.extraSearchInput}
                 placeholder="Search items (e.g. Panadol, Bandages)..."
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={itemSearchQuery}
                 onChangeText={setItemSearchQuery}
               />
               {itemSearchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => setItemSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <X color={COLORS.textMuted} size={16} strokeWidth={2} />
+                  <X color={colors.textMuted} size={16} strokeWidth={2} />
                 </TouchableOpacity>
               )}
             </View>
@@ -421,7 +443,7 @@ export const UploadPrescriptionScreen = () => {
                             onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, -1); }}
                             activeOpacity={0.7}
                           >
-                            <Minus color={COLORS.midTeal} size={12} strokeWidth={3} />
+                            <Minus color={colors.midTeal} size={12} strokeWidth={3} />
                           </TouchableOpacity>
                           <Text style={s.gridStepQty}>{qty}</Text>
                           <TouchableOpacity
@@ -429,7 +451,7 @@ export const UploadPrescriptionScreen = () => {
                             onPress={(e) => { e.stopPropagation?.(); setItemQty(item.id, 1); }}
                             activeOpacity={0.7}
                           >
-                            <Plus color={COLORS.midTeal} size={12} strokeWidth={3} />
+                            <Plus color={colors.midTeal} size={12} strokeWidth={3} />
                           </TouchableOpacity>
                         </View>
                       ) : (
@@ -460,7 +482,7 @@ export const UploadPrescriptionScreen = () => {
                     onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     activeOpacity={0.7}
                   >
-                    <ChevronLeft color={currentPage === 1 ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+                    <ChevronLeft color={currentPage === 1 ? '#94A3B8' : colors.midTeal} size={16} strokeWidth={2.5} />
                   </TouchableOpacity>
 
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -482,7 +504,7 @@ export const UploadPrescriptionScreen = () => {
                     onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     activeOpacity={0.7}
                   >
-                    <ChevronRight color={currentPage === totalPages ? '#94A3B8' : COLORS.midTeal} size={16} strokeWidth={2.5} />
+                    <ChevronRight color={currentPage === totalPages ? '#94A3B8' : colors.midTeal} size={16} strokeWidth={2.5} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -502,7 +524,7 @@ export const UploadPrescriptionScreen = () => {
         <View style={s.modalOverlay}>
           <View style={s.modalCard}>
             <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDetailModalItem(null)}>
-              <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+              <X color={colors.textDark} size={18} strokeWidth={2.5} />
             </TouchableOpacity>
 
             {detailModalItem && (
@@ -511,7 +533,7 @@ export const UploadPrescriptionScreen = () => {
                   {detailModalItem.image ? (
                     <Image source={detailModalItem.image} style={s.modalImg} resizeMode="cover" />
                   ) : (
-                    <ShoppingBag color={COLORS.midTeal} size={48} strokeWidth={2} />
+                    <ShoppingBag color={colors.midTeal} size={48} strokeWidth={2} />
                   )}
                 </View>
 
@@ -531,14 +553,14 @@ export const UploadPrescriptionScreen = () => {
                       style={s.modalQtyBtn}
                       onPress={() => setItemQty(detailModalItem.id, -1)}
                     >
-                      <Minus color={COLORS.midTeal} size={16} strokeWidth={3} />
+                      <Minus color={colors.midTeal} size={16} strokeWidth={3} />
                     </TouchableOpacity>
                     <Text style={s.modalQtyText}>{selectedItemQtys[detailModalItem.id] || 0}</Text>
                     <TouchableOpacity
                       style={s.modalQtyBtn}
                       onPress={() => setItemQty(detailModalItem.id, 1)}
                     >
-                      <Plus color={COLORS.midTeal} size={16} strokeWidth={3} />
+                      <Plus color={colors.midTeal} size={16} strokeWidth={3} />
                     </TouchableOpacity>
                   </View>
 
@@ -558,48 +580,48 @@ export const UploadPrescriptionScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8FAF7' },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   nav: {
     flexDirection: 'row', alignItems: 'center',
     paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+    backgroundColor: colors.surfaceWhite,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.surfaceSubtle, justifyContent: 'center', alignItems: 'center',
   },
-  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.bold, fontSize: 16, color: COLORS.peacockBlue },
+  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.bold, fontSize: 16, color: colors.peacockBlue },
   scroll: { padding: 16, paddingBottom: 60, gap: 14 },
 
   cameraZone: {
-    backgroundColor: COLORS.white, borderRadius: 18, padding: 32,
+    backgroundColor: colors.surfaceWhite, borderRadius: 18, padding: 32,
     alignItems: 'center', gap: 8,
-    borderWidth: 1.5, borderStyle: 'dashed', borderColor: COLORS.deepTeal,
+    borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.deepTeal,
   },
   cameraCircle: {
     width: 68, height: 68, borderRadius: 34,
-    backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center',
     marginBottom: 4,
   },
-  cameraTitle: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.peacockBlue },
-  cameraSub: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted, textAlign: 'center' },
+  cameraTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.peacockBlue },
+  cameraSub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   orLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
-  orText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textMuted },
+  orText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textMuted },
 
   fileBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: COLORS.white, borderRadius: 12,
-    borderWidth: 1.5, borderColor: '#E2E8F0', height: 50, paddingHorizontal: 15,
+    backgroundColor: colors.surfaceWhite, borderRadius: 12,
+    borderWidth: 1.5, borderColor: colors.borderSoft, height: 50, paddingHorizontal: 15,
   },
-  fileBtnText: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.peacockBlue },
+  fileBtnText: { fontFamily: FONTS.bold, fontSize: 14, color: colors.peacockBlue },
 
   previewContainer: {
-    backgroundColor: COLORS.white, borderRadius: 18,
-    overflow: 'hidden', borderWidth: 1.5, borderColor: COLORS.deepTeal,
+    backgroundColor: colors.surfaceWhite, borderRadius: 18,
+    overflow: 'hidden', borderWidth: 1.5, borderColor: colors.deepTeal,
     position: 'relative',
   },
   previewImage: { width: '100%', height: 220 },
@@ -618,11 +640,11 @@ const s = StyleSheet.create({
 
   // Extra OTC Items Card
   extraItemsContainer: {
-    backgroundColor: COLORS.white, borderRadius: 18, padding: 16,
-    borderWidth: 1.5, borderColor: '#E2E8F0', gap: 12,
+    backgroundColor: colors.surfaceWhite, borderRadius: 18, padding: 16,
+    borderWidth: 1.5, borderColor: colors.borderSoft, gap: 12,
   },
   browseStoreBtn: {
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     paddingVertical: 14,
     borderRadius: 12,
     flexDirection: 'row',
@@ -637,50 +659,50 @@ const s = StyleSheet.create({
   browseStoreBtnText: {
     fontFamily: FONTS.bold,
     fontSize: 14,
-    color: COLORS.deepTeal,
+    color: colors.deepTeal,
   },
   extraHeaderBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   catchyIconBox: {
     width: 42, height: 42, borderRadius: 12,
-    backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center',
   },
   needMedsBadge: {
     backgroundColor: '#FFF7ED', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
     borderWidth: 1, borderColor: '#FED7AA',
   },
   needMedsBadgeText: { fontFamily: FONTS.extrabold, fontSize: 8, color: '#EA580C', letterSpacing: 0.5 },
-  catchyTitle: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.peacockBlue, letterSpacing: -0.3 },
-  catchySub: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, lineHeight: 16 },
+  catchyTitle: { fontFamily: FONTS.black, fontSize: 16, color: colors.peacockBlue, letterSpacing: -0.3 },
+  catchySub: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, lineHeight: 16 },
 
   totalBanner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 16, paddingVertical: 14,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 16, paddingVertical: 14,
     borderRadius: 12, borderWidth: 1, borderColor: '#D6EDA0',
     marginTop: 4, marginBottom: 4,
   },
-  totalBannerText: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.deepTeal },
-  totalBannerPrice: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.peacockBlue },
+  totalBannerText: { fontFamily: FONTS.bold, fontSize: 14, color: colors.deepTeal },
+  totalBannerPrice: { fontFamily: FONTS.black, fontSize: 16, color: colors.peacockBlue },
 
   extraSearchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#F8FAF7', borderRadius: 12, paddingHorizontal: 12, height: 42,
-    borderWidth: 1, borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceSubtle, borderRadius: 12, paddingHorizontal: 12, height: 42,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
-  extraSearchInput: { flex: 1, fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textDark, height: '100%' },
+  extraSearchInput: { flex: 1, fontFamily: FONTS.medium, fontSize: 13, color: colors.textDark, height: '100%' },
   addCustomBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: COLORS.midTeal, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14,
+    backgroundColor: colors.midTeal, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14,
   },
   addCustomBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF' },
   // 2-col grid — matches Browse productCard/productImgBox exactly
   extraGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   gridCard: {
-    width: '47.5%', backgroundColor: COLORS.white, borderRadius: 20, padding: 12,
-    borderWidth: 1, borderColor: '#E8EDF2', gap: 4,
+    width: '47.5%', backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 12,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 4,
   },
-  gridCardSelected: { borderColor: '#D6EDA0', backgroundColor: COLORS.limeWhisper },
+  gridCardSelected: { borderColor: '#D6EDA0', backgroundColor: colors.limeWhisper },
   gridImgBox: {
-    height: 120, backgroundColor: COLORS.limeWhisper, borderRadius: 14,
+    height: 120, backgroundColor: colors.limeWhisper, borderRadius: 14,
     justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: 6, padding: 6,
     overflow: 'hidden',
   },
@@ -689,20 +711,20 @@ const s = StyleSheet.create({
     position: 'absolute', top: 7, right: 7,
     backgroundColor: 'rgba(15,23,42,0.38)', borderRadius: 10, padding: 4,
   },
-  gridProdName: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark, lineHeight: 17 },
-  gridProdDosage: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
+  gridProdName: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark, lineHeight: 17 },
+  gridProdDosage: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
   gridCardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 6 },
-  gridProdPricePrefix: { fontFamily: FONTS.medium, fontSize: 10, color: COLORS.textMuted },
-  gridProdPrice: { fontFamily: FONTS.black, fontSize: 13, color: COLORS.textDark },
+  gridProdPricePrefix: { fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted },
+  gridProdPrice: { fontFamily: FONTS.black, fontSize: 13, color: colors.textDark },
   gridStepperBox: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, borderRadius: 10, paddingHorizontal: 6, height: 30,
+    backgroundColor: colors.limeWhisper, borderRadius: 10, paddingHorizontal: 6, height: 30,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
   gridStepBtn: { width: 18, height: 18, justifyContent: 'center', alignItems: 'center' },
-  gridStepQty: { fontFamily: FONTS.black, fontSize: 12, color: COLORS.midTeal },
+  gridStepQty: { fontFamily: FONTS.black, fontSize: 12, color: colors.midTeal },
   gridAddCircle: {
-    width: 30, height: 30, borderRadius: 10, backgroundColor: COLORS.midTeal,
+    width: 30, height: 30, borderRadius: 10, backgroundColor: colors.midTeal,
     justifyContent: 'center', alignItems: 'center',
   },
 
@@ -714,7 +736,7 @@ const s = StyleSheet.create({
   paginationInfoText: {
     fontFamily: FONTS.medium,
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   paginationRow: {
     flexDirection: 'row',
@@ -725,34 +747,34 @@ const s = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#D6EDA0',
   },
   pageNavBtnDisabled: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceSubtle,
+    borderColor: colors.borderSoft,
   },
   pageNumberBtn: {
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: '#F8FAF7',
+    backgroundColor: colors.surfaceSubtle,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.borderSoft,
   },
   pageNumberBtnActive: {
-    backgroundColor: COLORS.midTeal,
-    borderColor: COLORS.midTeal,
+    backgroundColor: colors.midTeal,
+    borderColor: colors.midTeal,
   },
   pageNumberText: {
     fontFamily: FONTS.bold,
     fontSize: 13,
-    color: COLORS.textDark,
+    color: colors.textDark,
   },
   pageNumberTextActive: {
     color: '#FFFFFF',
@@ -760,57 +782,57 @@ const s = StyleSheet.create({
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.45)', justifyContent: 'flex-end' },
   modalCard: {
-    backgroundColor: COLORS.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: colors.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 20, paddingBottom: Platform.OS === 'ios' ? 36 : 24, gap: 10, position: 'relative',
   },
   modalCloseBtn: {
     position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', zIndex: 10,
+    backgroundColor: colors.surfaceSubtle, justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
   modalImgBox: {
-    height: 180, backgroundColor: COLORS.limeWhisper, borderRadius: 16,
+    height: 180, backgroundColor: colors.limeWhisper, borderRadius: 16,
     justifyContent: 'center', alignItems: 'center', marginVertical: 6,
     overflow: 'hidden', borderWidth: 1, borderColor: '#D6EDA0',
   },
   modalImg: { width: '100%', height: '100%' },
-  modalTitle: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark },
-  modalDosage: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textMuted },
+  modalTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.textDark },
+  modalDosage: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textMuted },
   modalPriceBadge: {
-    alignSelf: 'flex-start', backgroundColor: COLORS.limeWhisper,
+    alignSelf: 'flex-start', backgroundColor: colors.limeWhisper,
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
-  modalPriceText: { fontFamily: FONTS.black, fontSize: 13, color: COLORS.midTeal },
-  modalDesc: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textSecondary, lineHeight: 20, marginVertical: 4 },
+  modalPriceText: { fontFamily: FONTS.black, fontSize: 13, color: colors.midTeal },
+  modalDesc: { fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary, lineHeight: 20, marginVertical: 4 },
   modalFooterRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   modalQtyBox: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#F8FAF7', borderRadius: 12, paddingHorizontal: 12, height: 44,
-    borderWidth: 1, borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceSubtle, borderRadius: 12, paddingHorizontal: 12, height: 44,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   modalQtyBtn: { width: 28, height: 28, justifyContent: 'center', alignItems: 'center' },
-  modalQtyText: { fontFamily: FONTS.black, fontSize: 15, color: COLORS.midTeal },
+  modalQtyText: { fontFamily: FONTS.black, fontSize: 15, color: colors.midTeal },
   modalAddDoneBtn: {
-    flex: 1, backgroundColor: COLORS.midTeal, borderRadius: 12, height: 44,
+    flex: 1, backgroundColor: colors.midTeal, borderRadius: 12, height: 44,
     justifyContent: 'center', alignItems: 'center',
   },
   modalAddDoneText: { fontFamily: FONTS.bold, fontSize: 14, color: '#FFF' },
 
   noteContainer: {
-    backgroundColor: COLORS.white, borderRadius: 16, padding: 14,
-    borderWidth: 1.5, borderColor: '#E2E8F0', gap: 8,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 14,
+    borderWidth: 1.5, borderColor: colors.borderSoft, gap: 8,
   },
   noteHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  noteTitle: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.peacockBlue },
+  noteTitle: { fontFamily: FONTS.bold, fontSize: 13, color: colors.peacockBlue },
   noteInput: {
-    backgroundColor: '#F8FAF7', borderRadius: 12, padding: 12,
-    fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textDark,
-    minHeight: 70, borderWidth: 1, borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceSubtle, borderRadius: 12, padding: 12,
+    fontFamily: FONTS.medium, fontSize: 13, color: colors.textDark,
+    minHeight: 70, borderWidth: 1, borderColor: colors.borderSoft,
   },
   targetBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 16, paddingVertical: 10,
     borderBottomWidth: 1, borderBottomColor: '#D6EDA0',
   },
-  targetBannerText: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.deepTeal },
+  targetBannerText: { fontFamily: FONTS.medium, fontSize: 13, color: colors.deepTeal },
 });

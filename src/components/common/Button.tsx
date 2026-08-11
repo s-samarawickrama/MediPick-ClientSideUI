@@ -9,7 +9,7 @@ import {
   TextStyle,
   View,
 } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 
 interface ButtonProps {
@@ -39,6 +39,8 @@ export const Button: React.FC<ButtonProps> = ({
   iconRight,
   fullWidth = true,
 }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
   const scale = useRef(new Animated.Value(1)).current;
 
   const pressIn = () => {
@@ -60,14 +62,20 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const variantStyle = {
-    primary:   { bg: COLORS.midTeal,      text: '#FFFFFF', border: 'transparent' },
-    espresso:  { bg: COLORS.peacockBlue,   text: '#FFFFFF', border: 'transparent' },
-    plum:      { bg: COLORS.deepPlum,     text: '#FFFFFF', border: 'transparent' },
-    secondary: { bg: COLORS.limeWhisper,  text: COLORS.midTeal, border: '#D6EDA0' },
-    outline:   { bg: 'transparent',       text: COLORS.midTeal, border: COLORS.midTeal },
-    ghost:     { bg: 'transparent',       text: COLORS.textSecondary, border: 'transparent' },
-    danger:    { bg: COLORS.error,        text: '#FFFFFF', border: 'transparent' },
-  }[variant] || { bg: COLORS.midTeal, text: '#FFFFFF', border: 'transparent' };
+    primary:   { bg: colors.midTeal,      text: '#FFFFFF', border: 'transparent' },
+    espresso:  { bg: colors.peacockBlue,   text: '#FFFFFF', border: 'transparent' },
+    plum:      { bg: colors.deepPlum,     text: '#FFFFFF', border: 'transparent' },
+    secondary: { bg: colors.limeWhisper,  text: colors.midTeal, border: '#D6EDA0' },
+    outline:   { bg: 'transparent',       text: colors.midTeal, border: colors.midTeal },
+    ghost:     { bg: 'transparent',       text: colors.textSecondary, border: 'transparent' },
+    danger:    { bg: colors.error,        text: '#FFFFFF', border: 'transparent' },
+  }[variant] || { bg: colors.midTeal, text: '#FFFFFF', border: 'transparent' };
+
+  const disabledStyle = {
+    bg: colors.surfaceSubtle,
+    text: colors.textMuted,
+    border: colors.borderSoft,
+  };
 
   const sizeStyle = {
     lg: { height: 52, px: 20, font: 16, radius: 14 },
@@ -92,16 +100,16 @@ export const Button: React.FC<ButtonProps> = ({
           height: sizeStyle.height,
           paddingHorizontal: sizeStyle.px,
           borderRadius: sizeStyle.radius,
-          backgroundColor: isDisabled ? '#E2E8F0' : variantStyle.bg,
+          backgroundColor: isDisabled ? disabledStyle.bg : variantStyle.bg,
           borderWidth: variant === 'outline' || variant === 'secondary' ? 1.5 : 0,
-          borderColor: variantStyle.border,
+          borderColor: isDisabled ? disabledStyle.border : variantStyle.border,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
           transform: [{ scale }],
         },
         style,
       ]}>
         {isLoading ? (
-          <ActivityIndicator color={isDisabled ? '#94A3B8' : variantStyle.text} size="small" />
+          <ActivityIndicator color={isDisabled ? disabledStyle.text : variantStyle.text} size="small" />
         ) : (
           <>
             {icon ? <View style={s.icon}>{icon}</View> : null}
@@ -110,7 +118,7 @@ export const Button: React.FC<ButtonProps> = ({
               {
                 fontFamily: FONTS.bold,
                 fontSize: sizeStyle.font,
-                color: isDisabled ? '#94A3B8' : variantStyle.text,
+                color: isDisabled ? disabledStyle.text : variantStyle.text,
               },
               textStyle,
             ]}>
@@ -124,7 +132,7 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   base: {
     flexDirection: 'row',
     alignItems: 'center',

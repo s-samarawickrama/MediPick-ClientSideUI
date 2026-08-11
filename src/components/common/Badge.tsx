@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 
 interface BadgeProps {
   label: string;
@@ -10,6 +10,8 @@ interface BadgeProps {
 }
 
 export const Badge: React.FC<BadgeProps> = ({ label, variant = 'lime', icon, style }) => {
+  const { colors } = useTheme();
+
   const getBadgeStyle = () => {
     switch (variant) {
       case 'success': return { bg: '#DCFCE7', text: '#15803D', border: '#86EFAC' };
@@ -19,7 +21,7 @@ export const Badge: React.FC<BadgeProps> = ({ label, variant = 'lime', icon, sty
       case 'danger': return { bg: '#FEE2E2', text: '#B91C1C', border: '#FCA5A5' };
       case 'lime':
       default:
-        return { bg: '#EDF4DE', text: COLORS.deepIndigo, border: COLORS.softLime };
+        return { bg: '#EDF4DE', text: colors.deepIndigo, border: colors.softLime };
     }
   };
 

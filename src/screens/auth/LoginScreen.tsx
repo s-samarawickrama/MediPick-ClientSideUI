@@ -14,13 +14,16 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Phone, User, Mail, ChevronLeft } from 'lucide-react-native';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
+
   const [phone,   setPhone]   = useState('');
   const [surname, setSurname] = useState('');
   const [email,   setEmail]   = useState('');
@@ -66,7 +69,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       style={s.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       <ScrollView
         contentContainerStyle={s.scroll}
         keyboardShouldPersistTaps="handled"
@@ -77,7 +80,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           {/* Top Bar with Back Button */}
           <View style={s.topBar}>
             <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-              <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+              <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
 
@@ -96,7 +99,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setPhone}
               keyboardType="phone-pad"
               error={phoneErr}
-              icon={<Phone color={COLORS.textMuted} size={16} strokeWidth={2} />}
+              icon={<Phone color={colors.textMuted} size={16} strokeWidth={2} />}
             />
             <Input
               label="Surname"
@@ -105,7 +108,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setSurname}
               autoCapitalize="words"
               error={surnameErr}
-              icon={<User color={COLORS.textMuted} size={16} strokeWidth={2} />}
+              icon={<User color={colors.textMuted} size={16} strokeWidth={2} />}
             />
             <Input
               label="Email (optional)"
@@ -114,7 +117,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              icon={<Mail color={COLORS.textMuted} size={16} strokeWidth={2} />}
+              icon={<Mail color={colors.textMuted} size={16} strokeWidth={2} />}
             />
           </View>
 
@@ -149,20 +152,20 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 52, paddingBottom: 40 },
   inner: { flex: 1 },
   topBar: { marginBottom: 20 },
   backBtn: {
-    width: 38, height: 38, borderRadius: 12, backgroundColor: COLORS.surfaceWhite,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.borderSoft,
+    width: 38, height: 38, borderRadius: 12, backgroundColor: colors.surfaceWhite,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSoft,
   },
   header: { marginBottom: 28 },
-  title: { fontFamily: FONTS.black, fontSize: 32, color: COLORS.peacockBlue, letterSpacing: -0.8, marginBottom: 6 },
-  subtitle: { fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textMuted },
+  title: { fontFamily: FONTS.black, fontSize: 32, color: colors.peacockBlue, letterSpacing: -0.8, marginBottom: 6 },
+  subtitle: { fontFamily: FONTS.medium, fontSize: 14, color: colors.textMuted },
   form: { marginBottom: 16 },
   footer: { marginTop: 'auto', paddingTop: 32, alignItems: 'center' },
-  footerText: { fontFamily: FONTS.regular, fontSize: 12, color: COLORS.textMuted, textAlign: 'center' },
-  footerLink: { fontFamily: FONTS.semibold, color: COLORS.deepTeal, textDecorationLine: 'underline' },
+  footerText: { fontFamily: FONTS.regular, fontSize: 12, color: colors.textMuted, textAlign: 'center' },
+  footerLink: { fontFamily: FONTS.semibold, color: colors.deepTeal, textDecorationLine: 'underline' },
 });

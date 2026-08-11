@@ -1,12 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { Sparkles, PackageCheck, Pill, ShieldAlert, FileText, CheckCircle2, Shield } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 
 // High-end 3D style vector graphic for Hero Prescription Banner
-export const PrescriptionHeroGraphic = () => (
-  <View style={s.rxGraphicWrap}>
+export const PrescriptionHeroGraphic = () => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
+
+  return (
+    <View style={s.rxGraphicWrap}>
     <View style={s.rxGlowBg} />
     
     {/* High-end 3D Clay Prescription Icon */}
@@ -39,11 +43,14 @@ export const PrescriptionHeroGraphic = () => (
         <Text style={s.badgeLabelBottom}>Verified</Text>
       </View>
     </View>
-  </View>
-);
+    </View>
+  );
+};
 
 // High-end 3D style clip art for Category Thumbnails
 export const CategoryTileGraphic = ({ type }: { type: 'vitamins' | 'firstaid' | 'supplements' | 'skincare' }) => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const configs = {
     vitamins:    { img: require('../../../assets/images/cat_vitamins_bg_1785829652014.png') },
     firstaid:    { img: require('../../../assets/images/cat_firstaid_bg_1785829660930.png') },
@@ -58,7 +65,7 @@ export const CategoryTileGraphic = ({ type }: { type: 'vitamins' | 'firstaid' | 
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   rxGraphicWrap: {
     width: 100,
     height: 100,
@@ -71,7 +78,7 @@ const s = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     opacity: 0.9,
   },
   clayIconWrap: {
@@ -112,13 +119,13 @@ const s = StyleSheet.create({
   badgeLabelTop: {
     fontFamily: 'Outfit_900Black',
     fontSize: 8,
-    color: COLORS.midTeal,
+    color: colors.midTeal,
     lineHeight: 9,
   },
   badgeLabelBottom: {
     fontFamily: 'PlusJakartaSans_700Bold',
     fontSize: 8,
-    color: COLORS.midTeal,
+    color: colors.midTeal,
     lineHeight: 9,
   },
 

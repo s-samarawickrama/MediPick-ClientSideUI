@@ -8,7 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronLeft, CheckCircle2, XCircle, Send, RefreshCw, Scan, Fingerprint, LayoutTemplate, Sparkles, ShieldCheck } from 'lucide-react-native';
 import Svg, { Defs, RadialGradient, LinearGradient as SvgLinearGradient, Stop, Circle, Mask } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Button } from '../../components/common/Button';
@@ -19,6 +19,8 @@ type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'AIQualityCheck'>;
 
 export const AIQualityCheckScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const uid = React.useMemo(() => Math.random().toString(36).slice(2), []);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -122,11 +124,11 @@ export const AIQualityCheckScreen = () => {
       <Animated.View style={[s.checkRow, { opacity: stepAnims[stepIndex], transform: [{ translateY: stepAnims[stepIndex].interpolate({ inputRange: [0, 1], outputRange: [15, 0] }) }] }]}>
         <View style={[s.checkIconBox, isActive && !isDone && s.checkIconBoxActive, isCriticalFailed && s.checkIconBoxFailed]}>
           {isCriticalFailed ? (
-             <XCircle color={COLORS.error} size={18} strokeWidth={2.5} />
+             <XCircle color={colors.error} size={18} strokeWidth={2.5} />
           ) : isDone ? (
-            <CheckCircle2 color={COLORS.deepPlum} size={18} strokeWidth={2.5} />
+            <CheckCircle2 color={colors.deepPlum} size={18} strokeWidth={2.5} />
           ) : isActive ? (
-            <ActivityIndicator size="small" color={COLORS.midTeal} />
+            <ActivityIndicator size="small" color={colors.midTeal} />
           ) : (
             icon
           )}
@@ -142,12 +144,12 @@ export const AIQualityCheckScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bgWarm} />
       
       {/* Standard App Navigation Bar */}
       <View style={s.nav}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={COLORS.peacockBlue} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.peacockBlue} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={s.navTitle}>AI Analysis</Text>
         <View style={{ width: 36 }} />
@@ -231,9 +233,9 @@ export const AIQualityCheckScreen = () => {
                   <Svg width={200} height={200} viewBox="0 0 200 200">
                     <Defs>
                       <SvgLinearGradient id={`pastelGrad-${uid}`} x1="0" y1="0" x2="1" y2="1">
-                         <Stop offset="0" stopColor={COLORS.deepPlum} stopOpacity="0.5" />
-                         <Stop offset="0.5" stopColor={COLORS.midTeal} stopOpacity="0.6" />
-                         <Stop offset="1" stopColor={COLORS.softLime} stopOpacity="0.5" />
+                         <Stop offset="0" stopColor={colors.deepPlum} stopOpacity="0.5" />
+                         <Stop offset="0.5" stopColor={colors.midTeal} stopOpacity="0.6" />
+                         <Stop offset="1" stopColor={colors.softLime} stopOpacity="0.5" />
                       </SvgLinearGradient>
                       
                       {/* The mask draws a solid line to reveal the dashed ring underneath */}
@@ -287,13 +289,13 @@ export const AIQualityCheckScreen = () => {
 
         {/* Minimalist Progress List */}
         <View style={s.progressList}>
-          {renderCheckRow(1, <Sparkles color={COLORS.textMuted} size={18} />, `Clarity Score: ${scoreOutOf20}/20`, !isClarityPassed)}
+          {renderCheckRow(1, <Sparkles color={colors.textMuted} size={18} />, `Clarity Score: ${scoreOutOf20}/20`, !isClarityPassed)}
           
           {isClarityPassed && (
             <>
-              {renderCheckRow(2, <LayoutTemplate color={COLORS.textMuted} size={18} />, "Hospital Letterhead Detection")}
-              {renderCheckRow(3, <Fingerprint color={COLORS.textMuted} size={18} />, "Doctor Seal & Signature Check")}
-              {renderCheckRow(4, <Scan color={COLORS.textMuted} size={18} />, "Prescription Layout Structure")}
+              {renderCheckRow(2, <LayoutTemplate color={colors.textMuted} size={18} />, "Hospital Letterhead Detection")}
+              {renderCheckRow(3, <Fingerprint color={colors.textMuted} size={18} />, "Doctor Seal & Signature Check")}
+              {renderCheckRow(4, <Scan color={colors.textMuted} size={18} />, "Prescription Layout Structure")}
             </>
           )}
         </View>
@@ -322,7 +324,7 @@ export const AIQualityCheckScreen = () => {
             })}
           >
             <Text style={s.primaryBtnTxt}>Retake Photo</Text>
-            <RefreshCw color={COLORS.white} size={18} strokeWidth={2.5} />
+            <RefreshCw color={colors.white} size={18} strokeWidth={2.5} />
           </TouchableOpacity>
         )}
       </Animated.View>
@@ -330,21 +332,21 @@ export const AIQualityCheckScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8FAF7' }, 
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm }, 
   
   nav: {
     flexDirection: 'row', alignItems: 'center',
     paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+    backgroundColor: colors.surfaceWhite,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
     zIndex: 10,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.surfaceSubtle, justifyContent: 'center', alignItems: 'center',
   },
-  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.bold, fontSize: 16, color: COLORS.peacockBlue },
+  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.bold, fontSize: 16, color: colors.peacockBlue },
   
   scroll: { padding: 20 },
   
@@ -390,8 +392,8 @@ const s = StyleSheet.create({
     justifyContent: 'center'
   },
   
-  heroTitle: { fontFamily: FONTS.black, fontSize: 26, color: COLORS.peacockBlue, textAlign: 'center', marginBottom: 8 },
-  heroSub: { fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textMuted, textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
+  heroTitle: { fontFamily: FONTS.black, fontSize: 26, color: colors.peacockBlue, textAlign: 'center', marginBottom: 8 },
+  heroSub: { fontFamily: FONTS.medium, fontSize: 14, color: colors.textMuted, textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
 
   // Circular Progress Ring Styles
   progressRingContainer: {
@@ -418,14 +420,14 @@ const s = StyleSheet.create({
   ringScoreValue: {
     fontFamily: FONTS.regular,
     fontSize: 84, // Massive, but thin and elegant
-    color: COLORS.peacockBlue,
+    color: colors.peacockBlue,
     letterSpacing: -2,
     lineHeight: 90,
   },
   ringScoreSymbol: {
     fontFamily: FONTS.regular,
     fontSize: 32,
-    color: COLORS.peacockBlue,
+    color: colors.peacockBlue,
     opacity: 0.5, // Soft elegant percent sign
     marginLeft: 2,
     marginTop: 12,
@@ -439,7 +441,7 @@ const s = StyleSheet.create({
   ringBadgeText: {
     fontFamily: FONTS.bold,
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     letterSpacing: 2, // Wide spacing for a premium technical look
     textTransform: 'uppercase',
   },
@@ -449,29 +451,29 @@ const s = StyleSheet.create({
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   checkIconBox: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.surfaceSubtle,
     justifyContent: 'center', alignItems: 'center',
   },
   checkIconBoxActive: { backgroundColor: 'rgba(29, 111, 114, 0.1)' },
   checkIconBoxFailed: { backgroundColor: 'rgba(220, 38, 38, 0.1)' },
-  checkLabel: { fontFamily: FONTS.medium, fontSize: 15, color: COLORS.textMuted },
-  checkLabelActive: { fontFamily: FONTS.bold, color: COLORS.peacockBlue },
-  checkLabelDone: { color: COLORS.text },
-  checkLabelFailed: { fontFamily: FONTS.bold, color: COLORS.error },
+  checkLabel: { fontFamily: FONTS.medium, fontSize: 15, color: colors.textMuted },
+  checkLabelActive: { fontFamily: FONTS.bold, color: colors.peacockBlue },
+  checkLabelDone: { color: colors.text },
+  checkLabelFailed: { fontFamily: FONTS.bold, color: colors.error },
   
   // Bottom Action Bar
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.bgWarm,
     paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32,
-    borderTopWidth: 1, borderTopColor: '#F1F5F9',
+    borderTopWidth: 1, borderTopColor: colors.borderSoft,
   },
   primaryBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: COLORS.midTeal,
+    backgroundColor: colors.midTeal,
     paddingVertical: 18, borderRadius: 16,
   },
-  primaryBtnDisabled: { backgroundColor: '#CBD5E1' },
-  primaryBtnDanger: { backgroundColor: COLORS.error },
-  primaryBtnTxt: { fontFamily: FONTS.bold, fontSize: 16, color: COLORS.white },
+  primaryBtnDisabled: { backgroundColor: colors.surfaceSubtle },
+  primaryBtnDanger: { backgroundColor: colors.error },
+  primaryBtnTxt: { fontFamily: FONTS.bold, fontSize: 16, color: '#FFFFFF' },
 });

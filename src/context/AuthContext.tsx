@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CustomerUser } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthContextType {
   user: CustomerUser;
@@ -14,40 +15,72 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<CustomerUser>({
-    phoneNumber: '0771234567',
-    surname: 'Perera',
-    email: 'perera@gmail.com',
-    isLoggedIn: true,
-    strikes: 1, // ADDED DEMO STRIKE HERE
+    phoneNumber: '',
+    surname: '',
+    email: '',
+    isLoggedIn: false,
+    strikes: 0,
   });
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('@medipick_user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        } else {
+          // Default mock user for demo
+          setUser({
+            phoneNumber: '0771234567',
+            surname: 'Perera',
+            email: 'perera@gmail.com',
+            isLoggedIn: true,
+            strikes: 1,
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load user', e);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    loadUser();
+  }, []);
+
+  const saveUser = async (newUser: CustomerUser) => {
+    setUser(newUser);
+    try {
+      await AsyncStorage.setItem('@medipick_user', JSON.stringify(newUser));
+    } catch (e) {
+      console.warn('Failed to save user', e);
+    }
+  };
 
   const login = (phoneNumber: string, surname: string, email?: string) => {
-    setUser({
+    saveUser({
       phoneNumber,
       surname,
       email,
-      isLoggedIn: false, // Pending OTP
+      isLoggedIn: false,
       strikes: 0,
     });
   };
 
   const verifyOtp = (otp: string) => {
     if (otp.length === 6) {
-      setUser((prev) => ({ ...prev, isLoggedIn: true }));
+      saveUser({ ...user, isLoggedIn: true });
       return true;
     }
     return false;
   };
 
   const changePhoneNumber = (newPhone: string) => {
-    setUser((prev) => ({
-      ...prev,
-      phoneNumber: newPhone,
-    }));
+    saveUser({ ...user, phoneNumber: newPhone });
   };
 
   const logout = () => {
-    setUser({
+    saveUser({
       phoneNumber: '',
       surname: '',
       email: '',
@@ -56,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const addStrike = () => setUser(prev => ({ ...prev, strikes: prev.strikes + 1 }));
+  const addStrike = () => saveUser({ ...user, strikes: user.strikes + 1 });
 
   return (
     <AuthContext.Provider value={{ user, login, verifyOtp, changePhoneNumber, logout, addStrike }}>

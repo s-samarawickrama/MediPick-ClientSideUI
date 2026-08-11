@@ -30,6 +30,9 @@ export const COLORS = {
   // Glassmorphic translucent surfaces & Warm neutrals
   bgWarm:       '#F6F8F6',
   surfaceWhite: '#FFFFFF',
+  surface: '#FFFFFF',
+  surfaceElevated: '#F8FAF8',
+  surfaceSubtle: '#F3F6F3',
   surfaceGlass: 'rgba(255, 255, 255, 0.85)',
   borderSoft:   '#E2E8E2',
   borderSubtle: '#F0F5F0',
@@ -56,7 +59,6 @@ export const COLORS = {
   // Extended tokens used by components
   deepIndigo:    '#1D6F72',   // alias → midTeal
   heroPeachText: '#0F172A',  // dark text for hero title
-  surface:       '#FFFFFF',  // alias → surfaceWhite
   textPrimary:   '#0F172A',  // alias → textDark
   border:        '#E2E8E2',  // alias → borderSoft
   text:          '#0F172A',  // alias → textDark

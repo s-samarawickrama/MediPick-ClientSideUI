@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { Star, CheckCircle2, X } from 'lucide-react-native';
 import { Button } from '../../components/common/Button';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 
 interface RateExperienceScreenProps {
@@ -20,6 +20,8 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
   onClose,
   pharmacyName = 'MediCare Central Pharmacy',
 }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
   const [overallRating, setOverallRating]   = useState(5);
   const [serviceRating, setServiceRating]   = useState(5);
   const [availRating, setAvailRating]       = useState(5);
@@ -68,7 +70,7 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
 
           {submitted ? (
             <View style={s.successBox}>
-              <CheckCircle2 color={COLORS.midTeal} size={52} strokeWidth={2} />
+              <CheckCircle2 color={colors.midTeal} size={52} strokeWidth={2} />
               <Text style={s.successTitle}>Review Submitted!</Text>
               <Text style={s.successSub}>Thank you for rating {pharmacyName}.</Text>
             </View>
@@ -133,7 +135,7 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: {
     flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'flex-end',
@@ -175,7 +177,7 @@ const s = StyleSheet.create({
   },
 
   skipBtn: { alignItems: 'center', paddingVertical: 8 },
-  skipText: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textMuted },
+  skipText: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textMuted },
 
   successBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 10 },
   successTitle: { fontFamily: FONTS.black, fontSize: 20, color: '#0F172A' },

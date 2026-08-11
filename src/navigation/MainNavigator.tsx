@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ShoppingBag, Pill, Package, MessageSquare, User } from 'lucide-react-native';
-import { COLORS } from '../theme/colors';
+import { useTheme, ThemeColors } from '../context/ThemeContext';
 
 // Screens
 import { HomeScreen } from '../screens/home/HomeScreen';
@@ -49,6 +49,9 @@ const Stack = createNativeStackNavigator<MainStackParamList>();
 
 // Custom bottom tab bar
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
+  const { colors } = useTheme();
+  const tabStyles = createTabStyles(colors);
+
   const tabs = [
     { key: 'Home',    label: 'Home',    Icon: ShoppingBag },
     { key: 'Browse',  label: 'Browse',  Icon: Pill },
@@ -94,7 +97,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           >
             <View style={[tabStyles.iconWrap, isFocused && tabStyles.iconWrapActive]}>
               <Icon
-                color={isFocused ? COLORS.midTeal : '#94A3B8'}
+                color={isFocused ? colors.midTeal : '#94A3B8'}
                 size={22}
                 strokeWidth={isFocused ? 2.5 : 1.8}
               />
@@ -109,12 +112,12 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   );
 };
 
-const tabStyles = StyleSheet.create({
+const createTabStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surfaceWhite,
+    backgroundColor: colors.surfaceWhite,
     borderTopWidth: 1,
-    borderTopColor: COLORS.borderSoft,
+    borderTopColor: colors.borderSoft,
     paddingBottom: Platform.OS === 'ios' ? 20 : 8,
     paddingTop: 8,
     paddingHorizontal: 4,
@@ -132,7 +135,7 @@ const tabStyles = StyleSheet.create({
     alignItems: 'center',
   },
   iconWrapActive: {
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
   },
   label: {
     fontSize: 10,
@@ -140,7 +143,7 @@ const tabStyles = StyleSheet.create({
     color: '#94A3B8',
   },
   labelActive: {
-    color: COLORS.midTeal,
+    color: colors.midTeal,
   },
 });
 

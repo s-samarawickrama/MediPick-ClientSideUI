@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { Badge } from '../common/Badge';
 import { ShieldCheck, MapPin, Star, Clock, Heart } from 'lucide-react-native';
 import { Pharmacy } from '../../types';
@@ -12,6 +12,8 @@ interface PharmacyCardProps {
 }
 
 export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect }) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [isFav, setIsFav] = useState(pharmacy.isFavorite || false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -35,7 +37,7 @@ export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect }
         <View style={styles.infoLeft}>
           <Text style={styles.name}>{pharmacy.name}</Text>
           <View style={styles.locationRow}>
-            <MapPin color={COLORS.deepTeal} size={13} />
+            <MapPin color={colors.deepTeal} size={13} />
             <Text style={styles.subText}>{pharmacy.address} • </Text>
             <Text style={styles.distanceText}>{pharmacy.distance}</Text>
           </View>
@@ -49,7 +51,7 @@ export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect }
           >
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
               <Heart 
-                color={isFav ? '#EF4444' : COLORS.textMuted} 
+                color={isFav ? '#EF4444' : colors.textMuted} 
                 size={20} 
                 strokeWidth={isFav ? 2 : 1.5}
                 fill={isFav ? '#EF4444' : 'transparent'} 
@@ -69,10 +71,10 @@ export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect }
         <Badge
           label={`License: ${pharmacy.nmraLicense}`}
           variant="lime"
-          icon={<ShieldCheck color={COLORS.deepIndigo} size={12} />}
+          icon={<ShieldCheck color={colors.deepIndigo} size={12} />}
         />
         <View style={styles.timeBox}>
-          <Clock color={COLORS.textMuted} size={12} />
+          <Clock color={colors.textMuted} size={12} />
           <Text style={styles.timeText}>{pharmacy.estimatedResponseTime}</Text>
         </View>
       </View>
@@ -80,9 +82,9 @@ export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect }
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     borderRadius: 14,
     padding: 16,
     marginVertical: 6,
@@ -106,7 +108,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '800',
-    color: COLORS.deepIndigo,
+    color: colors.deepIndigo,
     letterSpacing: -0.2,
   },
   locationRow: {
@@ -116,12 +118,12 @@ const styles = StyleSheet.create({
   },
   subText: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   distanceText: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.deepTeal,
+    color: colors.deepTeal,
   },
   ratingBox: {
     flexDirection: 'row',
@@ -155,6 +157,6 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
 });

@@ -6,7 +6,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MessageSquare, ChevronRight, ShieldCheck, Clock } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MOCK_PHARMACIES } from '../../mock/demoData';
@@ -14,6 +14,8 @@ import { MOCK_PHARMACIES } from '../../mock/demoData';
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
 export const ChatListScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const opacity    = useRef(new Animated.Value(0)).current;
 
@@ -48,7 +50,7 @@ export const ChatListScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
       <View style={s.header}>
         <Text style={s.title}>Pharmacy Chats</Text>
@@ -81,7 +83,7 @@ export const ChatListScreen = () => {
                 <View style={s.cardTopRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, paddingRight: 4 }}>
                     <Text style={s.pharmName} numberOfLines={1}>{chat.pharmacyName}</Text>
-                    <ShieldCheck color={COLORS.midTeal} size={13} strokeWidth={2.5} />
+                    <ShieldCheck color={colors.midTeal} size={13} strokeWidth={2.5} />
                   </View>
                   <Text style={s.timeText}>{chat.time}</Text>
                 </View>
@@ -102,38 +104,38 @@ export const ChatListScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   header: {
     paddingTop: 52, paddingBottom: 14, paddingHorizontal: 20,
-    backgroundColor: COLORS.bgWarm, borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
-  title: { fontFamily: FONTS.black, fontSize: 24, color: COLORS.textDark, letterSpacing: -0.5 },
+  title: { fontFamily: FONTS.black, fontSize: 24, color: colors.textDark, letterSpacing: -0.5 },
   scroll: { padding: 16, gap: 10, paddingBottom: 100 },
 
   chatCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: COLORS.borderSoft,
-    shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03, shadowRadius: 10, elevation: 2,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: colors.borderSoft,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08, shadowRadius: 10, elevation: 2,
   },
   avatarBox: {
     width: 44, height: 44, borderRadius: 14,
-    backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center',
   },
   avatarImg: {
     width: 44, height: 44, borderRadius: 14, resizeMode: 'cover',
   },
-  avatarInitial: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.midTeal },
+  avatarInitial: { fontFamily: FONTS.black, fontSize: 18, color: colors.midTeal },
   cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  pharmName: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  pharmacistSub: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
-  lastMsg: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  timeText: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
+  pharmName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  pharmacistSub: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
+  lastMsg: { fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  timeText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
   unreadBadge: {
     width: 20, height: 20, borderRadius: 10,
-    backgroundColor: COLORS.midTeal, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.midTeal, justifyContent: 'center', alignItems: 'center',
   },
   unreadText: { fontFamily: FONTS.bold, fontSize: 11, color: '#fff' },
 });

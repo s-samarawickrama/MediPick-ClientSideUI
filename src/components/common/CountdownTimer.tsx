@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { Clock } from 'lucide-react-native';
 
 interface CountdownTimerProps {
@@ -10,6 +10,8 @@ interface CountdownTimerProps {
 }
 
 export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetIsoDate, label = 'Remaining Time:', onExpire }) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number; isExpired: boolean }>({
     hours: 0,
     minutes: 0,
@@ -44,7 +46,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetIsoDate, l
   if (timeLeft.isExpired) {
     return (
       <View style={[styles.container, styles.expiredContainer]}>
-        <Clock color={COLORS.error} size={16} />
+        <Clock color={colors.error} size={16} />
         <Text style={styles.expiredText}>Expired</Text>
       </View>
     );
@@ -54,7 +56,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetIsoDate, l
 
   return (
     <View style={styles.container}>
-      <Clock color={COLORS.deepIndigo} size={16} />
+      <Clock color={colors.deepIndigo} size={16} />
       <Text style={styles.labelText}>{label}</Text>
       <Text style={styles.timerText}>
         {formatPad(timeLeft.hours)}h {formatPad(timeLeft.minutes)}m {formatPad(timeLeft.seconds)}s
@@ -63,11 +65,11 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetIsoDate, l
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -79,16 +81,16 @@ const styles = StyleSheet.create({
   labelText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.deepIndigo,
+    color: colors.deepIndigo,
   },
   timerText: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.deepIndigo,
+    color: colors.deepIndigo,
   },
   expiredText: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.error,
+    color: colors.error,
   },
 });

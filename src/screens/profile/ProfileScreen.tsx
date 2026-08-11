@@ -12,6 +12,8 @@ import { COLORS } from '../../theme/colors';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
+import { Moon } from 'lucide-react-native';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -19,6 +21,8 @@ export const ProfileScreen = () => {
   const navigation = useNavigation<Nav>();
   const opacity = useRef(new Animated.Value(0)).current;
   const { user } = useAuth();
+  const { isDark, toggleTheme, colors } = useTheme();
+  const s = makeStyles(colors);
 
   const [phone, setPhone]                 = useState('+1 (555) 019-2834');
   const [newPhone, setNewPhone]           = useState('');
@@ -64,7 +68,7 @@ export const ProfileScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.bgWarm} />
 
       <Animated.ScrollView
         style={{ opacity }}
@@ -82,7 +86,7 @@ export const ProfileScreen = () => {
               <View style={s.nameRow}>
                 <Text style={s.userName}>{user.surname || 'Perera'}</Text>
                 <View style={s.verifiedTag}>
-                  <ShieldCheck color={COLORS.midTeal} size={13} strokeWidth={2.5} />
+                  <ShieldCheck color={colors.midTeal} size={13} strokeWidth={2.5} />
                   <Text style={s.verifiedText}>Verified</Text>
                 </View>
               </View>
@@ -90,7 +94,7 @@ export const ProfileScreen = () => {
                 <Text style={s.userPhone}>{user.phoneNumber || phone}</Text>
                 {user.strikes > 0 && (
                   <View style={s.strikeTag}>
-                    <AlertTriangle color={COLORS.warning} size={12} strokeWidth={2.5} />
+                    <AlertTriangle color={colors.warning} size={12} strokeWidth={2.5} />
                     <Text style={s.strikeText}>{user.strikes}</Text>
                   </View>
                 )}
@@ -108,13 +112,13 @@ export const ProfileScreen = () => {
               onPress={() => (navigation as any).navigate('Favorites')}
             >
               <View style={s.menuIconBox}>
-                <Heart color={COLORS.midTeal} size={18} strokeWidth={2} />
+                <Heart color={colors.midTeal} size={18} strokeWidth={2} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.menuLabel}>Favorite Pharmacies</Text>
                 <Text style={s.menuSub}>Quick access to your saved stores</Text>
               </View>
-              <ChevronRight color={COLORS.textMuted} size={16} strokeWidth={2} />
+              <ChevronRight color={colors.textMuted} size={16} strokeWidth={2} />
             </Pressable>
           </View>
         </View>
@@ -123,26 +127,37 @@ export const ProfileScreen = () => {
         <View style={s.sectionWrap}>
           <Text style={s.sectionTitle}>PREFERENCES</Text>
           <View style={s.menuCard}>
-            <Pressable style={s.menuItem} onPress={() => setShowPhoneModal(true)}>
+            <View style={s.switchRowItem}>
               <View style={s.menuIconBox}>
-                <Phone color={COLORS.midTeal} size={18} strokeWidth={2} />
+                <Moon color={colors.midTeal} size={18} strokeWidth={2} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={s.menuLabel}>Dark Mode</Text>
+                <Text style={s.menuSub}>Toggle dark theme</Text>
+              </View>
+              <Switch value={isDark} onValueChange={toggleTheme} trackColor={{ false: '#CBD5E1', true: colors.midTeal }} />
+            </View>
+
+            <Pressable style={[s.menuItem, s.menuBorder]} onPress={() => setShowPhoneModal(true)}>
+              <View style={s.menuIconBox}>
+                <Phone color={colors.midTeal} size={18} strokeWidth={2} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.menuLabel}>Change Phone Number</Text>
                 <Text style={s.menuSub}>{phone}</Text>
               </View>
-              <ChevronRight color={COLORS.textMuted} size={16} strokeWidth={2} />
+              <ChevronRight color={colors.textMuted} size={16} strokeWidth={2} />
             </Pressable>
 
             <Pressable style={[s.menuItem, s.menuBorder]} onPress={() => setShowNotifModal(true)}>
               <View style={s.menuIconBox}>
-                <Bell color={COLORS.midTeal} size={18} strokeWidth={2} />
+                <Bell color={colors.midTeal} size={18} strokeWidth={2} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.menuLabel}>Notification Settings</Text>
                 <Text style={s.menuSub}>Order alerts & SMS updates</Text>
               </View>
-              <ChevronRight color={COLORS.textMuted} size={16} strokeWidth={2} />
+              <ChevronRight color={colors.textMuted} size={16} strokeWidth={2} />
             </Pressable>
           </View>
         </View>
@@ -153,35 +168,35 @@ export const ProfileScreen = () => {
           <View style={s.menuCard}>
             <Pressable style={s.menuItem} onPress={() => navigation.navigate('LegalDoc', { type: 'terms' })}>
               <View style={s.menuIconBox}>
-                <FileText color={COLORS.midTeal} size={18} strokeWidth={2} />
+                <FileText color={colors.midTeal} size={18} strokeWidth={2} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.menuLabel}>Terms of Service</Text>
                 <Text style={s.menuSub}>User agreement & policies</Text>
               </View>
-              <ChevronRight color={COLORS.textMuted} size={16} strokeWidth={2} />
+              <ChevronRight color={colors.textMuted} size={16} strokeWidth={2} />
             </Pressable>
 
             <Pressable style={[s.menuItem, s.menuBorder]} onPress={() => navigation.navigate('LegalDoc', { type: 'privacy' })}>
               <View style={s.menuIconBox}>
-                <Lock color={COLORS.midTeal} size={18} strokeWidth={2} />
+                <Lock color={colors.midTeal} size={18} strokeWidth={2} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.menuLabel}>Privacy Policy</Text>
                 <Text style={s.menuSub}>Data protection & security</Text>
               </View>
-              <ChevronRight color={COLORS.textMuted} size={16} strokeWidth={2} />
+              <ChevronRight color={colors.textMuted} size={16} strokeWidth={2} />
             </Pressable>
 
             <Pressable style={[s.menuItem, s.menuBorder]} onPress={() => navigation.navigate('LegalDoc', { type: 'faq' })}>
               <View style={s.menuIconBox}>
-                <HelpCircle color={COLORS.midTeal} size={18} strokeWidth={2} />
+                <HelpCircle color={colors.midTeal} size={18} strokeWidth={2} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.menuLabel}>Help center</Text>
                 <Text style={s.menuSub}>FAQ and chat support</Text>
               </View>
-              <ChevronRight color={COLORS.textMuted} size={16} strokeWidth={2} />
+              <ChevronRight color={colors.textMuted} size={16} strokeWidth={2} />
             </Pressable>
           </View>
         </View>
@@ -192,7 +207,7 @@ export const ProfileScreen = () => {
           activeOpacity={0.6}
           onPress={() => Platform.OS === 'web' ? window.alert('You have been successfully signed out.') : Alert.alert('Sign Out', 'You have been successfully signed out.')}
         >
-          <LogOut color={COLORS.error} size={18} strokeWidth={2.5} />
+          <LogOut color={colors.error} size={18} strokeWidth={2.5} />
           <Text style={s.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
@@ -207,7 +222,7 @@ export const ProfileScreen = () => {
         >
           <View style={s.modalCard}>
             <TouchableOpacity style={s.closeBtn} onPress={closePhoneModal}>
-              <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+              <X color={colors.textDark} size={18} strokeWidth={2.5} />
             </TouchableOpacity>
 
             <Text style={s.modalTitle}>{phoneStep === 'input' ? 'Change Phone Number' : 'Verify New Number'}</Text>
@@ -219,7 +234,7 @@ export const ProfileScreen = () => {
               <TextInput
                 style={s.textInput}
                 placeholder="Enter new phone number..."
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={colors.textMuted}
                 keyboardType="phone-pad"
                 value={newPhone}
                 onChangeText={setNewPhone}
@@ -261,7 +276,7 @@ export const ProfileScreen = () => {
         <View style={s.modalOverlay}>
           <View style={s.modalCard}>
             <TouchableOpacity style={s.closeBtn} onPress={() => setShowNotifModal(false)}>
-              <X color={COLORS.textDark} size={18} strokeWidth={2.5} />
+              <X color={colors.textDark} size={18} strokeWidth={2.5} />
             </TouchableOpacity>
 
             <Text style={s.modalTitle}>Notification Preferences</Text>
@@ -271,7 +286,7 @@ export const ProfileScreen = () => {
                 <Text style={s.switchTitle}>Push Notifications</Text>
                 <Text style={s.switchSub}>Real-time order quote and pickup alerts</Text>
               </View>
-              <Switch value={notifPush} onValueChange={setNotifPush} trackColor={{ false: '#CBD5E1', true: COLORS.midTeal }} />
+              <Switch value={notifPush} onValueChange={setNotifPush} trackColor={{ false: '#CBD5E1', true: colors.midTeal }} />
             </View>
 
             <View style={s.switchRow}>
@@ -279,7 +294,7 @@ export const ProfileScreen = () => {
                 <Text style={s.switchTitle}>SMS Verification Alerts</Text>
                 <Text style={s.switchSub}>Text notifications for OTP codes</Text>
               </View>
-              <Switch value={notifSms} onValueChange={setNotifSms} trackColor={{ false: '#CBD5E1', true: COLORS.midTeal }} />
+              <Switch value={notifSms} onValueChange={setNotifSms} trackColor={{ false: '#CBD5E1', true: colors.midTeal }} />
             </View>
 
             <Button
@@ -298,89 +313,92 @@ export const ProfileScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   scroll: { padding: 16, paddingTop: 56, paddingBottom: 100, gap: 16 },
 
   profileCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 18,
-    borderWidth: 1.5, borderColor: COLORS.borderSoft, gap: 16,
+    backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 18,
+    borderWidth: 1.5, borderColor: colors.borderSoft, gap: 16,
     shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2,
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatarCircle: {
     width: 54, height: 54, borderRadius: 27,
-    backgroundColor: COLORS.midTeal, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.midTeal, justifyContent: 'center', alignItems: 'center',
   },
   avatarText: { fontFamily: FONTS.black, fontSize: 22, color: '#FFFFFF' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  userName: { fontFamily: FONTS.black, fontSize: 20, color: COLORS.textDark, letterSpacing: -0.4 },
-  userPhone: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
+  userName: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark, letterSpacing: -0.4 },
+  userPhone: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, marginTop: 2 },
   verifiedTag: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999,
-    borderWidth: 1, borderColor: '#D6EDA0',
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999,
+    borderWidth: 1, borderColor: '#D6EDA0', // Could make these dynamic too
   },
-  verifiedText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  verifiedText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
   strikeTag: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: COLORS.warningLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
+    backgroundColor: colors.warningLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999,
     borderWidth: 1, borderColor: '#FDE68A',
   },
-  strikeText: { fontFamily: FONTS.bold, fontSize: 10, color: COLORS.warning },
+  strikeText: { fontFamily: FONTS.bold, fontSize: 10, color: colors.warning },
 
   sectionWrap: { gap: 8 },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textMuted, letterSpacing: 0.8 },
+  sectionTitle: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textMuted, letterSpacing: 0.8 },
   menuCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16,
-    borderWidth: 1, borderColor: COLORS.borderSoft, overflow: 'hidden',
+    backgroundColor: colors.surfaceWhite, borderRadius: 16,
+    borderWidth: 1, borderColor: colors.borderSoft, overflow: 'hidden',
   },
   menuItem: {
     flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14,
   },
-  menuBorder: { borderTopWidth: 1, borderTopColor: COLORS.borderSoft },
+  switchRowItem: {
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14,
+  },
+  menuBorder: { borderTopWidth: 1, borderTopColor: colors.borderSoft },
   menuIconBox: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: COLORS.limeWhisper, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center',
   },
-  menuLabel: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  menuSub: { fontFamily: FONTS.regular, fontSize: 12, color: COLORS.textMuted, marginTop: 1 },
+  menuLabel: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  menuSub: { fontFamily: FONTS.regular, fontSize: 12, color: colors.textMuted, marginTop: 1 },
 
   signOutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     paddingVertical: 18, marginTop: 4,
   },
-  signOutText: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.error },
-  versionText: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted, textAlign: 'center', marginTop: 4 },
+  signOutText: { fontFamily: FONTS.bold, fontSize: 14, color: colors.error },
+  versionText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, textAlign: 'center', marginTop: 4 },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'flex-end' },
   modalCard: {
-    backgroundColor: COLORS.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: colors.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, gap: 12, position: 'relative',
   },
   closeBtn: {
     position: 'absolute', top: 16, right: 16,
-    width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.bgWarm,
+    width: 32, height: 32, borderRadius: 16, backgroundColor: colors.bgWarm,
     justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
-  modalTitle: { fontFamily: FONTS.black, fontSize: 20, color: COLORS.textDark },
-  modalSub: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textMuted },
+  modalTitle: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark },
+  modalSub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted },
   textInput: {
-    width: '100%', backgroundColor: COLORS.bgWarm, borderRadius: 14,
-    borderWidth: 1, borderColor: COLORS.borderSoft, paddingHorizontal: 14, height: 48,
-    fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textDark,
+    width: '100%', backgroundColor: colors.bgWarm, borderRadius: 14,
+    borderWidth: 1, borderColor: colors.borderSoft, paddingHorizontal: 14, height: 48,
+    fontFamily: FONTS.medium, fontSize: 14, color: colors.textDark,
     outlineStyle: 'none' as any, outlineWidth: 0 as any,
   },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
-  switchTitle: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  switchSub: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
+  switchTitle: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  switchSub: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 },
   
   otpContainer: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10, position: 'relative' },
   otpBox: { 
-    width: 46, height: 56, borderRadius: 12, backgroundColor: COLORS.bgWarm,
-    borderWidth: 1, borderColor: COLORS.borderSoft, justifyContent: 'center', alignItems: 'center'
+    width: 46, height: 56, borderRadius: 12, backgroundColor: colors.bgWarm,
+    borderWidth: 1, borderColor: colors.borderSoft, justifyContent: 'center', alignItems: 'center'
   },
-  otpBoxFilled: { borderColor: COLORS.softLime, backgroundColor: COLORS.limeWhisper },
-  otpText: { fontFamily: FONTS.black, fontSize: 22, color: COLORS.textDark },
+  otpBoxFilled: { borderColor: colors.softLime, backgroundColor: colors.limeWhisper },
+  otpText: { fontFamily: FONTS.black, fontSize: 22, color: colors.textDark },
   hiddenOtpInput: { position: 'absolute', width: '100%', height: '100%', opacity: 0 },
 });

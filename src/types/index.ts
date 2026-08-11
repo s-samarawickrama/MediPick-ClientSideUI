@@ -34,11 +34,12 @@ export interface MedicineItem {
   mrpPrice: number;
   pharmacyPrice: number;
   isRxRequired: boolean;
-  category: 'Cold & Flu' | 'First Aid' | 'Vitamins' | 'Personal Care' | 'Chronic';
+  category: 'Cold & Flu' | 'First Aid' | 'Vitamins' | 'Personal Care' | 'Chronic' | 'Skincare' | 'Supplements';
   inStock: boolean;
   availableAtPharmacyIds?: string[]; // Array of pharmacy IDs where this is available
   popularity?: number; // 0-100 rating for sorting
   image?: string | any;
+  description?: string;
 }
 
 export interface Pharmacy {

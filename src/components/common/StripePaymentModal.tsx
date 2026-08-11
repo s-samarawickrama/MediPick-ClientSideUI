@@ -5,7 +5,7 @@ import {
   KeyboardAvoidingView, Platform
 } from 'react-native';
 import { X, CreditCard, Lock, CheckCircle2, ShieldCheck, Check } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 
 interface StripePaymentModalProps {
@@ -21,6 +21,8 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
   const [cardNumber, setCardNumber]   = useState('4242 4242 4242 4242');
   const [expiry, setExpiry]           = useState('12 / 28');
   const [cvc, setCvc]                 = useState('123');
@@ -186,7 +188,7 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: {
     flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center', padding: 20,
@@ -201,7 +203,7 @@ const s = StyleSheet.create({
   },
   stripeBranding: { flexDirection: 'row', alignItems: 'center' },
   stripeBrandText: { fontFamily: FONTS.medium, fontSize: 12, color: '#64748B' },
-  stripeLogoText: { fontFamily: FONTS.black, fontSize: 15, color: COLORS.midTeal, letterSpacing: -0.5 },
+  stripeLogoText: { fontFamily: FONTS.black, fontSize: 15, color: colors.midTeal, letterSpacing: -0.5 },
   closeBtn: {
     width: 28, height: 28, borderRadius: 14, backgroundColor: '#F8FAFC',
     justifyContent: 'center', alignItems: 'center',
@@ -214,7 +216,7 @@ const s = StyleSheet.create({
     paddingBottom: 4,
   },
   payToText: { fontFamily: FONTS.bold, fontSize: 14, color: '#1E293B' },
-  amountText: { fontFamily: FONTS.black, fontSize: 20, color: COLORS.midTeal },
+  amountText: { fontFamily: FONTS.black, fontSize: 20, color: colors.midTeal },
 
   expressBtn: {
     backgroundColor: '#000000', borderRadius: 10, height: 46,
@@ -229,8 +231,8 @@ const s = StyleSheet.create({
 
   // Unified Stripe Card Box
   stripeCardBox: {
-    backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: COLORS.midTeal,
-    shadowColor: COLORS.midTeal, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6,
+    backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: colors.midTeal,
+    shadowColor: colors.midTeal, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6,
   },
   cardInputRow: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, height: 46,
@@ -253,15 +255,15 @@ const s = StyleSheet.create({
     width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, borderColor: '#94A3B8',
     justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF',
   },
-  checkboxChecked: { backgroundColor: COLORS.midTeal, borderColor: COLORS.midTeal },
+  checkboxChecked: { backgroundColor: colors.midTeal, borderColor: colors.midTeal },
   linkCheckText: { fontFamily: FONTS.medium, fontSize: 12, color: '#475569' },
-  linkBold: { fontFamily: FONTS.bold, color: COLORS.midTeal },
+  linkBold: { fontFamily: FONTS.bold, color: colors.midTeal },
 
   // Brand Teal Primary CTA
   stripePayBtn: {
-    backgroundColor: COLORS.midTeal, borderRadius: 10, height: 48,
+    backgroundColor: colors.midTeal, borderRadius: 10, height: 48,
     justifyContent: 'center', alignItems: 'center', marginTop: 4,
-    shadowColor: COLORS.midTeal, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8,
+    shadowColor: colors.midTeal, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8,
   },
   stripePayBtnLoading: { opacity: 0.75 },
   payBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },

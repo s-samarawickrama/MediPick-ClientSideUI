@@ -6,7 +6,7 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronLeft, Shield, FileText, HelpCircle } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 
@@ -14,6 +14,8 @@ type Nav = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'LegalDoc'>;
 
 export const LegalDocScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const type = route.params?.type ?? 'terms';
@@ -36,12 +38,12 @@ export const LegalDocScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
       {/* Header */}
       <View style={s.nav}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={s.navTitle}>{title}</Text>
         <View style={{ width: 36 }} />
@@ -56,11 +58,11 @@ export const LegalDocScreen = () => {
         <View style={s.heroCard}>
           <View style={s.iconCircle}>
             {isTerms ? (
-              <FileText color={COLORS.midTeal} size={24} strokeWidth={2} />
+              <FileText color={colors.midTeal} size={24} strokeWidth={2} />
             ) : isPrivacy ? (
-              <Shield color={COLORS.midTeal} size={24} strokeWidth={2} />
+              <Shield color={colors.midTeal} size={24} strokeWidth={2} />
             ) : (
-              <HelpCircle color={COLORS.midTeal} size={24} strokeWidth={2} />
+              <HelpCircle color={colors.midTeal} size={24} strokeWidth={2} />
             )}
           </View>
           <Text style={s.heroTitle}>{title}</Text>
@@ -141,35 +143,35 @@ export const LegalDocScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   nav: {
     flexDirection: 'row', alignItems: 'center',
     paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20,
-    backgroundColor: COLORS.bgWarm, borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.surfaceWhite,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.borderSoft,
+    width: 36, height: 36, borderRadius: 10, backgroundColor: colors.surfaceWhite,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.borderSoft,
   },
-  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark },
+  navTitle: { flex: 1, textAlign: 'center', fontFamily: FONTS.black, fontSize: 16, color: colors.textDark },
   scroll: { padding: 20, paddingBottom: 60, gap: 14 },
 
   heroCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 20,
-    borderWidth: 1, borderColor: COLORS.borderSoft, alignItems: 'center', gap: 6,
+    backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 20,
+    borderWidth: 1, borderColor: colors.borderSoft, alignItems: 'center', gap: 6,
   },
   iconCircle: {
-    width: 52, height: 52, borderRadius: 16, backgroundColor: COLORS.limeWhisper,
+    width: 52, height: 52, borderRadius: 16, backgroundColor: colors.limeWhisper,
     justifyContent: 'center', alignItems: 'center', marginBottom: 4,
   },
-  heroTitle: { fontFamily: FONTS.black, fontSize: 20, color: COLORS.textDark, textAlign: 'center' },
-  heroSub: { fontFamily: FONTS.medium, fontSize: 12, color: COLORS.textMuted, textAlign: 'center' },
+  heroTitle: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark, textAlign: 'center' },
+  heroSub: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, textAlign: 'center' },
 
   contentCard: {
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 20,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 10,
+    backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 20,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 10,
   },
-  sectionHeader: { fontFamily: FONTS.black, fontSize: 15, color: COLORS.textDark, marginTop: 6 },
-  paragraph: { fontFamily: FONTS.regular, fontSize: 13, color: COLORS.textSecondary, lineHeight: 20 },
+  sectionHeader: { fontFamily: FONTS.black, fontSize: 15, color: colors.textDark, marginTop: 6 },
+  paragraph: { fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary, lineHeight: 20 },
 });

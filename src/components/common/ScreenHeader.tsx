@@ -7,7 +7,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { SPACING } from '../../theme/spacing';
 
 interface ScreenHeaderProps {
@@ -25,13 +25,15 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   rightAction,
   variant = 'light',
 }) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const isDark = variant === 'dark';
 
   return (
     <View style={[styles.container, isDark && styles.darkContainer]}>
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={isDark ? COLORS.peacockBlue : COLORS.white}
+        backgroundColor={isDark ? colors.peacockBlue : colors.white}
       />
       <View style={styles.row}>
         {onBack ? (
@@ -43,7 +45,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
             accessibilityLabel="Go back"
           >
             <ChevronLeft
-              color={isDark ? COLORS.white : COLORS.deepIndigo}
+              color={isDark ? colors.white : colors.deepIndigo}
               size={22}
               strokeWidth={2.5}
             />
@@ -77,9 +79,9 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
-    backgroundColor: COLORS.white,
+    backgroundColor: colors.white,
     paddingTop: SPACING[3],
     paddingBottom: SPACING[3],
     paddingHorizontal: SPACING[4],
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F1F5F9',
   },
   darkContainer: {
-    backgroundColor: COLORS.peacockBlue,
+    backgroundColor: colors.peacockBlue,
     borderBottomColor: 'transparent',
   },
   row: {
@@ -114,15 +116,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: '800',
-    color: COLORS.deepIndigo,
+    color: colors.deepIndigo,
     letterSpacing: -0.2,
   },
   titleDark: {
-    color: COLORS.white,
+    color: colors.white,
   },
   subtitle: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     marginTop: 1,
   },
   subtitleDark: {

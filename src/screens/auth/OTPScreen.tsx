@@ -13,7 +13,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ChevronLeft, RotateCcw } from 'lucide-react-native';
 import { TextInput } from 'react-native';
 import { Button } from '../../components/common/Button';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 
@@ -22,6 +22,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'OTP'> & {
 };
 
 export const OTPScreen: React.FC<Props> = ({ navigation, route, onSignIn }) => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const { phone } = route.params;
   const [otp,      setOtp]      = useState('');
   const [otpErr,   setOtpErr]   = useState('');
@@ -68,11 +70,11 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route, onSignIn }) => {
 
   return (
     <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bgWarm} />
 
       <View style={s.nav}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={COLORS.peacockBlue} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.peacockBlue} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
 
@@ -123,7 +125,7 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route, onSignIn }) => {
           disabled={!canResend}
           activeOpacity={canResend ? 0.7 : 1}
         >
-          <RotateCcw color={canResend ? COLORS.deepTeal : COLORS.textMuted} size={14} strokeWidth={2} />
+          <RotateCcw color={canResend ? colors.deepTeal : colors.textMuted} size={14} strokeWidth={2} />
           <Text style={[s.resendText, canResend && s.resendActive]}>
             {canResend
               ? 'Resend Code'
@@ -135,31 +137,31 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route, onSignIn }) => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.white },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   nav: { paddingTop: 52, paddingHorizontal: 20, paddingBottom: 8 },
   backBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.surfaceSubtle,
     justifyContent: 'center', alignItems: 'center',
   },
   content: { flex: 1, paddingHorizontal: 24, paddingTop: 20 },
   heading: { marginBottom: 28 },
-  title: { fontFamily: FONTS.black, fontSize: 30, color: COLORS.peacockBlue, letterSpacing: -0.6, marginBottom: 6 },
-  desc: { fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textMuted },
-  phone: { fontFamily: FONTS.bold, color: COLORS.peacockBlue },
+  title: { fontFamily: FONTS.black, fontSize: 30, color: colors.textDark, letterSpacing: -0.6, marginBottom: 6 },
+  desc: { fontFamily: FONTS.medium, fontSize: 14, color: colors.textMuted },
+  phone: { fontFamily: FONTS.bold, color: colors.textDark },
   resendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
-  resendText: { fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textMuted },
-  resendActive: { color: COLORS.deepTeal, fontFamily: FONTS.bold },
+  resendText: { fontFamily: FONTS.medium, fontSize: 14, color: colors.textMuted },
+  resendActive: { color: colors.midTeal, fontFamily: FONTS.bold },
 
   otpContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, position: 'relative' },
   otpBox: { 
-    width: 48, height: 56, borderRadius: 12, backgroundColor: '#F8FAFC',
-    borderWidth: 1.5, borderColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center'
+    width: 48, height: 56, borderRadius: 12, backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1.5, borderColor: colors.borderSoft, justifyContent: 'center', alignItems: 'center'
   },
-  otpBoxFilled: { borderColor: COLORS.softLime, backgroundColor: COLORS.limeWhisper },
-  otpBoxError: { borderColor: COLORS.error, backgroundColor: '#FEF2F2' },
-  otpText: { fontFamily: FONTS.black, fontSize: 24, color: COLORS.peacockBlue },
+  otpBoxFilled: { borderColor: colors.softLime, backgroundColor: colors.limeWhisper },
+  otpBoxError: { borderColor: colors.error, backgroundColor: colors.errorLight },
+  otpText: { fontFamily: FONTS.black, fontSize: 24, color: colors.textDark },
   hiddenOtpInput: { position: 'absolute', width: '100%', height: '100%', opacity: 0 },
-  errorText: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.error, marginTop: -12, marginBottom: 16 },
+  errorText: { fontFamily: FONTS.medium, fontSize: 13, color: colors.error, marginTop: -12, marginBottom: 16 },
 });

@@ -26,7 +26,7 @@ import { PrescriptionHeroGraphic, CategoryTileGraphic } from '../../components/c
 import { useCart } from '../../context/CartContext';
 import { MedicineCard } from '../../components/common/MedicineCard';
 import { Button } from '../../components/common/Button';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MOCK_PHARMACIES, MOCK_ORDERS, MOCK_MEDICINES, togglePharmacyFavorite } from '../../mock/demoData';
 import { MainStackParamList } from '../../navigation/MainNavigator';
@@ -35,7 +35,7 @@ type Nav = NativeStackNavigationProp<MainStackParamList>;
 
 const { width } = Dimensions.get('window');
 
-const AnimatedHeartButton = ({ isFavorite, onPress }: { isFavorite: boolean, onPress: () => void }) => {
+const AnimatedHeartButton = ({ isFavorite, onPress, colors, s }: { isFavorite: boolean, onPress: () => void, colors: ThemeColors, s: ReturnType<typeof makeStyles> }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePress = (e: any) => {
@@ -55,7 +55,7 @@ const AnimatedHeartButton = ({ isFavorite, onPress }: { isFavorite: boolean, onP
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <Heart 
-          color={isFavorite ? "#EF4444" : COLORS.borderSoft} 
+          color={isFavorite ? "#EF4444" : colors.borderSoft} 
           size={18} 
           strokeWidth={2} 
           fill={isFavorite ? "#EF4444" : "transparent"} 
@@ -81,6 +81,8 @@ const LOCATIONS_LIST = [
 ];
 
 export const HomeScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const [searchQuery, setSearchQuery]       = useState('');
   const { cartItems }                       = useCart();
@@ -127,7 +129,7 @@ export const HomeScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
 
       {/* DoorDash Style Header Navbar */}
       <View style={s.topBar}>
@@ -143,7 +145,7 @@ export const HomeScreen = () => {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Text style={s.deliverLabel}>COUNTER PICKUP ONLY</Text>
-              <ChevronDown color={COLORS.midTeal} size={14} strokeWidth={2.8} />
+              <ChevronDown color={colors.midTeal} size={14} strokeWidth={2.8} />
             </View>
             <Text style={s.greetingTitle} numberOfLines={1} ellipsizeMode="tail">{currentLocation}</Text>
           </TouchableOpacity>
@@ -155,7 +157,7 @@ export const HomeScreen = () => {
             activeOpacity={0.8}
             onPress={() => (navigation as any).navigate('MultiStoreCart')}
           >
-            <ShoppingCart color={COLORS.textDark} size={19} strokeWidth={2} />
+            <ShoppingCart color={colors.textDark} size={19} strokeWidth={2} />
             {totalCartCount > 0 && (
               <View style={s.cartBadgeTop}>
                 <Text style={s.cartBadgeTopText}>{totalCartCount}</Text>
@@ -168,7 +170,7 @@ export const HomeScreen = () => {
             activeOpacity={0.8}
             onPress={() => (navigation as any).navigate('Notifications')}
           >
-            <Bell color={COLORS.textDark} size={19} strokeWidth={2} />
+            <Bell color={colors.textDark} size={19} strokeWidth={2} />
             <View style={s.bellDot} />
           </TouchableOpacity>
         </View>
@@ -190,24 +192,24 @@ export const HomeScreen = () => {
             <View style={{ flex: 1 }} />
             <View style={s.bannerTrackBadge}>
               <Text style={s.bannerAction}>Track</Text>
-              <ChevronRight color={COLORS.midTeal} size={14} strokeWidth={2.5} />
+              <ChevronRight color={colors.midTeal} size={14} strokeWidth={2.5} />
             </View>
           </TouchableOpacity>
         )}
 
         {/* Search Bar Input */}
         <View style={s.searchBarContainer}>
-          <Search color={COLORS.midTeal} size={18} strokeWidth={2.5} />
+          <Search color={colors.midTeal} size={18} strokeWidth={2.5} />
           <TextInput
             style={s.searchInputInline}
             placeholder="Search medicines or partner pharmacies..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <X color={COLORS.textMuted} size={18} strokeWidth={2.5} />
+              <X color={colors.textMuted} size={18} strokeWidth={2.5} />
             </TouchableOpacity>
           )}
         </View>
@@ -241,8 +243,8 @@ export const HomeScreen = () => {
             onPress={() => Platform.OS === 'web' ? window.alert('Pill reminders will be available in the next update!') : Alert.alert('Coming Soon', 'Pill reminders will be available in the next update!')}
             activeOpacity={0.7}
           >
-            <View style={[s.actionIconBox, { backgroundColor: COLORS.plumLight }]}>
-              <Pill color={COLORS.deepPlum} size={20} strokeWidth={2.5} />
+            <View style={[s.actionIconBox, { backgroundColor: colors.plumLight }]}>
+              <Pill color={colors.deepPlum} size={20} strokeWidth={2.5} />
             </View>
             <Text style={s.actionCardText}>Reminders</Text>
           </TouchableOpacity>
@@ -273,7 +275,7 @@ export const HomeScreen = () => {
             <Text style={s.heroTitle}>Got a{'\n'}Prescription?</Text>
             <Text style={s.heroSub}>Upload it and get quotes from top pharmacies instantly.</Text>
 
-            <View style={{ backgroundColor: COLORS.midTeal, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, marginTop: 10, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ backgroundColor: colors.midTeal, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, marginTop: 10, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Upload color="#fff" size={14} strokeWidth={2.5} />
               <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF' }}>Upload Prescription</Text>
             </View>
@@ -325,27 +327,29 @@ export const HomeScreen = () => {
                 {p.image ? (
                   <Image source={p.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="cover" />
                 ) : (
-                  <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: COLORS.surfaceWhite, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
-                    <Store color={COLORS.midTeal} size={26} strokeWidth={2.2} />
+                  <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.surfaceWhite, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
+                    <Store color={colors.midTeal} size={26} strokeWidth={2.2} />
                   </View>
                 )}
 
                 {/* Live Open / Closed Badge */}
-                <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: COLORS.surfaceWhite, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: colors.surfaceWhite, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: p.isOpen ? '#10B981' : '#EF4444' }} />
-                  <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: COLORS.textDark }}>
+                  <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: colors.textDark }}>
                     {p.isOpen ? 'Open Now' : 'Closed'}
                   </Text>
                 </View>
 
                 <View style={s.storeDistanceTag}>
-                  <MapPin color={COLORS.midTeal} size={11} strokeWidth={2.5} />
+                  <MapPin color={colors.midTeal} size={11} strokeWidth={2.5} />
                   <Text style={s.storeDistanceText}>{p.distance}</Text>
                 </View>
 
                 <AnimatedHeartButton 
                   isFavorite={!!p.isFavorite}
                   onPress={() => handleToggleFav(p.id)}
+                  colors={colors}
+                  s={s}
                 />
               </View>
 
@@ -358,7 +362,7 @@ export const HomeScreen = () => {
                   <Text style={s.ratingText}>{p.rating}</Text>
                   <Text style={s.ratingCount}>(120+)</Text>
                   <Text style={s.bullet}>·</Text>
-                  <Clock color={COLORS.textMuted} size={11} strokeWidth={2} />
+                  <Clock color={colors.textMuted} size={11} strokeWidth={2} />
                   <Text style={s.timeText}>{p.estimatedResponseTime}</Text>
                 </View>
               </View>
@@ -402,37 +406,37 @@ export const HomeScreen = () => {
           onRequestClose={() => setLocationModal(false)}
         >
           <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: COLORS.bgWarm }}
+            style={{ flex: 1, backgroundColor: colors.bgWarm }}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
-            <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: COLORS.borderSoft, gap: 12, backgroundColor: COLORS.surfaceWhite }}>
-              <TouchableOpacity onPress={() => setLocationModal(false)} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.bgWarm, justifyContent: 'center', alignItems: 'center' }}>
-                <X color={COLORS.textDark} size={20} strokeWidth={2.5} />
+            <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: colors.borderSoft, gap: 12, backgroundColor: colors.surfaceWhite }}>
+              <TouchableOpacity onPress={() => setLocationModal(false)} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bgWarm, justifyContent: 'center', alignItems: 'center' }}>
+                <X color={colors.textDark} size={20} strokeWidth={2.5} />
               </TouchableOpacity>
-              <Text style={{ fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark, flex: 1 }}>Select Pickup Location</Text>
+              <Text style={{ fontFamily: FONTS.black, fontSize: 18, color: colors.textDark, flex: 1 }}>Select Pickup Location</Text>
             </View>
 
             <View style={{ padding: 20, gap: 16, flex: 1 }}>
               {/* Search Locations Input */}
               <View style={s.locationSearchBar}>
-                <Search color={COLORS.midTeal} size={18} strokeWidth={2.5} />
+                <Search color={colors.midTeal} size={18} strokeWidth={2.5} />
                 <TextInput
                   style={s.locationSearchInput}
                   placeholder="Search city, area, or street..."
-                  placeholderTextColor={COLORS.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   value={locationSearch}
                   onChangeText={setLocationSearch}
                   autoFocus
                 />
                 {locationSearch.length > 0 && (
                   <TouchableOpacity onPress={() => setLocationSearch('')}>
-                    <X color={COLORS.textMuted} size={16} strokeWidth={2} />
+                    <X color={colors.textMuted} size={16} strokeWidth={2} />
                   </TouchableOpacity>
                 )}
               </View>
 
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nearby Service Locations</Text>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nearby Service Locations</Text>
 
               {/* Location Suggestions List */}
               <ScrollView
@@ -453,7 +457,7 @@ export const HomeScreen = () => {
                       }}
                       activeOpacity={0.8}
                     >
-                      <MapPin color={isSelected ? COLORS.midTeal : COLORS.textMuted} size={18} strokeWidth={2} />
+                      <MapPin color={isSelected ? colors.midTeal : colors.textMuted} size={18} strokeWidth={2} />
                       <Text style={[s.locationItemText, isSelected && s.locationItemTextSelected]}>
                         {loc}
                       </Text>
@@ -469,14 +473,14 @@ export const HomeScreen = () => {
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
 
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.bgWarm,
+    backgroundColor: colors.bgWarm,
     paddingTop: 52,
     paddingBottom: 14,
     paddingHorizontal: 20,
@@ -484,31 +488,31 @@ const s = StyleSheet.create({
   userInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, paddingRight: 8 },
   avatarCircle: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: COLORS.midTeal,
+    backgroundColor: colors.midTeal,
     justifyContent: 'center', alignItems: 'center',
   },
   avatarInitial: { fontFamily: FONTS.black, fontSize: 18, color: '#FFFFFF' },
-  deliverLabel: { fontFamily: FONTS.extrabold, fontSize: 10, color: COLORS.midTeal, letterSpacing: 0.8 },
-  greetingTitle: { fontFamily: FONTS.black, fontSize: 16, color: COLORS.textDark, letterSpacing: -0.3 },
+  deliverLabel: { fontFamily: FONTS.extrabold, fontSize: 10, color: colors.midTeal, letterSpacing: 0.8 },
+  greetingTitle: { fontFamily: FONTS.black, fontSize: 16, color: colors.textDark, letterSpacing: -0.3 },
 
   bellBtn: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: COLORS.surfaceWhite,
+    backgroundColor: colors.surfaceWhite,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    borderWidth: 1, borderColor: colors.borderSoft,
     position: 'relative',
   },
   bellDot: {
     position: 'absolute', top: 9, right: 9,
     width: 7, height: 7, borderRadius: 3.5,
-    backgroundColor: COLORS.midTeal,
+    backgroundColor: colors.midTeal,
   },
   cartBadgeTop: {
     position: 'absolute', top: -4, right: -4,
-    backgroundColor: COLORS.midTeal, minWidth: 18, height: 18, borderRadius: 9,
+    backgroundColor: colors.midTeal, minWidth: 18, height: 18, borderRadius: 9,
     paddingHorizontal: 4,
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1.5, borderColor: COLORS.surfaceWhite,
+    borderWidth: 1.5, borderColor: colors.surfaceWhite,
   },
   cartBadgeTopText: { fontFamily: FONTS.black, fontSize: 9, color: '#FFFFFF' },
 
@@ -516,7 +520,7 @@ const s = StyleSheet.create({
 
   activeOrderBanner: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.midTeal,
+    backgroundColor: colors.midTeal,
     marginTop: 4, paddingHorizontal: 16, paddingVertical: 12,
     borderRadius: 16,
     shadowColor: '#1D6F72', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 8, elevation: 3,
@@ -525,19 +529,19 @@ const s = StyleSheet.create({
   bannerText: { fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF' },
   bannerTrackBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
   },
-  bannerAction: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.midTeal },
+  bannerAction: { fontFamily: FONTS.bold, fontSize: 12, color: colors.midTeal },
 
   searchBarContainer: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: COLORS.surfaceWhite, borderRadius: 16,
+    backgroundColor: colors.surfaceWhite, borderRadius: 16,
     height: 52, paddingHorizontal: 16,
-    borderWidth: 1.5, borderColor: COLORS.borderSoft,
+    borderWidth: 1.5, borderColor: colors.borderSoft,
     marginBottom: 8,
   },
-  searchInputInline: { flex: 1, fontFamily: FONTS.medium, fontSize: 14, color: COLORS.textDark },
+  searchInputInline: { flex: 1, fontFamily: FONTS.medium, fontSize: 14, color: colors.textDark },
 
   quickActionsGrid: {
     flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between',
@@ -545,46 +549,46 @@ const s = StyleSheet.create({
   },
   actionCard: {
     width: '48%', flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: COLORS.surfaceWhite, padding: 10, borderRadius: 16,
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.surfaceWhite, padding: 10, borderRadius: 16,
+    borderWidth: 1, borderColor: colors.borderSoft,
     shadowColor: '#64748B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
   actionIconBox: { width: 38, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  actionCardText: { flex: 1, fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark },
+  actionCardText: { flex: 1, fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark },
 
   heroBannerCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.heroPeach, borderRadius: 24, padding: 20,
+    backgroundColor: colors.heroPeach, borderRadius: 24, padding: 20,
     marginTop: 4,
-    borderWidth: 1.5, borderColor: COLORS.heroPeachDark, overflow: 'hidden',
+    borderWidth: 1.5, borderColor: colors.heroPeachDark, overflow: 'hidden',
   },
   heroContent: { flex: 1, gap: 4 },
-  heroTitle: { fontFamily: FONTS.black, fontSize: 22, color: COLORS.textDark, lineHeight: 26 },
-  heroSub: { fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textSecondary, opacity: 0.9, marginTop: 2 },
+  heroTitle: { fontFamily: FONTS.black, fontSize: 22, color: colors.textDark, lineHeight: 26 },
+  heroSub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textSecondary, opacity: 0.9, marginTop: 2 },
   discountBadge: {
-    alignSelf: 'flex-start', backgroundColor: COLORS.surfaceWhite,
+    alignSelf: 'flex-start', backgroundColor: colors.surfaceWhite,
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: 6,
   },
-  discountText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  discountText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
 
 
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark, letterSpacing: -0.4 },
-  seeAllText: { fontFamily: FONTS.bold, fontSize: 13, color: COLORS.midTeal },
+  sectionTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.textDark, letterSpacing: -0.4 },
+  seeAllText: { fontFamily: FONTS.bold, fontSize: 13, color: colors.midTeal },
 
   categoriesGrid: { flexDirection: 'row', justifyContent: 'space-between' },
   catCardTile: { alignItems: 'center', width: '22%' },
-  catTileName: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark, textAlign: 'center' },
+  catTileName: { fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark, textAlign: 'center' },
 
   // DoorDash Store Carousel
   storeCarousel: { gap: 14, paddingRight: 20 },
   doorDashStoreCard: {
-    width: 280, backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 12,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 8,
+    width: 280, backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 12,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 8,
   },
   storeHeroBanner: {
-    height: 130, borderRadius: 16, backgroundColor: COLORS.limeWhisper,
+    height: 130, borderRadius: 16, backgroundColor: colors.limeWhisper,
     justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden',
   },
   storeDistanceTag: {
@@ -592,38 +596,38 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
     flexDirection: 'row', alignItems: 'center', gap: 4,
   },
-  storeDistanceText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textDark },
+  storeDistanceText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textDark },
   favBtn: {
     position: 'absolute', top: 10, right: 10,
     backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 16, width: 32, height: 32,
     justifyContent: 'center', alignItems: 'center',
   },
   storeMetaContainer: { padding: 14, gap: 2 },
-  storeTitle: { fontFamily: FONTS.bold, fontSize: 15, color: COLORS.textDark },
-  storeSubText: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
+  storeTitle: { fontFamily: FONTS.bold, fontSize: 15, color: colors.textDark },
+  storeSubText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
   storeRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  ratingText: { fontFamily: FONTS.bold, fontSize: 12, color: COLORS.textDark },
-  ratingCount: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
-  bullet: { color: COLORS.textMuted, fontSize: 10 },
-  timeText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  ratingText: { fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark },
+  ratingCount: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
+  bullet: { color: colors.textMuted, fontSize: 10 },
+  timeText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
   // DoorDash Multi-Store Product Grid
   productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   productCard: {
-    width: '47.5%', backgroundColor: COLORS.surfaceWhite, borderRadius: 20, padding: 12,
-    borderWidth: 1, borderColor: COLORS.borderSoft, gap: 4,
+    width: '47.5%', backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 12,
+    borderWidth: 1, borderColor: colors.borderSoft, gap: 4,
   },
   productImgBox: {
-    height: 140, backgroundColor: COLORS.limeWhisper, borderRadius: 14,
+    height: 140, backgroundColor: colors.limeWhisper, borderRadius: 14,
     justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: 6,
     padding: 6,
   },
   productPillGraphic: {
-    width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.surfaceWhite,
+    width: 48, height: 48, borderRadius: 24, backgroundColor: colors.surfaceWhite,
     justifyContent: 'center', alignItems: 'center',
   },
   discBadge: {
-    position: 'absolute', top: 8, left: 8, backgroundColor: COLORS.midTeal,
+    position: 'absolute', top: 8, left: 8, backgroundColor: colors.midTeal,
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
   },
   discText: { fontFamily: FONTS.extrabold, fontSize: 9, color: '#FFFFFF' },
@@ -631,29 +635,29 @@ const s = StyleSheet.create({
     position: 'absolute', bottom: 8, left: 8, backgroundColor: '#F5D7FF',
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
   },
-  rxBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: COLORS.deepPlum },
-  prodName: { fontFamily: FONTS.bold, fontSize: 14, color: COLORS.textDark },
-  prodGeneric: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.textMuted },
+  rxBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: colors.deepPlum },
+  prodName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  prodGeneric: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
   prodFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 6 },
-  fromText: { fontFamily: FONTS.bold, fontSize: 9, color: COLORS.textMuted, textTransform: 'uppercase' },
-  prodPrice: { fontFamily: FONTS.black, fontSize: 14, color: COLORS.textDark },
+  fromText: { fontFamily: FONTS.bold, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' },
+  prodPrice: { fontFamily: FONTS.black, fontSize: 14, color: colors.textDark },
   storeCountBadge: {
-    backgroundColor: COLORS.limeWhisper, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
-  storeCountText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.midTeal },
+  storeCountText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
   addBtnInitial: {
-    width: 32, height: 32, borderRadius: 10, backgroundColor: COLORS.midTeal,
+    width: 32, height: 32, borderRadius: 10, backgroundColor: colors.midTeal,
     justifyContent: 'center', alignItems: 'center',
   },
   stepperBox: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: COLORS.limeWhisper, borderRadius: 10, paddingHorizontal: 6, height: 32,
+    backgroundColor: colors.limeWhisper, borderRadius: 10, paddingHorizontal: 6, height: 32,
     borderWidth: 1, borderColor: '#D6EDA0',
   },
   stepperBtn: { width: 22, height: 22, justifyContent: 'center', alignItems: 'center' },
-  stepperQtyText: { fontFamily: FONTS.black, fontSize: 14, color: COLORS.midTeal, paddingHorizontal: 2 },
+  stepperQtyText: { fontFamily: FONTS.black, fontSize: 14, color: colors.midTeal, paddingHorizontal: 2 },
 
   floatingCartWrap: {
     position: 'absolute', bottom: 20, left: 20, right: 20,
@@ -661,7 +665,7 @@ const s = StyleSheet.create({
   },
   floatingCartBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.midTeal, borderRadius: 18, height: 54, paddingHorizontal: 16,
+    backgroundColor: colors.midTeal, borderRadius: 18, height: 54, paddingHorizontal: 16,
   },
   cartCountPill: {
     width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255, 255, 255, 0.25)',
@@ -676,20 +680,20 @@ const s = StyleSheet.create({
     flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.45)', justifyContent: 'flex-end',
   },
   locationModalCard: {
-    backgroundColor: COLORS.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: colors.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingTop: 20, paddingBottom: Platform.OS === 'ios' ? 36 : 24, gap: 14,
   },
   locationModalHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  locationModalTitle: { fontFamily: FONTS.black, fontSize: 18, color: COLORS.textDark },
+  locationModalTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.textDark },
   locationSearchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: COLORS.bgWarm, borderRadius: 14, paddingHorizontal: 14, height: 44,
-    borderWidth: 1, borderColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm, borderRadius: 14, paddingHorizontal: 14, height: 44,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   locationSearchInput: {
-    flex: 1, fontFamily: FONTS.medium, fontSize: 13, color: COLORS.textDark,
+    flex: 1, fontFamily: FONTS.medium, fontSize: 13, color: colors.textDark,
     outlineStyle: 'none' as any, outlineWidth: 0 as any,
   },
   locationItemRow: {
@@ -697,8 +701,8 @@ const s = StyleSheet.create({
     paddingVertical: 12, paddingHorizontal: 10, borderRadius: 12,
   },
   locationItemRowSelected: {
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
   },
-  locationItemText: { flex: 1, fontFamily: FONTS.bold, fontSize: 13, color: COLORS.textDark },
-  locationItemTextSelected: { color: COLORS.midTeal },
+  locationItemText: { flex: 1, fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark },
+  locationItemTextSelected: { color: colors.midTeal },
 });

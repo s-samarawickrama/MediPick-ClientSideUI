@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Pressable, TouchableOpacity } from 'react-native';
 import { ShoppingBag, Store } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MedicineItem as Medicine } from '../../types';
 
@@ -24,6 +24,8 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
   onStoreSelectPress,
   actionComponent
 }) => {
+  const { colors } = useTheme();
+  const s = makeStyles(colors);
   const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
 
   return (
@@ -35,7 +37,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
         {med.image ? (
           <Image source={med.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
         ) : (
-          <ShoppingBag color={COLORS.midTeal} size={28} strokeWidth={2} />
+          <ShoppingBag color={colors.midTeal} size={28} strokeWidth={2} />
         )}
         {disc > 0 && (
           <View style={s.discTag}>
@@ -78,7 +80,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
             }}
             activeOpacity={0.85}
           >
-            <Store color={COLORS.midTeal} size={12} strokeWidth={2.2} />
+            <Store color={colors.midTeal} size={12} strokeWidth={2.2} />
             <Text style={s.selectStoreBadgeText}>
               {med.availableAtPharmacyIds?.length ? `Available at ${med.availableAtPharmacyIds.length} stores` : 'Unavailable'}
             </Text>
@@ -100,19 +102,19 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
   );
 };
 
-const s = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   productCard: {
     width: '47.5%',
-    backgroundColor: COLORS.surfaceWhite,
+    backgroundColor: colors.surfaceWhite,
     borderRadius: 20,
     padding: 12,
     borderWidth: 1,
-    borderColor: COLORS.borderSoft,
+    borderColor: colors.borderSoft,
     gap: 4,
   },
   productImgBox: {
     height: 140,
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
@@ -124,7 +126,7 @@ const s = StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: COLORS.midTeal,
+    backgroundColor: colors.midTeal,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -143,10 +145,10 @@ const s = StyleSheet.create({
   rxBadgeText: {
     fontFamily: FONTS.bold,
     fontSize: 9,
-    color: COLORS.deepPlum,
+    color: colors.deepPlum,
   },
   oosBadge: {
-    backgroundColor: COLORS.borderSoft,
+    backgroundColor: colors.borderSoft,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -155,17 +157,17 @@ const s = StyleSheet.create({
   oosBadgeText: {
     fontFamily: FONTS.bold,
     fontSize: 9,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   prodName: {
     fontFamily: FONTS.bold,
     fontSize: 14,
-    color: COLORS.textDark,
+    color: colors.textDark,
   },
   prodGeneric: {
     fontFamily: FONTS.medium,
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -176,17 +178,17 @@ const s = StyleSheet.create({
   prodPricePrefix: {
     fontFamily: FONTS.medium,
     fontSize: 10,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
   },
   prodPrice: {
     fontFamily: FONTS.black,
     fontSize: 14,
-    color: COLORS.textDark,
+    color: colors.textDark,
   },
   prodMrp: {
     fontFamily: FONTS.regular,
     fontSize: 11,
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     textDecorationLine: 'line-through',
   },
   selectStoreBadgeBtn: {
@@ -194,7 +196,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     borderRadius: 10,
     paddingVertical: 8,
     marginTop: 8,
@@ -204,6 +206,6 @@ const s = StyleSheet.create({
   selectStoreBadgeText: {
     fontFamily: FONTS.bold,
     fontSize: 11,
-    color: COLORS.midTeal,
+    color: colors.midTeal,
   },
 });

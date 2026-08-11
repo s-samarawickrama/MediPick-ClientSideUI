@@ -14,7 +14,7 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronLeft, Send, ShieldCheck, Clock } from 'lucide-react-native';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { useOrders } from '../../context/OrderContext';
@@ -24,6 +24,8 @@ type Nav = NativeStackNavigationProp<MainStackParamList>;
 type ChatRouteProp = RouteProp<MainStackParamList, 'PharmacyChat'>;
 
 export const PharmacyChatScreen = () => {
+  const { isDark, colors } = useTheme();
+  const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const route = useRoute<ChatRouteProp>();
   const orderId = route.params?.orderId || 'ord-101'; // Fallback for safety
@@ -69,12 +71,12 @@ export const PharmacyChatScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
 
       {/* Uber Eats Style Chat Navbar */}
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={COLORS.peacockBlue} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.peacockBlue} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <View style={s.headerCenter}>
           {pharmacy?.image ? (
@@ -87,7 +89,7 @@ export const PharmacyChatScreen = () => {
           <View>
             <View style={s.pharmacyTitleRow}>
               <Text style={s.pharmacyName}>MediCare Central</Text>
-              <ShieldCheck color={COLORS.midTeal} size={14} strokeWidth={2.5} />
+              <ShieldCheck color={colors.midTeal} size={14} strokeWidth={2.5} />
             </View>
             <Text style={s.onlineText}>Online · Response time &lt; 5 mins</Text>
           </View>
@@ -96,9 +98,13 @@ export const PharmacyChatScreen = () => {
       </View>
 
       {/* Order Context Banner */}
-      <View style={s.contextBanner}>
+      <TouchableOpacity
+        style={s.contextBanner}
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('ReadyForPickup', { orderId })}
+      >
         <Text style={s.contextText}>Order {orderId} · Pickup Code Ready</Text>
-      </View>
+      </TouchableOpacity>
 
       {/* Message List */}
       <ScrollView
@@ -115,7 +121,7 @@ export const PharmacyChatScreen = () => {
             return (
               <View key={msg.id} style={s.systemBubbleWrap}>
                 <View style={s.systemBubble}>
-                  <Clock color={COLORS.textMuted} size={12} strokeWidth={2.5} style={{ marginTop: 1 }} />
+                  <Clock color={colors.textMuted} size={12} strokeWidth={2.5} style={{ marginTop: 1 }} />
                   <Text style={s.systemText}>{msg.text}</Text>
                 </View>
                 <Text style={s.msgTimeCenter}>{msg.timestamp}</Text>
@@ -143,7 +149,7 @@ export const PharmacyChatScreen = () => {
         <TextInput
           style={s.inputField}
           placeholder="Message pharmacist..."
-          placeholderTextColor={COLORS.textMuted}
+          placeholderTextColor={colors.textMuted}
           value={input}
           onChangeText={setInput}
           onSubmitEditing={sendMessage}
@@ -155,48 +161,48 @@ export const PharmacyChatScreen = () => {
           disabled={!input.trim()}
           activeOpacity={0.8}
         >
-          <Send color={input.trim() ? COLORS.white : COLORS.textMuted} size={16} strokeWidth={2.5} />
+          <Send color={input.trim() ? colors.white : colors.textMuted} size={16} strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 };
 
-const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8FAF7' },
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingTop: 52, paddingBottom: 12, paddingHorizontal: 16,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+    backgroundColor: colors.surfaceWhite,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
     gap: 10,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.surfaceSubtle,
     justifyContent: 'center', alignItems: 'center',
   },
   headerCenter: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   pharmacyAvatar: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     justifyContent: 'center', alignItems: 'center',
   },
   pharmacyAvatarImg: {
     width: 40, height: 40, borderRadius: 12, resizeMode: 'cover',
   },
-  avatarInitial: { fontFamily: FONTS.bold, fontSize: 16, color: COLORS.deepTeal },
+  avatarInitial: { fontFamily: FONTS.bold, fontSize: 16, color: colors.deepTeal },
   pharmacyTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  pharmacyName: { fontFamily: FONTS.bold, fontSize: 15, color: COLORS.peacockBlue },
-  onlineText: { fontFamily: FONTS.medium, fontSize: 11, color: COLORS.deepTeal, marginTop: 1 },
+  pharmacyName: { fontFamily: FONTS.bold, fontSize: 15, color: colors.peacockBlue },
+  onlineText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.deepTeal, marginTop: 1 },
 
   contextBanner: {
-    backgroundColor: COLORS.limeWhisper,
+    backgroundColor: colors.limeWhisper,
     paddingVertical: 8, paddingHorizontal: 16,
     borderBottomWidth: 1, borderBottomColor: '#D6EDA0',
   },
   contextText: {
-    fontFamily: FONTS.bold, fontSize: 12, color: COLORS.deepTeal, textAlign: 'center',
+    fontFamily: FONTS.bold, fontSize: 12, color: colors.softLime, textAlign: 'center',
   },
 
   msgList: { padding: 16, paddingBottom: 20, gap: 12 },
@@ -204,18 +210,18 @@ const s = StyleSheet.create({
   systemBubbleWrap: { alignItems: 'center', marginVertical: 10 },
   systemBubble: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#F1F5F9', paddingHorizontal: 12, paddingVertical: 6,
+    backgroundColor: colors.surfaceSubtle, paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 999,
   },
-  systemText: { fontFamily: FONTS.bold, fontSize: 11, color: COLORS.textMuted },
-  msgTimeCenter: { fontFamily: FONTS.medium, fontSize: 10, color: COLORS.borderSoft, marginTop: 4 },
+  systemText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textMuted },
+  msgTimeCenter: { fontFamily: FONTS.medium, fontSize: 10, color: colors.borderSoft, marginTop: 4 },
 
   bubbleWrap: { maxWidth: '82%', alignSelf: 'flex-start' },
   bubbleWrapCustomer: { alignSelf: 'flex-end' },
   bubble: { borderRadius: 16, padding: 13 },
   bubblePharmacy: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1, borderColor: '#F1F5F9',
+    backgroundColor: colors.surfaceWhite,
+    borderWidth: 1, borderColor: colors.borderSoft,
     borderBottomLeftRadius: 4,
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
@@ -224,31 +230,31 @@ const s = StyleSheet.create({
     elevation: 1,
   },
   bubbleCustomer: {
-    backgroundColor: COLORS.peacockBlue,
+    backgroundColor: colors.peacockBlue,
     borderBottomRightRadius: 4,
   },
-  bubbleText: { fontFamily: FONTS.regular, fontSize: 14, color: COLORS.textDark, lineHeight: 20 },
-  bubblePharmacyText: { color: COLORS.textDark },
+  bubbleText: { fontFamily: FONTS.regular, fontSize: 14, color: colors.textDark, lineHeight: 20 },
+  bubblePharmacyText: { color: colors.textDark },
   bubbleCustomerText: { color: '#FFFFFF' },
-  msgTime: { fontFamily: FONTS.medium, fontSize: 10, color: COLORS.textMuted, marginTop: 4, paddingHorizontal: 4 },
+  msgTime: { fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted, marginTop: 4, paddingHorizontal: 4 },
 
   inputBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     padding: 12, paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1, borderTopColor: '#F1F5F9',
+    backgroundColor: colors.surfaceWhite,
+    borderTopWidth: 1, borderTopColor: colors.borderSoft,
   },
   inputField: {
     flex: 1, height: 44,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12, borderWidth: 1.5, borderColor: '#E2E8F0',
-    paddingHorizontal: 14, fontFamily: FONTS.regular, fontSize: 14, color: COLORS.peacockBlue,
+    backgroundColor: colors.surfaceSubtle,
+    borderRadius: 12, borderWidth: 1.5, borderColor: colors.borderSoft,
+    paddingHorizontal: 14, fontFamily: FONTS.regular, fontSize: 14, color: colors.peacockBlue,
     outlineStyle: 'none' as any, outlineWidth: 0 as any,
   },
   sendBtn: {
     width: 44, height: 44, borderRadius: 12,
-    backgroundColor: COLORS.peacockBlue,
+    backgroundColor: colors.peacockBlue,
     justifyContent: 'center', alignItems: 'center',
   },
-  sendBtnDisabled: { backgroundColor: '#F1F5F9' },
+  sendBtnDisabled: { backgroundColor: colors.surfaceSubtle },
 });

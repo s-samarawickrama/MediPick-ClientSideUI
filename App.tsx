@@ -19,6 +19,7 @@ import { COLORS } from './src/theme/colors';
 import { CartProvider } from './src/context/CartContext';
 import { AuthProvider } from './src/context/AuthContext';
 import { OrderProvider } from './src/context/OrderContext';
+import { ThemeProvider } from './src/context/ThemeContext';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -41,12 +42,14 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <OrderProvider>
-        <CartProvider>
-          <AppNavigator />
-        </CartProvider>
-      </OrderProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <OrderProvider>
+          <CartProvider>
+            <AppNavigator />
+          </CartProvider>
+        </OrderProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
