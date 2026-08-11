@@ -99,7 +99,7 @@ export const AIQualityCheckScreen = () => {
     } else if (targetPharmacyId) {
       navigation.navigate('Quotation', { orderId: 'ord-102', pharmacyId: targetPharmacyId });
     } else {
-      navigation.navigate('SelectPharmacies', { selectedItems });
+      navigation.navigate('Tabs', { screen: 'Orders' });
     }
   };
 

@@ -19,7 +19,7 @@ import { NotificationsScreen } from '../screens/notifications/NotificationsScree
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { UploadPrescriptionScreen } from '../screens/prescription/UploadPrescriptionScreen';
 import { AIQualityCheckScreen } from '../screens/prescription/AIQualityCheckScreen';
-import { SelectPharmaciesScreen } from '../screens/prescription/SelectPharmaciesScreen';
+
 import { SelectPharmacyScreen } from '../screens/prescription/SelectPharmacyScreen';
 import { ReportIssueScreen } from '../screens/issues/ReportIssueScreen';
 
@@ -31,7 +31,7 @@ export type MainStackParamList = {
   Browse: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } | undefined;
   UploadPrescription: { pharmacyId?: string; pharmacyName?: string; initialSelectedExtraItems?: Record<string, number> } | undefined;
   AIQualityCheck: { clarityScore?: number; pharmacyId?: string; pharmacyName?: string; selectedItems?: string[]; selectedExtraItemsDict?: Record<string, number>; nextScreen?: string; nextParams?: any } | undefined;
-  SelectPharmacies: { fromOtc?: boolean; selectedItems?: string[] };
+
   SelectPharmacy: undefined;
   Quotation: { orderId: string; pharmacyId?: string };
   ReadyForPickup: { orderId: string; isPaidOnline?: boolean };
@@ -165,7 +165,7 @@ export const MainNavigator = () => (
     <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
     <Stack.Screen name="UploadPrescription" component={UploadPrescriptionScreen} />
     <Stack.Screen name="AIQualityCheck" component={AIQualityCheckScreen} options={{ gestureEnabled: false }} />
-    <Stack.Screen name="SelectPharmacies" component={SelectPharmaciesScreen} />
+
     <Stack.Screen name="SelectPharmacy" component={SelectPharmacyScreen} />
     <Stack.Screen name="Quotation" component={QuotationScreen} options={{ animation: 'slide_from_right' }} />
     <Stack.Screen name="ReadyForPickup" component={ReadyForPickupScreen} options={{ animation: 'slide_from_right' }} />

@@ -18,7 +18,7 @@ const ALL_SCREENS = [
   { id: 'Cart', name: '7. Shopping Cart & Checkout', category: 'OTC Flow' },
   { id: 'UploadPrescription', name: '8. Upload Prescription', category: 'Rx Flow' },
   { id: 'AIQualityCheck', name: '9. AI Quality Check', category: 'Rx Flow' },
-  { id: 'SelectPharmacies', name: '10. Select Pharmacies (Max 3)', category: 'Rx Flow' },
+
   { id: 'PrescriptionQuotation', name: '11. Quotation & Offer Review', category: 'Rx Flow' },
   { id: 'MixedOrderReview', name: '12. Mixed Order Summary', category: 'Rx Flow' },
   { id: 'Payment', name: '13. Payment Selection', category: 'Fulfillment' },
