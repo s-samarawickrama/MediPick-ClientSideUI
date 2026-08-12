@@ -104,7 +104,7 @@ const ActiveOrderCard = ({
           <Text style={s.pharmName}>{order.pharmacy?.name ?? 'MediPick Pharmacy'}</Text>
           <Text style={s.pharmType}>
             {order.orderType === 'PRESCRIPTION' ? 'Prescription Order'
-              : order.orderType === 'MIXED' ? 'Prescription + OTC' : 'OTC Order'}
+              : order.orderType === 'MIXED' ? 'Prescription & Pharmacy Items' : 'Pharmacy Items'}
           </Text>
         </View>
         
