@@ -26,6 +26,15 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# Python virtual environments and generated files
+backend/.venv/
+.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
 # macOS
 .DS_Store
 *.pem
