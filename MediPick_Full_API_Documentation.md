@@ -4,6 +4,11 @@
 
 This document defines the actual customer-facing API contract implemented for the current MediPick frontend and mock backend. It is intentionally written as a production-style design document for engineering, product, and client review.
 
+### Live Swagger documentation
+
+- Swagger UI: http://127.0.0.1:8000/docs
+- OpenAPI schema: http://127.0.0.1:8000/openapi.json
+
 The purpose of this contract is to describe:
 
 - the app domain and user flows
@@ -341,43 +346,45 @@ This is the practical data contract that the current frontend app actually uses.
 
 ### 6.0 Quick reference matrix
 
+The table below matches the actual routes implemented in the current FastAPI app under backend/app/api/v1 and is the source of truth for the frontend contract.
+
 | Method | Route | Purpose | Notes |
 |---|---|---|---|
-| 🟢 GET | /auth/otp/request | Request OTP | Auth entry point |
-| 🟢 GET | /auth/otp/verify | Verify OTP and sign in | Returns token pair |
-| 🟢 GET | /auth/otp/resend | Resend OTP | Same auth flow |
-| 🟢 GET | /auth/logout | Log out current session | Session cleanup |
+| 🔵 POST | /auth/otp/request | Request OTP | Auth entry point |
+| 🔵 POST | /auth/otp/verify | Verify OTP and sign in | Returns token pair |
+| 🔵 POST | /auth/otp/resend | Resend OTP | Same auth flow |
+| 🔵 POST | /auth/logout | Log out current session | Session cleanup |
 | 🟢 GET | /users/me | Get profile | Current customer record |
 | 🟠 PATCH | /users/me | Update profile | Name/email updates |
 | 🟠 PATCH | /users/me/preferences | Update preferences | Notification toggles |
 | 🟠 PATCH | /users/me/phone | Update phone | Change contact number |
-| 🟢 GET | /users/me/phone/verify | Verify updated phone | OTP validation step |
-| 🟢 GET | /users/me/push-token | Register device token | Push notification setup |
+| 🔵 POST | /users/me/phone/verify | Verify updated phone | OTP validation step |
+| 🔵 POST | /users/me/push-token | Register device token | Push notification setup |
 | 🟢 GET | /pharmacies | List pharmacies | Customer home/search |
 | 🟢 GET | /pharmacies/{pharmacy_id} | Get pharmacy detail | Single vendor view |
-| 🟢 GET | /pharmacies/{pharmacy_id}/favorites | Add favorite | Favorites action |
+| 🔵 POST | /pharmacies/{pharmacy_id}/favorites | Add favorite | Favorites action |
 | 🔴 DELETE | /pharmacies/{pharmacy_id}/favorites/{favorite_id} | Remove favorite | Favorite removal |
 | 🟢 GET | /products | List products | Catalog browsing |
 | 🟢 GET | /products/{product_id} | Get product detail | Item detail |
-| 🟢 GET | /prescriptions | Create prescription | Upload/submit Rx |
+| 🔵 POST | /prescriptions | Create prescription | Upload/submit Rx |
 | 🟢 GET | /prescriptions/{prescription_id} | Get prescription detail | prescription record |
 | 🟢 GET | /prescriptions/{prescription_id}/status | Check prescription status | AI/pharmacy validation |
+| 🔵 POST | /orders | Create order | Checkout/planning |
 | 🟢 GET | /orders | List orders | Order history |
 | 🟢 GET | /orders/{order_id} | Get order detail | Full order view |
-| 🟢 GET | /orders | Create order | Checkout/planning |
-| 🔴 DELETE | /orders/{order_id}/cancel | Cancel order | Cancel active order |
-| 🟢 GET | /orders/{order_id}/rating | Submit rating | Post-order feedback |
+| 🔵 POST | /orders/{order_id}/cancel | Cancel order | Cancel active order |
+| 🔵 POST | /orders/{order_id}/rating | Submit rating | Post-order feedback |
 | 🟢 GET | /orders/{order_id}/quote | Get quote | Quotation review |
-| 🟢 GET | /orders/{order_id}/quote/accept | Accept quote | Transition to prep |
-| 🟢 GET | /orders/{order_id}/quote/decline | Decline quote | Reject quote |
+| 🔵 POST | /orders/{order_id}/quote/accept | Accept quote | Transition to prep |
+| 🔵 POST | /orders/{order_id}/quote/decline | Decline quote | Reject quote |
 | 🟢 GET | /orders/{order_id}/pickup | Get pickup details | OTP + counter status |
-| 🟢 GET | /orders/{order_id}/pickup/extend | Extend pickup time | Pickup window action |
+| 🔵 POST | /orders/{order_id}/pickup/extend | Extend pickup time | Pickup window action |
 | 🟢 GET | /orders/{order_id}/messages | Get chat messages | Conversation history |
-| 🟢 GET | /orders/{order_id}/messages | Send message | Message customer/pharmacist |
+| 🔵 POST | /orders/{order_id}/messages | Send message | Message customer/pharmacist |
 | 🟢 GET | /notifications | Get notifications | App alerts |
 | 🟠 PATCH | /notifications/{notification_id} | Mark read | Notification state update |
-| 🟢 GET | /orders/{order_id}/issues | Report issue | Customer support |
-| 🟢 GET | /payments/intents | Create pay intent | Stripe/online payment |
+| 🔵 POST | /orders/{order_id}/issues | Report issue | Customer support |
+| 🔵 POST | /payments/intents | Create pay intent | Stripe/online payment |
 
 > Method coloring key: 🟢 GET, 🔵 POST, 🟠 PATCH, 🔴 DELETE
 
