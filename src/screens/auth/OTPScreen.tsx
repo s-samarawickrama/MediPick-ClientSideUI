@@ -15,16 +15,16 @@ import { TextInput } from 'react-native';
 import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { AuthStackParamList } from '../../navigation/AppNavigator';
+import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import { useAuth } from '../../context/AuthContext';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'OTP'> & {
-  onSignIn: () => void;
-};
+type Props = NativeStackScreenProps<AuthStackParamList, 'OTP'>;
 
-export const OTPScreen: React.FC<Props> = ({ navigation, route, onSignIn }) => {
+export const OTPScreen: React.FC<Props> = ({ navigation, route }) => {
   const { isDark, colors } = useTheme();
   const s = makeStyles(colors);
   const { phone } = route.params;
+  const { verifyOtp } = useAuth();
   const [otp,      setOtp]      = useState('');
   const [otpErr,   setOtpErr]   = useState('');
   const [loading,  setLoading]  = useState(false);
@@ -53,7 +53,13 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route, onSignIn }) => {
     if (otp.length < 6) { setOtpErr('Enter 6-digit code'); return; }
     setOtpErr('');
     setLoading(true);
-    setTimeout(() => { setLoading(false); onSignIn(); }, 700);
+    setTimeout(() => {
+      const ok = verifyOtp(otp);
+      setLoading(false);
+      if (ok) {
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+      }
+    }, 700);
   };
 
   const handleResend = () => {

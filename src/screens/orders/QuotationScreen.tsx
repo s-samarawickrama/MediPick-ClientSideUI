@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Animated, StatusBar, Alert, Platform
+  TouchableOpacity, Animated, StatusBar, Alert, Platform, Image
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,7 +11,7 @@ import {
 import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { MOCK_ORDERS } from '../../mock/demoData';
+import { MOCK_ORDERS, MOCK_PHARMACIES } from '../../mock/demoData';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 
 type Nav   = NativeStackNavigationProp<MainStackParamList>;
@@ -40,9 +40,59 @@ export const QuotationScreen = () => {
   const navigation = useNavigation<Nav>();
   const route      = useRoute<Route>();
   const order      = MOCK_ORDERS.find((o) => o.id === route.params?.orderId) ?? MOCK_ORDERS[1];
+  const pharmacyImage = order.pharmacy?.image ?? MOCK_PHARMACIES.find((p) => p.name === (order.pharmacy?.name ?? 'City Health Pharmacy'))?.image;
 
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY  = useRef(new Animated.Value(10)).current;
+
+  const quoteBannerStyle = {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    backgroundColor: isDark ? 'rgba(122, 35, 143, 0.18)' : '#EDE7F6',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(168, 85, 199, 0.5)' : '#D7C6E9',
+    marginBottom: 20,
+  };
+
+  const quoteBannerTextStyle = {
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: isDark ? '#F5D6FF' : colors.deepPlum,
+  };
+
+  const quoteBannerSubStyle = {
+    fontFamily: FONTS.medium,
+    fontSize: 11,
+    color: isDark ? '#E7C4F4' : colors.textSecondary,
+    marginTop: 1,
+    opacity: 0.95,
+  };
+
+  const quoteBannerTimerStyle = {
+    color: isDark ? '#FFB4A2' : '#B45309',
+    fontFamily: FONTS.bold,
+  };
+
+  const savingBadgeStyle = {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    backgroundColor: isDark ? 'rgba(249, 115, 22, 0.14)' : '#F8E4D3',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(251, 146, 60, 0.45)' : '#E6C9A9',
+  };
+
+  const savingBadgeTextStyle = {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    color: isDark ? '#FED7AA' : '#9A5600',
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -117,16 +167,12 @@ export const QuotationScreen = () => {
       >
         {/* Time Limit Banner */}
         {order?.state === 'WAITING_CUSTOMER_CONFIRMATION' && (
-          <View style={{
-            flexDirection: 'row', alignItems: 'center', gap: 12,
-            backgroundColor: 'rgba(122, 35, 143, 0.18)', borderRadius: 16, padding: 14,
-            borderWidth: 1, borderColor: 'rgba(168, 85, 199, 0.5)', marginBottom: 20,
-          }}>
-            <Clock color={colors.deepPlum} size={24} strokeWidth={2} />
+          <View style={quoteBannerStyle}>
+            <Clock color={isDark ? '#F5D6FF' : colors.deepPlum} size={24} strokeWidth={2} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: '#F5D6FF' }}>Quote Ready for Review</Text>
-              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: '#E7C4F4', marginTop: 1, opacity: 0.95 }}>
-                <Text style={{ color: '#FFB4A2', fontFamily: FONTS.bold }}>23h 59m remaining </Text>
+              <Text style={quoteBannerTextStyle}>Quote Ready for Review</Text>
+              <Text style={quoteBannerSubStyle}>
+                <Text style={quoteBannerTimerStyle}>23h 59m remaining </Text>
                 to confirm before auto-cancellation.
               </Text>
             </View>
@@ -136,6 +182,15 @@ export const QuotationScreen = () => {
         {/* Pharmacy Details */}
         <TouchableOpacity style={s.offerCard} activeOpacity={0.7} onPress={() => Alert.alert(offer.name, `${offer.address}\n\nDistance: ${offer.distance}`)}>
           <View style={s.offerHeaderRow}>
+            <View style={s.pharmacyLogoWrap}>
+              {pharmacyImage ? (
+                <Image source={pharmacyImage} style={s.pharmacyLogo} />
+              ) : (
+                <View style={s.pharmacyLogoFallback}>
+                  <Text style={s.pharmacyLogoFallbackText}>{offer.name.charAt(0)}</Text>
+                </View>
+              )}
+            </View>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={s.offerPharmName}>{offer.name}</Text>
@@ -196,9 +251,9 @@ export const QuotationScreen = () => {
 
           <View style={s.totalRow}>
             <Text style={s.totalAmount}>LKR {offer.totalOffered}</Text>
-            <View style={s.savingBadge}>
-              <CheckCircle2 color="#FDBA74" size={12} strokeWidth={2.5} />
-              <Text style={s.savingBadgeText}>LKR {offer.totalMrp - offer.totalOffered} saved</Text>
+            <View style={[s.savingBadge, { backgroundColor: isDark ? '#2C1C0E' : '#FFF7ED', borderColor: isDark ? '#8B5E34' : '#FCD7B0' }]}>
+              <CheckCircle2 color={isDark ? '#FBBF24' : '#C2410C'} size={12} strokeWidth={2.5} />
+              <Text style={[s.savingBadgeText, { color: isDark ? '#FDE68A' : '#9A4B10' }]}>LKR {offer.totalMrp - offer.totalOffered} saved</Text>
             </View>
           </View>
         </View>
@@ -253,6 +308,17 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     borderWidth: 1.5, borderColor: colors.borderSoft, gap: 10,
   },
   offerHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  pharmacyLogoWrap: {
+    width: 44, height: 44, borderRadius: 12,
+    overflow: 'hidden', backgroundColor: colors.limeWhisper,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  pharmacyLogo: { width: 44, height: 44, borderRadius: 12 },
+  pharmacyLogoFallback: {
+    width: '100%', height: '100%',
+    backgroundColor: colors.midTealLight, justifyContent: 'center', alignItems: 'center',
+  },
+  pharmacyLogoFallbackText: { fontFamily: FONTS.bold, fontSize: 18, color: colors.midTeal },
   offerPharmName: { fontFamily: FONTS.bold, fontSize: 16, color: colors.textDark },
   offerPharmAddr: { fontFamily: FONTS.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
 
@@ -274,6 +340,11 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   itemOffer: { fontFamily: FONTS.bold, fontSize: 13, color: colors.midTeal },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.borderSoft },
   totalAmount: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark },
-  savingBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(249, 115, 22, 0.14)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(251, 146, 60, 0.45)' },
-  savingBadgeText: { fontFamily: FONTS.bold, fontSize: 12, color: '#FED7AA' },
+  savingBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  savingBadgeText: { fontFamily: FONTS.bold, fontSize: 12 },
 });

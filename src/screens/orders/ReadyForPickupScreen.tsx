@@ -207,7 +207,14 @@ export const ReadyForPickupScreen = () => {
 
           {orderState === 'PREPARING' ? (
             <View style={{ alignItems: 'center', paddingVertical: 16, gap: 10 }}>
-              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' }}>
+              <View style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: isDark ? colors.limeWhisper : '#EAF7E7',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
                 <Clock color={colors.midTeal} size={22} strokeWidth={2.2} />
               </View>
               <Text style={{ fontFamily: FONTS.black, fontSize: 16, color: colors.textDark, textAlign: 'center' }}>
@@ -225,8 +232,8 @@ export const ReadyForPickupScreen = () => {
               <View style={s.otpContainer}>
                 <View style={s.otpRow}>
                   {otp.split('').map((d, i) => (
-                    <View key={i} style={s.otpCell}>
-                      <Text style={s.otpDigit}>{d}</Text>
+                    <View key={i} style={[s.otpCell, { backgroundColor: isDark ? colors.limeWhisper : '#EAF7E7', borderColor: isDark ? '#D6EDA0' : '#B7D99A' }]}>
+                      <Text style={[s.otpDigit, { color: colors.midTeal }]}>{d}</Text>
                     </View>
                   ))}
                 </View>

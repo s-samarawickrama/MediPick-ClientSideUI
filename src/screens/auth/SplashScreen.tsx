@@ -13,7 +13,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ArrowRight, ShoppingBag } from 'lucide-react-native';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { AuthStackParamList } from '../../navigation/AppNavigator';
+import { AuthStackParamList } from '../../navigation/AuthNavigator';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 

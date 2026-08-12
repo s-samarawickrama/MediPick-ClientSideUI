@@ -16,12 +16,15 @@ import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { AuthStackParamList } from '../../navigation/AppNavigator';
+import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import { useAuth } from '../../context/AuthContext';
+import { isValidPhoneNumber, normalizePhoneNumber } from '../../utils/phone';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
+  const { login } = useAuth();
   const s = makeStyles(colors);
 
   const [phone,   setPhone]   = useState('');
@@ -44,10 +47,13 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const validate = () => {
     let ok = true;
-    if (!phone.trim() || phone.trim().length < 9) {
-      setPhoneErr('Enter phone number');
+    const cleanedPhone = normalizePhoneNumber(phone.trim());
+
+    if (!isValidPhoneNumber(cleanedPhone)) {
+      setPhoneErr('Use valid Sri Lankan mobile number');
       ok = false;
     } else setPhoneErr('');
+
     if (!surname.trim() || surname.trim().length < 2) {
       setSurnameErr('Enter surname');
       ok = false;
@@ -58,9 +64,11 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const handleSubmit = () => {
     if (!validate()) return;
     setLoading(true);
+    const cleanedPhone = normalizePhoneNumber(phone.trim());
+    login(cleanedPhone, surname.trim(), email.trim() || undefined);
     setTimeout(() => {
       setLoading(false);
-      navigation.navigate('OTP', { phone: phone.trim(), surname: surname.trim() });
+      navigation.navigate('OTP', { phone: cleanedPhone, surname: surname.trim() });
     }, 600);
   };
 

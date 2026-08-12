@@ -30,13 +30,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         } else {
-          // Default mock user for demo
           setUser({
-            phoneNumber: '0771234567',
-            surname: 'Perera',
-            email: 'perera@gmail.com',
-            isLoggedIn: true,
-            strikes: 1,
+            phoneNumber: '',
+            surname: '',
+            email: '',
+            isLoggedIn: false,
+            strikes: 0,
           });
         }
       } catch (e) {

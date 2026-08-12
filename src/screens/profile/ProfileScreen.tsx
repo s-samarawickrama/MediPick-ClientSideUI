@@ -20,7 +20,7 @@ type Nav = NativeStackNavigationProp<MainStackParamList>;
 export const ProfileScreen = () => {
   const navigation = useNavigation<Nav>();
   const opacity = useRef(new Animated.Value(0)).current;
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { isDark, toggleTheme, colors } = useTheme();
   const s = makeStyles(colors);
 
@@ -205,7 +205,14 @@ export const ProfileScreen = () => {
         <TouchableOpacity 
           style={s.signOutBtn} 
           activeOpacity={0.6}
-          onPress={() => Platform.OS === 'web' ? window.alert('You have been successfully signed out.') : Alert.alert('Sign Out', 'You have been successfully signed out.')}
+          onPress={() => {
+            logout();
+            if (Platform.OS === 'web') {
+              window.alert('You have been successfully signed out.');
+            } else {
+              Alert.alert('Sign Out', 'You have been successfully signed out.');
+            }
+          }}
         >
           <LogOut color={colors.error} size={18} strokeWidth={2.5} />
           <Text style={s.signOutText}>Sign Out</Text>

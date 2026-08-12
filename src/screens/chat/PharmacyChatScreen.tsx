@@ -197,12 +197,12 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   onlineText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.deepTeal, marginTop: 1 },
 
   contextBanner: {
-    backgroundColor: colors.limeWhisper,
+    backgroundColor: '#EAF7E7',
     paddingVertical: 8, paddingHorizontal: 16,
-    borderBottomWidth: 1, borderBottomColor: '#D6EDA0',
+    borderBottomWidth: 1, borderBottomColor: '#CFE9C5',
   },
   contextText: {
-    fontFamily: FONTS.bold, fontSize: 12, color: colors.softLime, textAlign: 'center',
+    fontFamily: FONTS.bold, fontSize: 12, color: colors.midTeal, textAlign: 'center',
   },
 
   msgList: { padding: 16, paddingBottom: 20, gap: 12 },
