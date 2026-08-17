@@ -52,15 +52,24 @@ export interface PharmacySummary {
   isFavorite?: boolean;
 }
 
-export interface ProductSummary {
+export interface MedicineSummary {
   id: string;
   name: string;
+  genericName?: string;
   category?: string;
+  dosage?: string;
   isRxRequired?: boolean;
   inStock?: boolean;
   mrpPrice?: number;
   pharmacyPrice?: number;
+  availableAtPharmacyIds?: string[];
+  popularity?: number;
+  image?: string;
+  description?: string;
 }
+
+// Backward compatibility alias
+export type ProductSummary = MedicineSummary;
 
 export interface OrderStateSummary {
   id: string;

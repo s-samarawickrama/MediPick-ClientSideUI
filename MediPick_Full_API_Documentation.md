@@ -374,7 +374,8 @@ The table below matches the actual routes implemented in the current FastAPI app
 | 🟢 GET | /orders/{order_id} | Get order detail | Full order view |
 | 🔵 POST | /orders/{order_id}/cancel | Cancel order | Cancel active order |
 | 🔵 POST | /orders/{order_id}/rating | Submit rating | Post-order feedback |
-| 🟢 GET | /orders/{order_id}/quote | Get quote | Quotation review |
+| � POST | /orders/{order_id}/reorder | Recreate an order from a previous order | Planned next-phase feature |
+| �🟢 GET | /orders/{order_id}/quote | Get quote | Quotation review |
 | 🔵 POST | /orders/{order_id}/quote/accept | Accept quote | Transition to prep |
 | 🔵 POST | /orders/{order_id}/quote/decline | Decline quote | Reject quote |
 | 🟢 GET | /orders/{order_id}/pickup | Get pickup details | OTP + counter status |
@@ -911,6 +912,30 @@ Success response:
 {
   "id": "ord_xyz",
   "rating": 5
+}
+```
+
+#### POST /orders/{order_id}/reorder
+Description: Recreate a new order from a previous completed order. This is a planned next-phase API and is not yet implemented in the current mock backend.
+
+Optional request body:
+
+```json
+{
+  "preferredPharmacyId": "ph_1"
+}
+```
+
+Success response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "newOrderId": "ord_new_001",
+    "sourceOrderId": "ord_xyz",
+    "state": "WAITING_PHARMACY_CONFIRMATION"
+  }
 }
 ```
 

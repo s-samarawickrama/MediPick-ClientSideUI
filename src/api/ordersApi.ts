@@ -49,4 +49,10 @@ export const ordersApi = {
       body: payload,
       token,
     }),
+
+  reorder: async (orderId: string, token?: string) =>
+    apiRequest<OrderApiDetail>(`/orders/${orderId}/reorder`, {
+      method: 'POST',
+      token,
+    }),
 };

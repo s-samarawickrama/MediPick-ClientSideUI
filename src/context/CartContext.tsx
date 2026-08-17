@@ -91,7 +91,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const existing = prev.find((item) => item.medicine.id === medicine.id && item.pharmacy.id === pharmacy.id);
       if (existing) {
         return prev.map((item) =>
-          item.medicine.id === medicine.id && item.pharmacy.id === pharmacy.id 
+          item.medicine.id === medicine.id && item.pharmacy.id === pharmacy.id
             ? { ...item, quantity: item.quantity + 1 } : item
         );
       }

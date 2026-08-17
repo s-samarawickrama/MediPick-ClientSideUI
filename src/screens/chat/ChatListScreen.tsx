@@ -20,7 +20,7 @@ export const ChatListScreen = () => {
   const opacity    = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    StatusBar.setBarStyle('dark-content');
+    StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
@@ -79,13 +79,17 @@ export const ChatListScreen = () => {
                 </View>
               )}
 
-              <View style={{ flex: 1, gap: 2 }}>
+              <View style={{ flex: 1, gap: 2, minWidth: 0 }}>
                 <View style={s.cardTopRow}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, paddingRight: 4 }}>
-                    <Text style={s.pharmName} numberOfLines={1}>{chat.pharmacyName}</Text>
-                    <ShieldCheck color={colors.midTeal} size={13} strokeWidth={2.5} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, paddingRight: 8 }}>
+                    <Text numberOfLines={1} style={{ flexShrink: 1, fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>
+                      {chat.pharmacyName}
+                    </Text>
+                    <View style={{ flexShrink: 0 }}>
+                      <ShieldCheck color={colors.midTeal} size={13} strokeWidth={2.5} />
+                    </View>
                   </View>
-                  <Text style={s.timeText}>{chat.time}</Text>
+                  <Text style={[s.timeText, { flexShrink: 0 }]} numberOfLines={1}>{chat.time}</Text>
                 </View>
 
                 <Text style={s.lastMsg} numberOfLines={1}>{chat.lastMessage}</Text>
@@ -128,11 +132,11 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     width: 44, height: 44, borderRadius: 14, resizeMode: 'cover',
   },
   avatarInitial: { fontFamily: FONTS.black, fontSize: 18, color: colors.midTeal },
-  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  pharmName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
+  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 4 },
+  pharmName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark, flex: 1, minWidth: 0 },
   pharmacistSub: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
   lastMsg: { fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-  timeText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
+  timeText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, flexShrink: 0 },
   unreadBadge: {
     width: 20, height: 20, borderRadius: 10,
     backgroundColor: colors.midTeal, justifyContent: 'center', alignItems: 'center',

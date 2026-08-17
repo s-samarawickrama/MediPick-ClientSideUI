@@ -12,6 +12,7 @@ export const orderService = {
   cancel: (orderId: string, token?: string) => ordersApi.cancel(orderId, token),
   rate: (orderId: string, payload: { rating: number; comment?: string }, token?: string) =>
     ordersApi.rate(orderId, payload, token),
+  reorder: (orderId: string, token?: string) => ordersApi.reorder(orderId, token),
 };
 
 export type OrderService = typeof orderService;

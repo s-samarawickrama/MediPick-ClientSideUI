@@ -183,14 +183,15 @@ export const OrderDetailsScreen = () => {
         {isQuote && (
           <View style={{
             flexDirection: 'row', alignItems: 'center', gap: 12,
-            backgroundColor: colors.surfaceWhite, borderRadius: 16, padding: 14,
-            borderWidth: 1, borderColor: colors.borderSoft, marginBottom: 16,
+            backgroundColor: isDark ? colors.plumLight : '#EDE7F6',
+            borderRadius: 16, padding: 14,
+            borderWidth: 1, borderColor: isDark ? colors.deepPlum : '#D7C6E9', marginBottom: 16,
           }}>
-            <Clock color={colors.deepPlum} size={24} strokeWidth={2} />
+            <Clock color={isDark ? '#F5D6FF' : colors.deepPlum} size={24} strokeWidth={2} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark }}>Quote Ready for Review</Text>
-              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textSecondary, marginTop: 1, opacity: 0.9 }}>
-                <Text style={{ color: colors.error, fontFamily: FONTS.bold }}>23h 59m remaining </Text>
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: isDark ? '#E9D5FF' : colors.deepPlum }}>Quote Ready for Review</Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: isDark ? '#D8B4E2' : colors.textSecondary, marginTop: 1, opacity: 0.9 }}>
+                <Text style={{ color: isDark ? colors.warning : '#B45309', fontFamily: FONTS.bold }}>23h 59m remaining </Text>
                 to confirm before auto-cancellation.
               </Text>
             </View>
@@ -220,7 +221,10 @@ export const OrderDetailsScreen = () => {
               <View style={[s.pharmAvatar, { backgroundColor: colors.limeWhisper }]} />
             )}
             <View style={{ flex: 1 }}>
-              <Text style={s.pharmName}>{order.pharmacy?.name}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={s.pharmName}>{order.pharmacy?.name}</Text>
+                <ShieldCheck color={colors.midTeal} size={13} strokeWidth={2.5} />
+              </View>
               <Text style={s.pharmAddress}>{order.pharmacy?.address}</Text>
             </View>
             {isActive ? (

@@ -1,9 +1,9 @@
-import { productsApi } from '../api/productsApi';
+import { medicinesApi } from '../api/productsApi';
 
-export const productService = {
-  list: (token?: string) => productsApi.list(token),
-  getById: (productId: string, token?: string) => productsApi.getById(productId, token),
+export const medicineService = {
+  list: (token?: string) => medicinesApi.list(token),
+  getById: (medicineId: string, token?: string) => medicinesApi.getById(medicineId, token),
 };
 
-export type ProductService = typeof productService;
-export default productService;
+export type MedicineService = typeof medicineService;
+export default medicineService;

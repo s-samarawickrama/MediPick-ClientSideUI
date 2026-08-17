@@ -72,7 +72,7 @@ export const MultiStoreCartScreen = () => {
   const cartStores = Object.values(cartStoresMap);
 
   useEffect(() => {
-    StatusBar.setBarStyle('dark-content');
+    StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
@@ -206,11 +206,11 @@ export const MultiStoreCartScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bgWarm} />
 
       {/* Nav Header */}
       <View style={s.nav}>
-        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
+        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={s.navTitle}>Order Cart ({totalItemCount})</Text>
@@ -412,6 +412,14 @@ export const MultiStoreCartScreen = () => {
             <ShoppingCart color={colors.textMuted} size={44} strokeWidth={1.5} />
             <Text style={s.emptyTitle}>Your Cart is Empty</Text>
             <Text style={s.emptySub}>Add medicines from partner pharmacies to place an order.</Text>
+            
+            <TouchableOpacity 
+              style={{ marginTop: 16, backgroundColor: colors.midTeal, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
+              onPress={() => navigation.navigate('Tabs', { screen: 'Browse' })}
+              activeOpacity={0.8}
+            >
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: '#FFF' }}>Start Browsing</Text>
+            </TouchableOpacity>
           </View>
         )}
 

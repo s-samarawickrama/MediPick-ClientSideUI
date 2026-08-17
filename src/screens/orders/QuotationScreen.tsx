@@ -49,30 +49,30 @@ export const QuotationScreen = () => {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 12,
-    backgroundColor: isDark ? 'rgba(122, 35, 143, 0.18)' : '#EDE7F6',
+    backgroundColor: isDark ? colors.plumLight : '#EDE7F6',
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: isDark ? 'rgba(168, 85, 199, 0.5)' : '#D7C6E9',
+    borderColor: isDark ? colors.deepPlum : '#D7C6E9',
     marginBottom: 20,
   };
 
   const quoteBannerTextStyle = {
     fontFamily: FONTS.bold,
     fontSize: 13,
-    color: isDark ? '#F5D6FF' : colors.deepPlum,
+    color: isDark ? '#E9D5FF' : colors.deepPlum,
   };
 
   const quoteBannerSubStyle = {
     fontFamily: FONTS.medium,
     fontSize: 11,
-    color: isDark ? '#E7C4F4' : colors.textSecondary,
+    color: isDark ? '#D8B4E2' : colors.textSecondary,
     marginTop: 1,
     opacity: 0.95,
   };
 
   const quoteBannerTimerStyle = {
-    color: isDark ? '#FFB4A2' : '#B45309',
+    color: isDark ? colors.warning : '#B45309',
     fontFamily: FONTS.bold,
   };
 
@@ -253,7 +253,7 @@ export const QuotationScreen = () => {
             <Text style={s.totalAmount}>LKR {offer.totalOffered}</Text>
             <View style={[s.savingBadge, { backgroundColor: isDark ? '#2C1C0E' : '#FFF7ED', borderColor: isDark ? '#8B5E34' : '#FCD7B0' }]}>
               <CheckCircle2 color={isDark ? '#FBBF24' : '#C2410C'} size={12} strokeWidth={2.5} />
-              <Text style={[s.savingBadgeText, { color: isDark ? '#FDE68A' : '#9A4B10' }]}>LKR {offer.totalMrp - offer.totalOffered} saved</Text>
+              <Text style={[s.savingBadgeText, { color: '#F97316' }]}>LKR {offer.totalMrp - offer.totalOffered} saved</Text>
             </View>
           </View>
         </View>
@@ -329,13 +329,16 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   itemsHeader: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark, marginBottom: 4 },
   breakdownSectionHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: colors.limeWhisper, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6,
-    marginVertical: 4,
+    backgroundColor: colors.limeWhisper, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 8,
+    marginVertical: 4, alignSelf: 'flex-start',
   },
-  breakdownSectionTitle: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
-  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 7 },
-  itemBorder: { borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
-  itemName: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textDark, flex: 1 },
+  breakdownSectionTitle: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal, flex: 1 },
+  itemRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 8, width: '100%',
+  },
+  itemBorder: { borderBottomWidth: 1, borderBottomColor: colors.borderSubtle },
+  itemName: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textDark, flex: 1, marginRight: 8 },
   itemMrp: { fontFamily: FONTS.regular, fontSize: 11, color: colors.textMuted, textDecorationLine: 'line-through' },
   itemOffer: { fontFamily: FONTS.bold, fontSize: 13, color: colors.midTeal },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.borderSoft },

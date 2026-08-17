@@ -55,6 +55,8 @@ export interface Pharmacy {
   estimatedResponseTime: string;
   isOpen: boolean;
   isFavorite?: boolean;
+  hasOffer?: boolean;
+  offerTag?: string;
   image?: string | any;
   latitude?: number;
   longitude?: number;

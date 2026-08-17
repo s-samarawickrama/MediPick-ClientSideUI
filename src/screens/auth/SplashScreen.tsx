@@ -18,8 +18,8 @@ import { AuthStackParamList } from '../../navigation/AuthNavigator';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
 export const SplashScreen: React.FC<Props> = ({ navigation }) => {
-  const { colors } = useTheme();
-  const s = makeStyles(colors);
+  const { colors, isDark } = useTheme();
+  const s = makeStyles(colors, isDark);
   const logoOp    = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.9)).current;
   const contentOp = useRef(new Animated.Value(0)).current;
@@ -51,8 +51,9 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
       <Animated.View style={[s.centerBrand, { opacity: logoOp, transform: [{ scale: logoScale }] }]}>
         <View style={s.logoCircle}>
           <Image 
-            source={require('../../../assets/medipick_3d_bag.png')} 
-            style={{ width: 140, height: 140, resizeMode: 'cover' }} 
+            source={require('../../../assets/images/medipick_bag.png')} 
+            style={{ width: 90, height: 90 }} 
+            resizeMode="contain" 
           />
         </View>
         <Text style={s.brandName}>MediPick</Text>
@@ -79,7 +80,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+const makeStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.bgWarm,
@@ -95,9 +96,12 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   logoCircle: {
     width: 140,
     height: 140,
+    borderRadius: 36,
+    backgroundColor: colors.surfaceSubtle,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+    overflow: 'hidden',
   },
   brandName: {
     fontFamily: FONTS.black,

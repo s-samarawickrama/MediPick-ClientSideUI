@@ -1,16 +1,22 @@
 import { apiRequest } from './client';
-import { ProductSummary } from '../types/api';
+import { MedicineSummary } from '../types/api';
 
-export const productsApi = {
+export const medicinesApi = {
   list: async (token?: string) =>
-    apiRequest<ProductSummary[]>('/products', {
+    apiRequest<MedicineSummary[]>('/medicines', {
       method: 'GET',
       token,
     }),
 
-  getById: async (productId: string, token?: string) =>
-    apiRequest<ProductSummary>(`/products/${productId}`, {
+  getById: async (medicineId: string, token?: string) =>
+    apiRequest<MedicineSummary>(`/medicines/${medicineId}`, {
       method: 'GET',
       token,
     }),
 };
+
+// Backward compatibility alias
+export const productsApi = medicinesApi;
+
+// Backward compatibility type alias
+export type ProductSummary = MedicineSummary;

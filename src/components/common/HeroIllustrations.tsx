@@ -16,7 +16,7 @@ export const PrescriptionHeroGraphic = () => {
     {/* High-end 3D Clay Prescription Icon */}
     <View style={s.clayIconWrap}>
       <Image 
-        source={require('../../../assets/images/user_clay_rx_latest.jpg')} 
+        source={require('../../../assets/images/clay_rx.png')} 
         style={{ width: '100%', height: '100%', transform: [{ scale: 1.45 }] }} 
         resizeMode="cover" 
       />
@@ -48,18 +48,23 @@ export const PrescriptionHeroGraphic = () => {
 };
 
 // High-end 3D style clip art for Category Thumbnails
-export const CategoryTileGraphic = ({ type }: { type: 'vitamins' | 'firstaid' | 'supplements' | 'skincare' }) => {
+export const CategoryTileGraphic = ({ type }: { type: 'chronic' | 'vitamins' | 'firstaid' | 'supplements' | 'skincare' | 'baby' | 'devices' | 'personalcare' | 'coldflu' }) => {
   const { isDark, colors } = useTheme();
   const s = makeStyles(colors);
   const configs = {
-    vitamins:    { img: require('../../../assets/images/cat_vitamins_bg_1785829652014.png') },
-    firstaid:    { img: require('../../../assets/images/cat_firstaid_bg_1785829660930.png') },
-    supplements: { img: require('../../../assets/images/cat_supplements_bg_1785829673928.png') },
-    skincare:    { img: require('../../../assets/images/cat_skincare_bg_1785829684632.png') },
+    chronic:     { img: require('../../../assets/images/cat_chronic.png') },
+    vitamins:    { img: require('../../../assets/images/cat_vitamins.png') },
+    firstaid:    { img: require('../../../assets/images/cat_firstaid.png') },
+    supplements: { img: require('../../../assets/images/cat_supplements.png') },
+    skincare:    { img: require('../../../assets/images/cat_skincare.png') },
+    coldflu:     { img: require('../../../assets/images/cat_coldflu.png') },
+    baby:        { img: require('../../../assets/images/cat_babycare.png') },
+    devices:     { img: require('../../../assets/images/clay_shield.png') },
+    personalcare:{ img: require('../../../assets/images/cat_personalcare.png') },
   }[type];
 
   return (
-    <View style={[s.catTileWrap, { backgroundColor: '#F6F8F6', overflow: 'hidden' }]}>
+    <View style={[s.catTileWrap, { backgroundColor: 'transparent' }]}>
       <Image source={configs.img} style={{ width: '100%', height: '100%', transform: [{ scale: 1.35 }] }} resizeMode="cover" />
     </View>
   );
@@ -85,7 +90,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     width: 86,
     height: 86,
     borderRadius: 16,
-    backgroundColor: '#EDF4DE',
+    backgroundColor: colors.limeWhisper,
     overflow: 'hidden',
   },
 
@@ -97,13 +102,13 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0FDF4', 
+    backgroundColor: colors.surfaceWhite, 
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1.5,
-    borderColor: '#FFFFFF', 
+    borderColor: colors.borderSoft, 
     shadowColor: '#059669',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,

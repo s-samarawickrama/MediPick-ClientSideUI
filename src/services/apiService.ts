@@ -7,7 +7,7 @@ import {
   paymentsApi,
   pharmaciesApi,
   prescriptionsApi,
-  productsApi,
+  medicinesApi,
   quotesApi,
   usersApi,
 } from '../api';
@@ -15,7 +15,7 @@ import {
 export const apiService = {
   auth: authApi,
   pharmacies: pharmaciesApi,
-  products: productsApi,
+  medicines: medicinesApi,
   prescriptions: prescriptionsApi,
   orders: ordersApi,
   quotes: quotesApi,

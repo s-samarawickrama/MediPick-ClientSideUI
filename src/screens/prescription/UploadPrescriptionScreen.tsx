@@ -26,7 +26,7 @@ type Route = RouteProp<MainStackParamList, 'UploadPrescription'>;
 
 export const UploadPrescriptionScreen = () => {
   const { isDark, colors } = useTheme();
-  const s = makeStyles(colors);
+  const s = makeStyles(colors, isDark);
   const navigation = useNavigation<Nav>();
   const route      = useRoute<Route>();
   const targetPharmacyId   = route.params?.pharmacyId;
@@ -277,7 +277,7 @@ export const UploadPrescriptionScreen = () => {
     >
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bgWarm} />
       <View style={s.nav}>
-        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
+        <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <ChevronLeft color={colors.peacockBlue} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={s.navTitle}>{targetPharmacyName ? `Upload to ${targetPharmacyName}` : 'Upload Prescription'}</Text>
@@ -316,8 +316,8 @@ export const UploadPrescriptionScreen = () => {
         ) : (
           <>
             <TouchableOpacity style={s.cameraZone} onPress={takePhoto} activeOpacity={0.88}>
-              <View style={[s.cameraCircle, { backgroundColor: colors.surfaceSubtle, overflow: 'hidden', padding: 0 }]}>
-                <Image source={require('../../../assets/prescription_and_camera.png')} style={{ width: 64, height: 64, transform: [{ scale: 1.35 }] }} resizeMode="cover" />
+              <View style={[s.cameraCircle, { backgroundColor: 'transparent', overflow: 'visible', padding: 0 }]}>
+                <Image source={require('../../../assets/images/prescription_camera.png')} style={{ width: 64, height: 64, transform: [{ scale: 1.6 }] }} resizeMode="cover" />
               </View>
               <Text style={s.cameraTitle}>Take Prescription Photo</Text>
               <Text style={s.cameraSub}>Hold camera steady under bright lighting</Text>
@@ -357,8 +357,8 @@ export const UploadPrescriptionScreen = () => {
         {/* Extra OTC Items Card */}
         <View style={s.extraItemsContainer}>
           <View style={s.extraHeaderBanner}>
-            <View style={{ width: 56, height: 56, borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.borderSoft, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceSubtle }}>
-              <Image source={require('../../../assets/clay_3d_bag_white.png')} style={{ width: 56, height: 56, transform: [{ scale: 1.35 }] }} resizeMode="cover" />
+            <View style={{ width: 56, height: 56, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent', overflow: 'visible' }}>
+              <Image source={require('../../../assets/images/clay_bag_white.png')} style={{ width: 56, height: 56, transform: [{ scale: 1.6 }] }} resizeMode="cover" />
             </View>
             <View style={{ flex: 1, gap: 3 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -482,7 +482,7 @@ export const UploadPrescriptionScreen = () => {
                     onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     activeOpacity={0.7}
                   >
-                    <ChevronLeft color={currentPage === 1 ? '#94A3B8' : colors.midTeal} size={16} strokeWidth={2.5} />
+                    <ChevronLeft color={currentPage === 1 ? colors.borderSoft : colors.midTeal} size={16} strokeWidth={2.5} />
                   </TouchableOpacity>
 
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -504,7 +504,7 @@ export const UploadPrescriptionScreen = () => {
                     onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     activeOpacity={0.7}
                   >
-                    <ChevronRight color={currentPage === totalPages ? '#94A3B8' : colors.midTeal} size={16} strokeWidth={2.5} />
+                    <ChevronRight color={currentPage === totalPages ? colors.borderSoft : colors.midTeal} size={16} strokeWidth={2.5} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -523,7 +523,7 @@ export const UploadPrescriptionScreen = () => {
       <Modal visible={!!detailModalItem} animationType="slide" transparent onRequestClose={() => setDetailModalItem(null)}>
         <View style={s.modalOverlay}>
           <View style={s.modalCard}>
-            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDetailModalItem(null)}>
+            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDetailModalItem(null)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
               <X color={colors.textDark} size={18} strokeWidth={2.5} />
             </TouchableOpacity>
 
@@ -580,7 +580,7 @@ export const UploadPrescriptionScreen = () => {
   );
 };
 
-const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+const makeStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bgWarm },
   nav: {
     flexDirection: 'row', alignItems: 'center',
@@ -609,7 +609,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   cameraSub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  orLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
+  orLine: { flex: 1, height: 1, backgroundColor: colors.borderSoft },
   orText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textMuted },
 
   fileBtn: {
@@ -744,37 +744,25 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     gap: 6,
   },
   pageNavBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.limeWhisper,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D6EDA0',
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: colors.surfaceSubtle,
+    justifyContent: 'center', alignItems: 'center',
   },
   pageNavBtnDisabled: {
-    backgroundColor: colors.surfaceSubtle,
-    borderColor: colors.borderSoft,
+    opacity: 0.4,
   },
   pageNumberBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 34, height: 34, borderRadius: 10,
     backgroundColor: colors.surfaceSubtle,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
+    justifyContent: 'center', alignItems: 'center',
   },
   pageNumberBtnActive: {
     backgroundColor: colors.midTeal,
-    borderColor: colors.midTeal,
   },
   pageNumberText: {
     fontFamily: FONTS.bold,
     fontSize: 13,
-    color: colors.textDark,
+    color: colors.textMuted,
   },
   pageNumberTextActive: {
     color: '#FFFFFF',

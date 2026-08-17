@@ -97,7 +97,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           >
             <View style={[tabStyles.iconWrap, isFocused && tabStyles.iconWrapActive]}>
               <Icon
-                color={isFocused ? colors.midTeal : '#94A3B8'}
+                color={isFocused ? colors.midTeal : colors.textMuted}
                 size={22}
                 strokeWidth={isFocused ? 2.5 : 1.8}
               />
@@ -140,7 +140,7 @@ const createTabStyles = (colors: ThemeColors) => StyleSheet.create({
   label: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#94A3B8',
+    color: colors.textMuted,
   },
   labelActive: {
     color: colors.midTeal,

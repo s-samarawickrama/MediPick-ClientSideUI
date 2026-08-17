@@ -20,7 +20,7 @@ const FUN_3D_BAG = require('../../../assets/fun_3d_bag.png');
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type BrowseRoute = RouteProp<MainStackParamList, 'Browse'>;
-const MED_CATEGORIES = ['All', 'Vitamins', 'First Aid', 'Supplements', 'Skincare', 'Chronic'];
+const MED_CATEGORIES = ['All', 'Chronic', 'Cold & Flu', 'Vitamins', 'First Aid', 'Supplements', 'Skincare', 'Personal Care', 'Baby Care'];
 
 export const BrowseOTCScreen = () => {
   const { isDark, colors } = useTheme();
@@ -44,6 +44,21 @@ export const BrowseOTCScreen = () => {
 
   const opacity = useRef(new Animated.Value(0)).current;
   const heartScale = useRef(new Animated.Value(1)).current;
+  const categoryScrollRef = useRef<ScrollView>(null);
+  const chipPositions = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    if (mode === 'meds') {
+      setTimeout(() => {
+        if (chipPositions.current[medCategory] !== undefined) {
+          categoryScrollRef.current?.scrollTo({
+            x: Math.max(0, chipPositions.current[medCategory] - 20),
+            animated: true,
+          });
+        }
+      }, 150);
+    }
+  }, [medCategory, mode]);
 
   const triggerHeartAnimation = () => {
     Animated.sequence([
@@ -207,7 +222,7 @@ export const BrowseOTCScreen = () => {
             onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
             activeOpacity={0.7}
           >
-            <ChevronLeft color={currentPage === 1 ? '#94A3B8' : colors.midTeal} size={16} strokeWidth={2.5} />
+            <ChevronLeft color={currentPage === 1 ? colors.borderSoft : colors.midTeal} size={16} strokeWidth={2.5} />
           </TouchableOpacity>
 
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -229,7 +244,7 @@ export const BrowseOTCScreen = () => {
             onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             activeOpacity={0.7}
           >
-            <ChevronRight color={currentPage === totalPages ? '#94A3B8' : colors.midTeal} size={16} strokeWidth={2.5} />
+            <ChevronRight color={currentPage === totalPages ? colors.borderSoft : colors.midTeal} size={16} strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
       </View>
@@ -543,7 +558,7 @@ export const BrowseOTCScreen = () => {
                 {/* Map Component with Web Fallback */}
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  style={{ borderRadius: 12, overflow: 'hidden' }}
+                  style={{ borderRadius: 12, overflow: 'hidden', width: '100%', maxWidth: 600, alignSelf: 'center' }}
                   onPress={() => {
                     const url = `https://www.google.com/maps/dir/?api=1&destination=${activeStore.latitude},${activeStore.longitude}`;
                     Linking.openURL(url);
@@ -581,10 +596,10 @@ export const BrowseOTCScreen = () => {
                   </View>
 
                   {/* Uber Eats Style Info Rows */}
-                  <View style={{ gap: 0, backgroundColor: '#FFF', borderRadius: 14, borderWidth: 1, borderColor: '#F1F5F9', overflow: 'hidden' }}>
+                  <View style={{ gap: 0, backgroundColor: colors.surfaceWhite, borderRadius: 14, borderWidth: 1, borderColor: colors.borderSoft, overflow: 'hidden' }}>
                     
                     {/* Prep Time & Distance Row */}
-                    <View style={{ flexDirection: 'row', padding: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
+                    <View style={{ flexDirection: 'row', padding: 16, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle }}>
                       <View style={{ flex: 1, borderRightWidth: 1, borderRightColor: '#F8FAFC' }}>
                         <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>Prep Time</Text>
                         <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>{activeStore.estimatedResponseTime || '15 mins'}</Text>
@@ -596,13 +611,13 @@ export const BrowseOTCScreen = () => {
                     </View>
 
                     {/* Address Row */}
-                    <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: '#F8FAFC' }}>
+                    <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: colors.borderSubtle }}>
                       <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>Location</Text>
                       <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>{activeStore.address}</Text>
                     </View>
 
                     {/* Legal Credentials (Folded) */}
-                    <View style={{ padding: 16, backgroundColor: '#F8FAF7' }}>
+                    <View style={{ padding: 16, backgroundColor: colors.surfaceSubtle }}>
                       <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginBottom: 8 }}>STORE CREDENTIALS</Text>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                         <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark }}>NMRA License</Text>
@@ -695,10 +710,11 @@ export const BrowseOTCScreen = () => {
       {/* Filter Row */}
       {mode === 'meds' ? (
         <View style={s.chipsWrapper}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsContainer}>
+          <ScrollView ref={categoryScrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsContainer}>
             {MED_CATEGORIES.map((c) => (
               <TouchableOpacity
                 key={c}
+                onLayout={(e) => { chipPositions.current[c] = e.nativeEvent.layout.x; }}
                 style={[s.chip, medCategory === c && s.chipActive]}
                 onPress={() => setMedCategory(c)}
                 activeOpacity={0.8}
@@ -734,6 +750,7 @@ export const BrowseOTCScreen = () => {
         style={{ flex: 1 }}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {mode === 'meds' ? (
           /* Medicines 2-Column Product Grid */
@@ -915,14 +932,14 @@ export const BrowseOTCScreen = () => {
               </View>
 
               {/* Map Preview Graphic */}
-              <View style={{ height: 140, borderRadius: 16, backgroundColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+              <View style={{ height: 140, borderRadius: 16, backgroundColor: colors.surfaceSubtle, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
                 <MapPin color={colors.midTeal} size={36} strokeWidth={2.5} />
                 <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark, marginTop: 6 }}>{store.address}</Text>
                 <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted }}>Google Maps Location · {store.distance} away</Text>
               </View>
 
               {/* Key Store Specs */}
-              <View style={{ backgroundColor: colors.bgWarm, borderRadius: 14, padding: 12, gap: 8 }}>
+              <View style={{ backgroundColor: colors.surfaceSubtle, borderRadius: 14, padding: 12, gap: 8 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted }}>Pharmacy License</Text>
                   <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark }}>{store.nmraLicense || 'PH-2024-8891'}</Text>
@@ -1229,37 +1246,25 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     gap: 6,
   },
   pageNavBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.limeWhisper,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D6EDA0',
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: colors.surfaceSubtle,
+    justifyContent: 'center', alignItems: 'center',
   },
   pageNavBtnDisabled: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#E2E8F0',
+    opacity: 0.4,
   },
   pageNumberBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: colors.surfaceWhite,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: colors.surfaceSubtle,
+    justifyContent: 'center', alignItems: 'center',
   },
   pageNumberBtnActive: {
     backgroundColor: colors.midTeal,
-    borderColor: colors.midTeal,
   },
   pageNumberText: {
     fontFamily: FONTS.bold,
     fontSize: 13,
-    color: colors.textDark,
+    color: colors.textMuted,
   },
   pageNumberTextActive: {
     color: '#FFFFFF',

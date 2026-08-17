@@ -19,13 +19,12 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
-  Search, ShieldCheck, Upload, Star, MapPin, Clock,
-  ChevronDown, ChevronRight, ShoppingBag, Bell, Store, ShoppingCart, Plus, Minus, X, Heart, Check, Tag, Pill
+  Search, Upload, Star, MapPin, Clock,
+  ChevronDown, ChevronRight, Bell, Store, ShoppingCart, X, Heart, Tag, Lightbulb,
 } from 'lucide-react-native';
 import { PrescriptionHeroGraphic, CategoryTileGraphic } from '../../components/common/HeroIllustrations';
 import { useCart } from '../../context/CartContext';
 import { MedicineCard } from '../../components/common/MedicineCard';
-import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MOCK_PHARMACIES, MOCK_ORDERS, MOCK_MEDICINES, togglePharmacyFavorite } from '../../mock/demoData';
@@ -48,17 +47,17 @@ const AnimatedHeartButton = ({ isFavorite, onPress, colors, s }: { isFavorite: b
   };
 
   return (
-    <TouchableOpacity 
-      style={s.favBtn} 
+    <TouchableOpacity
+      style={s.favBtn}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       onPress={handlePress}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <Heart 
-          color={isFavorite ? "#EF4444" : colors.borderSoft} 
-          size={18} 
-          strokeWidth={2} 
-          fill={isFavorite ? "#EF4444" : "transparent"} 
+        <Heart
+          color={isFavorite ? "#EF4444" : colors.borderSoft}
+          size={18}
+          strokeWidth={2}
+          fill={isFavorite ? "#EF4444" : "transparent"}
         />
       </Animated.View>
     </TouchableOpacity>
@@ -66,10 +65,14 @@ const AnimatedHeartButton = ({ isFavorite, onPress, colors, s }: { isFavorite: b
 };
 
 const CATEGORIES_MEDICHY = [
-  { id: 'vitamins',    name: 'Vitamins',    type: 'vitamins' as const },
-  { id: 'firstaid',    name: 'First Aid',   type: 'firstaid' as const },
+  { id: 'chronic', name: 'Chronic', type: 'chronic' as const },
+  { id: 'coldflu', name: 'Cold & Flu', type: 'coldflu' as const },
+  { id: 'vitamins', name: 'Vitamins', type: 'vitamins' as const },
+  { id: 'firstaid', name: 'First Aid', type: 'firstaid' as const },
   { id: 'supplements', name: 'Supplements', type: 'supplements' as const },
-  { id: 'skincare',    name: 'Skincare',    type: 'skincare' as const },
+  { id: 'skincare', name: 'Skincare', type: 'skincare' as const },
+  { id: 'personalcare', name: 'Personal Care', type: 'personalcare' as const },
+  { id: 'baby', name: 'Baby Care', type: 'baby' as const },
 ];
 
 const LOCATIONS_LIST = [
@@ -82,20 +85,20 @@ const LOCATIONS_LIST = [
 
 export const HomeScreen = () => {
   const { isDark, colors } = useTheme();
-  const s = makeStyles(colors);
+  const s = makeStyles(colors, isDark);
   const navigation = useNavigation<Nav>();
-  const [searchQuery, setSearchQuery]       = useState('');
-  const { cartItems }                       = useCart();
-  const [, setFavTick]                      = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { cartItems } = useCart();
+  const [, setFavTick] = useState(0);
   const [currentLocation, setCurrentLocation] = useState('Colombo 03 · Nearby Pharmacies');
-  const [locationModal, setLocationModal]   = useState(false);
+  const [locationModal, setLocationModal] = useState(false);
   const [locationSearch, setLocationSearch] = useState('');
 
   const opacity = useRef(new Animated.Value(0)).current;
-  const slideY  = useRef(new Animated.Value(14)).current;
+  const slideY = useRef(new Animated.Value(14)).current;
 
   useEffect(() => {
-    StatusBar.setBarStyle('dark-content');
+    StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 320, useNativeDriver: true }),
       Animated.spring(slideY, { toValue: 0, useNativeDriver: true, speed: 26 }),
@@ -113,14 +116,14 @@ export const HomeScreen = () => {
   const q = searchQuery.trim().toLowerCase();
   const filteredMedicines = q
     ? MOCK_MEDICINES.filter(
-        (m) => m.name.toLowerCase().includes(q) || m.genericName.toLowerCase().includes(q) || m.category.toLowerCase().includes(q)
-      )
+      (m) => m.name.toLowerCase().includes(q) || m.genericName.toLowerCase().includes(q) || m.category.toLowerCase().includes(q)
+    )
     : MOCK_MEDICINES.slice(0, 4);
 
   const filteredPharmacies = q
     ? MOCK_PHARMACIES.filter(
-        (p) => p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q)
-      )
+      (p) => p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q)
+    )
     : MOCK_PHARMACIES;
 
   const filteredLocations = LOCATIONS_LIST.filter((loc) =>
@@ -129,16 +132,19 @@ export const HomeScreen = () => {
 
   return (
     <View style={s.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.bgWarm}
+      />
 
-      {/* DoorDash Style Header Navbar */}
+      {/* Header Navbar */}
       <View style={s.topBar}>
         <View style={s.userInfoRow}>
           <TouchableOpacity style={s.avatarCircle} onPress={() => (navigation as any).navigate('Profile')}>
             <Text style={s.avatarInitial}>P</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            onPress={() => setLocationModal(true)} 
+          <TouchableOpacity
+            onPress={() => setLocationModal(true)}
             activeOpacity={0.75}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={{ flex: 1, paddingRight: 8 }}
@@ -152,8 +158,8 @@ export const HomeScreen = () => {
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <TouchableOpacity 
-            style={s.bellBtn} 
+          <TouchableOpacity
+            style={s.bellBtn}
             activeOpacity={0.8}
             onPress={() => (navigation as any).navigate('MultiStoreCart')}
           >
@@ -165,8 +171,8 @@ export const HomeScreen = () => {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={s.bellBtn} 
+          <TouchableOpacity
+            style={s.bellBtn}
             activeOpacity={0.8}
             onPress={() => (navigation as any).navigate('Notifications')}
           >
@@ -182,7 +188,7 @@ export const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {activeOrders.length > 0 && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={s.activeOrderBanner}
             onPress={() => (navigation as any).navigate('Tabs', { screen: 'Orders' })}
             activeOpacity={0.9}
@@ -214,53 +220,6 @@ export const HomeScreen = () => {
           )}
         </View>
 
-        {/* Quick Actions (Premium 2x2 Grid) */}
-        <View style={s.quickActionsGrid}>
-          <TouchableOpacity 
-            style={s.actionCard}
-            onPress={() => (navigation as any).navigate('Favorites')}
-            activeOpacity={0.7}
-          >
-            <View style={[s.actionIconBox, { backgroundColor: '#FEF2F2' }]}>
-              <Heart color="#EF4444" size={20} strokeWidth={2.5} />
-            </View>
-            <Text style={s.actionCardText}>Favorites</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={s.actionCard}
-            onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: 'All' } })}
-            activeOpacity={0.7}
-          >
-            <View style={[s.actionIconBox, { backgroundColor: '#FFF7ED' }]}>
-              <Tag color="#F97316" size={20} strokeWidth={2.5} />
-            </View>
-            <Text style={s.actionCardText}>Offers</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={s.actionCard}
-            onPress={() => Platform.OS === 'web' ? window.alert('Pill reminders will be available in the next update!') : Alert.alert('Coming Soon', 'Pill reminders will be available in the next update!')}
-            activeOpacity={0.7}
-          >
-            <View style={[s.actionIconBox, { backgroundColor: colors.plumLight }]}>
-              <Pill color={colors.deepPlum} size={20} strokeWidth={2.5} />
-            </View>
-            <Text style={s.actionCardText}>Reminders</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={s.actionCard}
-            onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds' } })}
-            activeOpacity={0.7}
-          >
-            <View style={[s.actionIconBox, { backgroundColor: '#EFF6FF' }]}>
-              <Star color="#3B82F6" size={20} strokeWidth={2.5} />
-            </View>
-            <Text style={s.actionCardText}>Top Brands</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Prescription Hero Banner Card */}
         <TouchableOpacity
           style={s.heroBannerCard}
@@ -284,7 +243,34 @@ export const HomeScreen = () => {
           <PrescriptionHeroGraphic />
         </TouchableOpacity>
 
+        {/* Quick Access Pills: Favorites + Health Tips */}
+        <View style={s.quickAccessRow}>
+          <TouchableOpacity
+            style={s.quickPill}
+            onPress={() => (navigation as any).navigate('Favorites')}
+            activeOpacity={0.8}
+          >
+            <View style={s.quickPillIcon}>
+              <Heart color="#EF4444" size={16} strokeWidth={2.5} fill="#EF4444" />
+            </View>
+            <Text style={s.quickPillText}>Favorites</Text>
+            <ChevronRight color={colors.textMuted} size={14} strokeWidth={2} />
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            style={s.quickPill}
+            onPress={() => Platform.OS === 'web'
+              ? window.alert('Health Tips coming soon!')
+              : Alert.alert('Health Tips', 'Personalized medication reminders and health tips coming soon!')}
+            activeOpacity={0.8}
+          >
+            <View style={[s.quickPillIcon, { backgroundColor: isDark ? '#1E1A26' : '#F5D7FF' }]}>
+              <Lightbulb color={colors.deepPlum} size={16} strokeWidth={2.5} />
+            </View>
+            <Text style={s.quickPillText}>Health Tips</Text>
+            <ChevronRight color={colors.textMuted} size={14} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
 
         {/* Categories Carousel */}
         <View style={s.sectionHeader}>
@@ -294,7 +280,7 @@ export const HomeScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={s.categoriesGrid}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.categoriesScroll}>
           {CATEGORIES_MEDICHY.map((cat) => (
             <TouchableOpacity
               key={cat.id}
@@ -303,12 +289,12 @@ export const HomeScreen = () => {
               activeOpacity={0.8}
             >
               <CategoryTileGraphic type={cat.type} />
-              <Text style={s.catTileName}>{cat.name}</Text>
+              <Text style={s.catTileName} numberOfLines={1}>{cat.name}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
 
-        {/* DoorDash Style Storefront Cards (Featured Pharmacies) */}
+        {/* Featured Pharmacies Carousel */}
         <View style={s.sectionHeader}>
           <Text style={s.sectionTitle}>Featured Pharmacies</Text>
           <TouchableOpacity onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}>
@@ -332,20 +318,28 @@ export const HomeScreen = () => {
                   </View>
                 )}
 
-                {/* Live Open / Closed Badge */}
-                <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: colors.surfaceWhite, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                {/* Live Open/Closed Badge */}
+                <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: isDark ? 'rgba(13,27,28,0.88)' : 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: p.isOpen ? '#10B981' : '#EF4444' }} />
                   <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: colors.textDark }}>
                     {p.isOpen ? 'Open Now' : 'Closed'}
                   </Text>
                 </View>
 
+                {/* Orange Offer Badge */}
+                {p.hasOffer && p.offerTag && (
+                  <View style={s.offerBadge}>
+                    <Tag color="#FFFFFF" size={9} strokeWidth={2.5} />
+                    <Text style={s.offerBadgeText}>{p.offerTag}</Text>
+                  </View>
+                )}
+
                 <View style={s.storeDistanceTag}>
                   <MapPin color={colors.midTeal} size={11} strokeWidth={2.5} />
                   <Text style={s.storeDistanceText}>{p.distance}</Text>
                 </View>
 
-                <AnimatedHeartButton 
+                <AnimatedHeartButton
                   isFavorite={!!p.isFavorite}
                   onPress={() => handleToggleFav(p.id)}
                   colors={colors}
@@ -379,20 +373,15 @@ export const HomeScreen = () => {
         </View>
 
         <View style={s.productGrid}>
-          {filteredMedicines.map((med) => {
-            const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
-            const qty = cartItems.find(c => c.medicine.id === med.id)?.quantity || 0;
-
-            return (
-              <MedicineCard
-                key={med.id}
-                med={med}
-                onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: med.category || 'All' } })}
-                isGlobal={true}
-                onStoreSelectPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}
-              />
-            );
-          })}
+          {filteredMedicines.map((med) => (
+            <MedicineCard
+              key={med.id}
+              med={med}
+              onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: med.category || 'All' } })}
+              isGlobal={true}
+              onStoreSelectPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}
+            />
+          ))}
         </View>
 
       </Animated.ScrollView>
@@ -409,7 +398,7 @@ export const HomeScreen = () => {
             style={{ flex: 1, backgroundColor: colors.bgWarm }}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
-            <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
+            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bgWarm} />
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: colors.borderSoft, gap: 12, backgroundColor: colors.surfaceWhite }}>
               <TouchableOpacity onPress={() => setLocationModal(false)} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.bgWarm, justifyContent: 'center', alignItems: 'center' }}>
                 <X color={colors.textDark} size={20} strokeWidth={2.5} />
@@ -418,7 +407,6 @@ export const HomeScreen = () => {
             </View>
 
             <View style={{ padding: 20, gap: 16, flex: 1 }}>
-              {/* Search Locations Input */}
               <View style={s.locationSearchBar}>
                 <Search color={colors.midTeal} size={18} strokeWidth={2.5} />
                 <TextInput
@@ -438,7 +426,6 @@ export const HomeScreen = () => {
 
               <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>Nearby Service Locations</Text>
 
-              {/* Location Suggestions List */}
               <ScrollView
                 style={{ flex: 1 }}
                 showsVerticalScrollIndicator={false}
@@ -473,7 +460,7 @@ export const HomeScreen = () => {
   );
 };
 
-const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+const makeStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bgWarm },
 
   topBar: {
@@ -539,22 +526,9 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.surfaceWhite, borderRadius: 16,
     height: 52, paddingHorizontal: 16,
     borderWidth: 1.5, borderColor: colors.borderSoft,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   searchInputInline: { flex: 1, fontFamily: FONTS.medium, fontSize: 14, color: colors.textDark },
-
-  quickActionsGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between',
-    paddingHorizontal: 0, paddingBottom: 16, rowGap: 12, marginTop: 6,
-  },
-  actionCard: {
-    width: '48%', flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: colors.surfaceWhite, padding: 10, borderRadius: 16,
-    borderWidth: 1, borderColor: colors.borderSoft,
-    shadowColor: '#64748B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
-  },
-  actionIconBox: { width: 38, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  actionCardText: { flex: 1, fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark },
 
   heroBannerCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -571,15 +545,44 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   discountText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
-
+  // ── Quick Access Pills ──
+  quickAccessRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 6,
+    marginTop: 2,
+  },
+  quickPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.surfaceWhite,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  quickPillIcon: {
+    width: 32, height: 32, borderRadius: 10,
+    backgroundColor: isDark ? '#2E1C20' : '#FEF2F2',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  quickPillText: {
+    flex: 1,
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: colors.textDark,
+  },
 
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.textDark, letterSpacing: -0.4 },
   seeAllText: { fontFamily: FONTS.bold, fontSize: 13, color: colors.midTeal },
 
-  categoriesGrid: { flexDirection: 'row', justifyContent: 'space-between' },
-  catCardTile: { alignItems: 'center', width: '22%' },
-  catTileName: { fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark, textAlign: 'center' },
+  categoriesScroll: { gap: 16, paddingRight: 20 },
+  catCardTile: { alignItems: 'center', width: 64 },
+  catTileName: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textDark, textAlign: 'center', marginTop: 4 },
 
   // DoorDash Store Carousel
   storeCarousel: { gap: 14, paddingRight: 20 },
@@ -593,13 +596,28 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   storeDistanceTag: {
     position: 'absolute', bottom: 10, left: 10,
-    backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+    backgroundColor: isDark ? 'rgba(13,27,28,0.88)' : 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
     flexDirection: 'row', alignItems: 'center', gap: 4,
   },
   storeDistanceText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textDark },
+  offerBadge: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: '#F97316',
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  offerBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: '#FFFFFF' },
   favBtn: {
     position: 'absolute', top: 10, right: 10,
-    backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 16, width: 32, height: 32,
+    backgroundColor: isDark ? 'rgba(13,27,28,0.80)' : 'rgba(255,255,255,0.9)',
+    borderRadius: 16, width: 32, height: 32,
     justifyContent: 'center', alignItems: 'center',
   },
   storeMetaContainer: { padding: 14, gap: 2 },
@@ -611,82 +629,9 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   bullet: { color: colors.textMuted, fontSize: 10 },
   timeText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
 
-  // DoorDash Multi-Store Product Grid
   productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  productCard: {
-    width: '47.5%', backgroundColor: colors.surfaceWhite, borderRadius: 20, padding: 12,
-    borderWidth: 1, borderColor: colors.borderSoft, gap: 4,
-  },
-  productImgBox: {
-    height: 140, backgroundColor: colors.limeWhisper, borderRadius: 14,
-    justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: 6,
-    padding: 6,
-  },
-  productPillGraphic: {
-    width: 48, height: 48, borderRadius: 24, backgroundColor: colors.surfaceWhite,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  discBadge: {
-    position: 'absolute', top: 8, left: 8, backgroundColor: colors.midTeal,
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
-  },
-  discText: { fontFamily: FONTS.extrabold, fontSize: 9, color: '#FFFFFF' },
-  rxBadge: {
-    position: 'absolute', bottom: 8, left: 8, backgroundColor: '#F5D7FF',
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6,
-  },
-  rxBadgeText: { fontFamily: FONTS.bold, fontSize: 9, color: colors.deepPlum },
-  prodName: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark },
-  prodGeneric: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
-  prodFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 6 },
-  fromText: { fontFamily: FONTS.bold, fontSize: 9, color: colors.textMuted, textTransform: 'uppercase' },
-  prodPrice: { fontFamily: FONTS.black, fontSize: 14, color: colors.textDark },
-  storeCountBadge: {
-    backgroundColor: colors.limeWhisper, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8,
-    borderWidth: 1, borderColor: '#D6EDA0',
-  },
-  storeCountText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.midTeal },
-
-  addBtnInitial: {
-    width: 32, height: 32, borderRadius: 10, backgroundColor: colors.midTeal,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  stepperBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: colors.limeWhisper, borderRadius: 10, paddingHorizontal: 6, height: 32,
-    borderWidth: 1, borderColor: '#D6EDA0',
-  },
-  stepperBtn: { width: 22, height: 22, justifyContent: 'center', alignItems: 'center' },
-  stepperQtyText: { fontFamily: FONTS.black, fontSize: 14, color: colors.midTeal, paddingHorizontal: 2 },
-
-  floatingCartWrap: {
-    position: 'absolute', bottom: 20, left: 20, right: 20,
-    shadowColor: '#0F172A', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 6,
-  },
-  floatingCartBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.midTeal, borderRadius: 18, height: 54, paddingHorizontal: 16,
-  },
-  cartCountPill: {
-    width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  cartCountText: { fontFamily: FONTS.black, fontSize: 13, color: '#FFFFFF' },
-  floatingCartText: { fontFamily: FONTS.bold, fontSize: 15, color: '#FFFFFF' },
-  floatingCartTotal: { fontFamily: FONTS.black, fontSize: 15, color: '#FFFFFF' },
 
   // Location Selector Modal
-  locationModalOverlay: {
-    flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.45)', justifyContent: 'flex-end',
-  },
-  locationModalCard: {
-    backgroundColor: colors.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingHorizontal: 20, paddingTop: 20, paddingBottom: Platform.OS === 'ios' ? 36 : 24, gap: 14,
-  },
-  locationModalHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-  },
-  locationModalTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.textDark },
   locationSearchBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: colors.bgWarm, borderRadius: 14, paddingHorizontal: 14, height: 44,

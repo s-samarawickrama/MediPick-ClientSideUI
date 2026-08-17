@@ -23,14 +23,12 @@ import {
   Image as ImageIcon,
   X,
   Plus,
-  Trash2,
-  Paperclip,
   CheckCircle2,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
-import { COLORS } from '../../theme/colors';
+import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 
@@ -45,14 +43,9 @@ const ISSUE_TYPES = [
   'Other',
 ];
 
-// High quality sample evidence images for web & testing fallback
-const SAMPLE_EVIDENCE_PHOTOS = [
-  'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1576602976047-174e57a47881?w=800&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=800&auto=format&fit=crop&q=80',
-];
-
 export const ReportIssueScreen = () => {
+  const { isDark, colors } = useTheme();
+  const styles = makeStyles(colors, isDark);
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { reportIssue } = useOrders();
@@ -68,7 +61,7 @@ export const ReportIssueScreen = () => {
   const slideY = useRef(new Animated.Value(24)).current;
 
   useEffect(() => {
-    StatusBar.setBarStyle('dark-content');
+    StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 320, useNativeDriver: true }),
       Animated.spring(slideY, { toValue: 0, useNativeDriver: true, speed: 22 }),
@@ -95,25 +88,25 @@ export const ReportIssueScreen = () => {
 
     try {
       const ok = await requestPermission(source);
-      if (!ok) {
-        // Just return if permission is denied, don't fake it
-        return;
-      }
+      if (!ok) return;
 
       let result;
       if (source === 'camera') {
         result = await ImagePicker.launchCameraAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
+          quality: 0.85,
           allowsEditing: true,
           aspect: [4, 3],
+          exif: false,
         });
       } else {
         result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
+          quality: 0.85,
           allowsEditing: true,
           aspect: [4, 3],
+          exif: false,
+          selectionLimit: 1,
         });
       }
 
@@ -121,7 +114,7 @@ export const ReportIssueScreen = () => {
         setAttachedPhotos((prev) => [...prev, result.assets[0].uri]);
       }
     } catch {
-      // Just silently fail or show an alert if picker fails, don't fake it
+      // silently fail if picker is unavailable
     }
   };
 
@@ -144,21 +137,21 @@ export const ReportIssueScreen = () => {
   if (submitted) {
     return (
       <View style={styles.screen}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bgWarm} />
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-            <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+            <ChevronLeft color={colors.midTeal} size={20} strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Issue Reported</Text>
           <View style={{ width: 36 }} />
         </View>
         <View style={styles.successScreen}>
           <View style={styles.successIcon}>
-            <AlertTriangle color={COLORS.warning} size={40} strokeWidth={2} />
+            <AlertTriangle color={colors.warning} size={40} strokeWidth={2} />
           </View>
           <Text style={styles.successTitle}>Report Submitted</Text>
           <Text style={styles.successDesc}>
-            Your issue and {attachedPhotos.length > 0 ? `${attachedPhotos.length} photo evidence(s)` : 'details'} have been sent directly to the pharmacy team for review. You will receive a response within 24 hours.
+            Your issue{attachedPhotos.length > 0 ? ` and ${attachedPhotos.length} photo(s)` : ''} have been sent to the pharmacy team. You'll get a response within 24 hours.
           </Text>
           <Button
             title="Go to Orders"
@@ -177,10 +170,10 @@ export const ReportIssueScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
     >
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgWarm} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.bgWarm} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronLeft color={COLORS.textDark} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.midTeal} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Report Issue</Text>
         <View style={{ width: 36 }} />
@@ -192,11 +185,11 @@ export const ReportIssueScreen = () => {
         style={{ opacity, transform: [{ translateY: slideY }] }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Floating Glass Warning Card */}
+        {/* 24h Warning Card */}
         <View style={styles.warningCard}>
           <View style={styles.warningHeaderRow}>
             <View style={styles.warningIconBadge}>
-              <Clock color="#D97706" size={16} strokeWidth={2.5} />
+              <Clock color={colors.warning} size={16} strokeWidth={2.5} />
             </View>
             <Text style={styles.warningTitle}>24-Hour Issue Window</Text>
             <View style={{ flex: 1 }} />
@@ -204,7 +197,6 @@ export const ReportIssueScreen = () => {
               <Text style={styles.orderBadgeText}>#MP123456</Text>
             </View>
           </View>
-
           <Text style={styles.warningText}>
             Issues must be reported within 24 hours of counter pickup for direct pharmacy replacement.
           </Text>
@@ -246,7 +238,7 @@ export const ReportIssueScreen = () => {
           />
         </View>
 
-        {/* Photo Evidence Section */}
+        {/* Photo Evidence Hero Zone */}
         <View style={styles.section}>
           <View style={styles.photoHeaderRow}>
             <Text style={styles.sectionLabel}>Photo Evidence (Optional)</Text>
@@ -255,7 +247,29 @@ export const ReportIssueScreen = () => {
             )}
           </View>
 
-          {attachedPhotos.length > 0 ? (
+          {attachedPhotos.length === 0 ? (
+            /* Hero-style upload zone matching UploadPrescription visual quality */
+            <>
+              <TouchableOpacity style={styles.cameraZone} onPress={() => handlePickImage('camera')} activeOpacity={0.88}>
+                <View style={[styles.cameraCircle, { backgroundColor: 'transparent', overflow: 'visible', padding: 0 }]}>
+                  <Image source={require('../../../assets/images/prescription_camera.png')} style={{ width: 64, height: 64, transform: [{ scale: 1.6 }] }} resizeMode="cover" />
+                </View>
+                <Text style={styles.cameraTitle}>Attach Photo Evidence</Text>
+                <Text style={styles.cameraSub}>Take a photo to show the issue clearly</Text>
+              </TouchableOpacity>
+
+              <View style={styles.orRow}>
+                <View style={styles.orLine} />
+                <Text style={styles.orText}>OR</Text>
+                <View style={styles.orLine} />
+              </View>
+
+              <TouchableOpacity style={styles.fileBtn} onPress={() => handlePickImage('gallery')} activeOpacity={0.8}>
+                <ImageIcon color={colors.midTeal} size={20} strokeWidth={2.2} />
+                <Text style={styles.fileBtnText}>Upload from Gallery</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoList}>
               {attachedPhotos.map((uri, idx) => (
                 <View key={idx} style={styles.photoThumbWrap}>
@@ -276,28 +290,11 @@ export const ReportIssueScreen = () => {
                   onPress={() => setPickerModalVisible(true)}
                   activeOpacity={0.8}
                 >
-                  <Plus color={COLORS.midTeal} size={22} strokeWidth={2.5} />
-                  <Text style={styles.addMoreText}>Add Photo</Text>
+                  <Plus color={colors.midTeal} size={22} strokeWidth={2.5} />
+                  <Text style={styles.addMoreText}>Add</Text>
                 </TouchableOpacity>
               )}
             </ScrollView>
-          ) : (
-            <TouchableOpacity
-              style={styles.evidenceCard}
-              onPress={() => setPickerModalVisible(true)}
-              activeOpacity={0.88}
-            >
-              <View style={styles.evidenceIconBox}>
-                <Camera color={COLORS.midTeal} size={22} strokeWidth={2} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.evidenceCardTitle}>Attach Photo Evidence</Text>
-                <Text style={styles.evidenceCardSub}>Take a photo or select from gallery (Optional)</Text>
-              </View>
-              <View style={styles.evidencePlusBadge}>
-                <Plus color={COLORS.midTeal} size={16} strokeWidth={2.5} />
-              </View>
-            </TouchableOpacity>
           )}
         </View>
 
@@ -315,376 +312,147 @@ export const ReportIssueScreen = () => {
           Your report will be sent to MediCare Central Pharmacy for resolution.
         </Text>
       </Animated.ScrollView>
-
-      {/* Image Picker Options Modal */}
-      <Modal
-        visible={pickerModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setPickerModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setPickerModalVisible(false)} />
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Attach Photo Evidence</Text>
-              <TouchableOpacity onPress={() => setPickerModalVisible(false)}>
-                <X color={COLORS.textMuted} size={20} strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity style={styles.modalOption} onPress={() => handlePickImage('camera')} activeOpacity={0.8}>
-              <View style={styles.modalOptionIcon}>
-                <Camera color={COLORS.midTeal} size={20} strokeWidth={2} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modalOptionTitle}>Take Photo</Text>
-                <Text style={styles.modalOptionSub}>Use your device camera</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.modalOption} onPress={() => handlePickImage('gallery')} activeOpacity={0.8}>
-              <View style={styles.modalOptionIcon}>
-                <ImageIcon color={COLORS.midTeal} size={20} strokeWidth={2} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modalOptionTitle}>Choose from Gallery</Text>
-                <Text style={styles.modalOptionSub}>Select an existing photo</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setPickerModalVisible(false)} activeOpacity={0.8}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COLORS.bgWarm },
+const makeStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bgWarm },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 52,
-    paddingBottom: 12,
-    paddingHorizontal: 20,
-    backgroundColor: COLORS.bgWarm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderSoft,
+    paddingTop: 52, paddingBottom: 12, paddingHorizontal: 20,
+    backgroundColor: colors.bgWarm,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COLORS.surfaceWhite,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.borderSoft,
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: colors.surfaceWhite,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 16,
-    fontFamily: FONTS.bold,
-    color: COLORS.textDark,
+    flex: 1, textAlign: 'center', fontSize: 16,
+    fontFamily: FONTS.bold, color: colors.textDark,
   },
   scroll: { padding: 16, paddingBottom: 60, gap: 16 },
+
   warningCard: {
-    backgroundColor: COLORS.surfaceWhite,
-    borderRadius: 16,
-    padding: 14,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: COLORS.borderSoft,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
+    backgroundColor: colors.surfaceWhite,
+    borderRadius: 16, padding: 14, gap: 8,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
-  warningHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
+  warningHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   warningIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#FEF3C7',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 28, height: 28, borderRadius: 8,
+    backgroundColor: isDark ? colors.warningLight : '#FEF3C7',
+    justifyContent: 'center', alignItems: 'center',
   },
-  warningTitle: {
-    fontSize: 14,
-    fontFamily: FONTS.bold,
-    color: COLORS.textDark,
-  },
+  warningTitle: { fontSize: 14, fontFamily: FONTS.bold, color: colors.textDark },
   orderBadgePill: {
-    backgroundColor: COLORS.bgWarm,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.borderSoft,
+    backgroundColor: colors.bgWarm, paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 8, borderWidth: 1, borderColor: colors.borderSoft,
   },
-  orderBadgeText: {
-    fontSize: 11,
-    fontFamily: FONTS.bold,
-    color: COLORS.midTeal,
-  },
-  warningText: {
-    fontSize: 12,
-    fontFamily: FONTS.medium,
-    color: COLORS.textMuted,
-    lineHeight: 18,
-  },
+  orderBadgeText: { fontSize: 11, fontFamily: FONTS.bold, color: colors.midTeal },
+  warningText: { fontSize: 12, fontFamily: FONTS.medium, color: colors.textMuted, lineHeight: 18 },
+
   section: { gap: 8 },
-  sectionLabel: {
-    fontSize: 13,
-    fontFamily: FONTS.bold,
-    color: COLORS.textDark,
-  },
-  issueGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  sectionLabel: { fontSize: 13, fontFamily: FONTS.bold, color: colors.textDark },
+  issueGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   issueChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: COLORS.surfaceWhite,
-    borderWidth: 1,
-    borderColor: COLORS.borderSoft,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
+    backgroundColor: colors.surfaceWhite,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   issueChipActive: {
-    backgroundColor: COLORS.midTeal,
-    borderColor: COLORS.midTeal,
-    shadowColor: '#1D6F72',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: colors.midTeal, borderColor: colors.midTeal,
+    shadowColor: colors.midTeal, shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2, shadowRadius: 6, elevation: 2,
   },
-  issueChipText: {
-    fontSize: 13,
-    fontFamily: FONTS.bold,
-    color: COLORS.textSecondary,
+  issueChipText: { fontSize: 13, fontFamily: FONTS.bold, color: colors.textSecondary },
+  issueChipTextActive: { color: '#FFFFFF', fontFamily: FONTS.bold },
+
+  photoHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  photoCountText: { fontSize: 12, fontFamily: FONTS.bold, color: colors.midTeal },
+
+  // ── Hero Upload Zone (like UploadPrescription) ──
+  cameraZone: {
+    backgroundColor: colors.surfaceWhite, borderRadius: 18, padding: 32,
+    alignItems: 'center', gap: 8,
+    borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.deepTeal,
   },
-  issueChipTextActive: {
-    color: '#FFFFFF',
-    fontFamily: FONTS.bold,
+  cameraCircle: {
+    width: 68, height: 68, borderRadius: 34,
+    backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center',
+    marginBottom: 4,
   },
-  photoHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  cameraTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.peacockBlue },
+  cameraSub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, textAlign: 'center' },
+
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 8 },
+  orLine: { flex: 1, height: 1, backgroundColor: colors.borderSoft },
+  orText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textMuted },
+
+  fileBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: colors.surfaceWhite, borderRadius: 12,
+    borderWidth: 1.5, borderColor: colors.borderSoft, height: 50, paddingHorizontal: 15,
   },
-  photoCountText: {
-    fontSize: 12,
-    fontFamily: FONTS.bold,
-    color: COLORS.midTeal,
-  },
-  evidenceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: COLORS.surfaceWhite,
-    borderWidth: 1.5,
-    borderColor: '#0F172A',
-    borderStyle: 'dashed',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  evidenceIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: COLORS.limeWhisper,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  evidenceCardTitle: {
-    fontSize: 14,
-    fontFamily: FONTS.bold,
-    color: COLORS.textDark,
-  },
-  evidenceCardSub: {
-    fontSize: 12,
-    fontFamily: FONTS.medium,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  evidencePlusBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#ECFDF5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-  },
-  photoList: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingVertical: 4,
-  },
-  photoThumbWrap: {
-    position: 'relative',
-    width: 76,
-    height: 76,
-    borderRadius: 14,
-    overflow: 'visible',
-  },
-  photoThumb: {
-    width: 76,
-    height: 76,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS.borderSoft,
-  },
+  fileBtnText: { fontFamily: FONTS.bold, fontSize: 14, color: colors.peacockBlue },
+
+  photoList: { flexDirection: 'row', gap: 12, paddingVertical: 4 },
+  photoThumbWrap: { position: 'relative', width: 76, height: 76, borderRadius: 14, overflow: 'visible' },
+  photoThumb: { width: 76, height: 76, borderRadius: 14, borderWidth: 1, borderColor: colors.borderSoft },
   removePhotoBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    backgroundColor: COLORS.error,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    elevation: 3,
+    position: 'absolute', top: -6, right: -6,
+    backgroundColor: colors.error,
+    width: 22, height: 22, borderRadius: 11,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: colors.surfaceWhite, elevation: 3,
   },
   addMorePhotoBtn: {
-    width: 76,
-    height: 76,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderSoft,
-    borderStyle: 'dashed',
-    backgroundColor: COLORS.surfaceWhite,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 2,
+    width: 76, height: 76, borderRadius: 14,
+    borderWidth: 1.5, borderColor: colors.borderSoft, borderStyle: 'dashed',
+    backgroundColor: colors.surfaceWhite,
+    justifyContent: 'center', alignItems: 'center', gap: 2,
   },
-  addMoreText: {
-    fontSize: 10,
-    fontFamily: FONTS.bold,
-    color: COLORS.midTeal,
-  },
+  addMoreText: { fontSize: 10, fontFamily: FONTS.bold, color: colors.midTeal },
   footNote: {
-    fontSize: 12,
-    fontFamily: FONTS.medium,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-    lineHeight: 17,
+    fontSize: 12, fontFamily: FONTS.medium, color: colors.textMuted,
+    textAlign: 'center', lineHeight: 17,
   },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
-    justifyContent: 'flex-end',
-  },
+
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(15,23,42,0.45)', justifyContent: 'flex-end' },
   modalContent: {
-    backgroundColor: COLORS.surfaceWhite,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    gap: 12,
+    backgroundColor: colors.surfaceWhite,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 20, paddingBottom: Platform.OS === 'ios' ? 36 : 24, gap: 12,
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 4,
-  },
-  modalTitle: {
-    fontSize: 16,
-    fontFamily: FONTS.black,
-    color: COLORS.textDark,
-  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 4 },
+  modalTitle: { fontSize: 16, fontFamily: FONTS.black, color: colors.textDark },
   modalOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    padding: 12,
-    borderRadius: 14,
-    backgroundColor: COLORS.bgWarm,
-    borderWidth: 1,
-    borderColor: COLORS.borderSoft,
+    flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14,
+    borderRadius: 14, backgroundColor: colors.bgWarm,
+    borderWidth: 1, borderColor: colors.borderSoft,
   },
   modalOptionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: COLORS.limeWhisper,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center',
   },
-  modalOptionTitle: {
-    fontSize: 14,
-    fontFamily: FONTS.bold,
-    color: COLORS.textDark,
-  },
-  modalOptionSub: {
-    fontSize: 12,
-    fontFamily: FONTS.medium,
-    color: COLORS.textMuted,
-  },
-  cancelBtn: {
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  cancelBtnText: {
-    fontSize: 14,
-    fontFamily: FONTS.bold,
-    color: COLORS.textMuted,
-  },
+  modalOptionTitle: { fontSize: 14, fontFamily: FONTS.bold, color: colors.textDark },
+  modalOptionSub: { fontSize: 12, fontFamily: FONTS.medium, color: colors.textMuted, marginTop: 1 },
+  cancelBtn: { paddingVertical: 12, alignItems: 'center', marginTop: 4 },
+  cancelBtnText: { fontSize: 14, fontFamily: FONTS.bold, color: colors.textMuted },
+
   // Success state
-  successScreen: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
+  successScreen: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
   successIcon: {
-    width: 88,
-    height: 88,
-    borderRadius: 30,
-    backgroundColor: '#FEF3C7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
+    width: 88, height: 88, borderRadius: 30,
+    backgroundColor: isDark ? colors.warningLight : '#FEF3C7',
+    justifyContent: 'center', alignItems: 'center', marginBottom: 20,
   },
-  successTitle: {
-    fontSize: 24,
-    fontFamily: FONTS.black,
-    color: COLORS.textDark,
-    marginBottom: 10,
-    letterSpacing: -0.5,
-  },
-  successDesc: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-    lineHeight: 21,
-  },
+  successTitle: { fontSize: 24, fontFamily: FONTS.black, color: colors.textDark, marginBottom: 10, letterSpacing: -0.5 },
+  successDesc: { fontSize: 14, fontFamily: FONTS.medium, color: colors.textMuted, textAlign: 'center', lineHeight: 21 },
 });

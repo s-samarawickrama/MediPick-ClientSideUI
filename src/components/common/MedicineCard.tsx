@@ -39,7 +39,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
         ) : (
           <ShoppingBag color={colors.midTeal} size={28} strokeWidth={2} />
         )}
-        {disc > 0 && (
+        {(!isGlobal && disc > 0) && (
           <View style={s.discTag}>
             <Text style={s.discTagText}>{disc}% OFF</Text>
           </View>
@@ -126,7 +126,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: colors.midTeal,
+    backgroundColor: '#F97316',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,

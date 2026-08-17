@@ -25,10 +25,10 @@ type ChatRouteProp = RouteProp<MainStackParamList, 'PharmacyChat'>;
 
 export const PharmacyChatScreen = () => {
   const { isDark, colors } = useTheme();
-  const s = makeStyles(colors);
+  const s = makeStyles(colors, isDark);
   const navigation = useNavigation<Nav>();
   const route = useRoute<ChatRouteProp>();
-  const orderId = route.params?.orderId || 'ord-101'; // Fallback for safety
+  const orderId = route.params?.orderId || 'ord-101';
 
   const { chatMessages, addChatMessage } = useOrders();
   const messages = chatMessages[orderId] || [];
@@ -36,22 +36,22 @@ export const PharmacyChatScreen = () => {
   const [input, setInput] = useState('');
   const scrollRef = useRef<ScrollView>(null);
 
-  const pharmacy = MOCK_PHARMACIES[0]; // Could be dynamic based on order
+  const pharmacy = MOCK_PHARMACIES[0];
 
   useEffect(() => {
-    StatusBar.setBarStyle('dark-content');
+    StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
   }, []);
 
   const sendMessage = () => {
     const text = input.trim();
     if (!text) return;
-    
+
     addChatMessage(orderId, {
       senderRole: 'CUSTOMER',
       senderName: 'You',
       text,
     });
-    
+
     setInput('');
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
 
@@ -71,12 +71,15 @@ export const PharmacyChatScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.surfaceWhite}
+      />
 
-      {/* Uber Eats Style Chat Navbar */}
+      {/* Chat Navbar */}
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
-          <ChevronLeft color={colors.peacockBlue} size={20} strokeWidth={2.5} />
+          <ChevronLeft color={colors.midTeal} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <View style={s.headerCenter}>
           {pharmacy?.image ? (
@@ -86,9 +89,9 @@ export const PharmacyChatScreen = () => {
               <Text style={s.avatarInitial}>M</Text>
             </View>
           )}
-          <View>
+          <View style={{ flex: 1 }}>
             <View style={s.pharmacyTitleRow}>
-              <Text style={s.pharmacyName}>MediCare Central</Text>
+              <Text style={s.pharmacyName} numberOfLines={1}>MediCare Central</Text>
               <ShieldCheck color={colors.midTeal} size={14} strokeWidth={2.5} />
             </View>
             <Text style={s.onlineText}>Online · Response time &lt; 5 mins</Text>
@@ -144,7 +147,7 @@ export const PharmacyChatScreen = () => {
         })}
       </ScrollView>
 
-      {/* Uber Style Floating Input Bar */}
+      {/* Floating Input Bar */}
       <View style={s.inputBar}>
         <TextInput
           style={s.inputField}
@@ -161,14 +164,14 @@ export const PharmacyChatScreen = () => {
           disabled={!input.trim()}
           activeOpacity={0.8}
         >
-          <Send color={input.trim() ? colors.white : colors.textMuted} size={16} strokeWidth={2.5} />
+          <Send color={input.trim() ? '#FFFFFF' : colors.textMuted} size={16} strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 };
 
-const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+const makeStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bgWarm },
   header: {
     flexDirection: 'row', alignItems: 'center',
@@ -191,49 +194,53 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   pharmacyAvatarImg: {
     width: 40, height: 40, borderRadius: 12, resizeMode: 'cover',
   },
-  avatarInitial: { fontFamily: FONTS.bold, fontSize: 16, color: colors.deepTeal },
+  avatarInitial: { fontFamily: FONTS.bold, fontSize: 16, color: colors.midTeal },
   pharmacyTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  pharmacyName: { fontFamily: FONTS.bold, fontSize: 15, color: colors.peacockBlue },
-  onlineText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.deepTeal, marginTop: 1 },
+  pharmacyName: { fontFamily: FONTS.bold, fontSize: 15, color: colors.textDark, flexShrink: 1 },
+  onlineText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 1 },
 
   contextBanner: {
-    backgroundColor: '#EAF7E7',
+    backgroundColor: isDark ? colors.plumLight : '#EDE7F6',
     paddingVertical: 8, paddingHorizontal: 16,
-    borderBottomWidth: 1, borderBottomColor: '#CFE9C5',
+    borderBottomWidth: 1,
+    borderBottomColor: isDark ? colors.deepPlum : '#D7C6E9',
   },
   contextText: {
-    fontFamily: FONTS.bold, fontSize: 12, color: colors.midTeal, textAlign: 'center',
+    fontFamily: FONTS.bold, fontSize: 12, color: isDark ? '#CDA4D7' : colors.deepPlum, textAlign: 'center',
   },
 
   msgList: { padding: 16, paddingBottom: 20, gap: 12 },
-  
-  systemBubbleWrap: { alignItems: 'center', marginVertical: 10 },
+
+  // System / verified bubbles — subtle in dark mode
+  systemBubbleWrap: { alignItems: 'center', marginVertical: 6 },
   systemBubble: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: colors.surfaceSubtle, paddingHorizontal: 12, paddingVertical: 6,
+    backgroundColor: colors.surfaceSubtle,
+    paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 999,
+    borderWidth: isDark ? 0 : 1,
+    borderColor: colors.borderSubtle,
   },
   systemText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textMuted },
-  msgTimeCenter: { fontFamily: FONTS.medium, fontSize: 10, color: colors.borderSoft, marginTop: 4 },
+  msgTimeCenter: { fontFamily: FONTS.medium, fontSize: 10, color: colors.textDisabled, marginTop: 4 },
 
   bubbleWrap: { maxWidth: '82%', alignSelf: 'flex-start' },
   bubbleWrapCustomer: { alignSelf: 'flex-end' },
-  bubble: { borderRadius: 16, padding: 13 },
+  bubble: { borderRadius: 18, padding: 13 },
+
+  // Pharmacy bubble — soft surface, warm card
   bubblePharmacy: {
     backgroundColor: colors.surfaceWhite,
-    borderWidth: 1, borderColor: colors.borderSoft,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     borderBottomLeftRadius: 4,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
   },
+  // Customer bubble — midTeal, consistent brand color
   bubbleCustomer: {
-    backgroundColor: colors.peacockBlue,
+    backgroundColor: colors.midTeal,
     borderBottomRightRadius: 4,
   },
-  bubbleText: { fontFamily: FONTS.regular, fontSize: 14, color: colors.textDark, lineHeight: 20 },
+  bubbleText: { fontFamily: FONTS.regular, fontSize: 14, lineHeight: 20 },
   bubblePharmacyText: { color: colors.textDark },
   bubbleCustomerText: { color: '#FFFFFF' },
   msgTime: { fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted, marginTop: 4, paddingHorizontal: 4 },
@@ -248,12 +255,12 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     flex: 1, height: 44,
     backgroundColor: colors.surfaceSubtle,
     borderRadius: 12, borderWidth: 1.5, borderColor: colors.borderSoft,
-    paddingHorizontal: 14, fontFamily: FONTS.regular, fontSize: 14, color: colors.peacockBlue,
+    paddingHorizontal: 14, fontFamily: FONTS.regular, fontSize: 14, color: colors.textDark,
     outlineStyle: 'none' as any, outlineWidth: 0 as any,
   },
   sendBtn: {
     width: 44, height: 44, borderRadius: 12,
-    backgroundColor: colors.peacockBlue,
+    backgroundColor: colors.midTeal,
     justifyContent: 'center', alignItems: 'center',
   },
   sendBtnDisabled: { backgroundColor: colors.surfaceSubtle },
