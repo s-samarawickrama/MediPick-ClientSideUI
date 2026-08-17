@@ -268,7 +268,9 @@ export const MultiStoreCartScreen = () => {
 
         {/* Store Groups */}
         {cartStores.map((storeGroup) => {
-          const storeSubtotal = storeGroup.items.reduce((s, i) => s + i.pharmacyPrice * i.qty, 0);
+          const storeSubtotal = storeGroup.items
+            .filter((i: any) => selectedItems.has(`${storeGroup.pharmacy.id}_${i.id}`))
+            .reduce((s: number, i: any) => s + i.pharmacyPrice * i.qty, 0);
 
           return (
             <View key={storeGroup.pharmacy.id} style={s.storeCard}>
