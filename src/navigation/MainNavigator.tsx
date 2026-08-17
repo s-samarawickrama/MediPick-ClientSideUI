@@ -25,6 +25,8 @@ import { ReportIssueScreen } from '../screens/issues/ReportIssueScreen';
 
 import { MultiStoreCartScreen } from '../screens/cart/MultiStoreCartScreen';
 import { LegalDocScreen } from '../screens/legal/LegalDocScreen';
+import { HealthTipsScreen } from '../screens/health/HealthTipsScreen';
+import { HealthTipDetailsScreen } from '../screens/health/HealthTipDetailsScreen';
 
 export type MainStackParamList = {
   Tabs: { screen?: string; params?: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } } | undefined;
@@ -42,6 +44,8 @@ export type MainStackParamList = {
   MultiStoreCart: undefined;
   LegalDoc: { type: 'terms' | 'privacy' | 'faq' };
   Favorites: undefined;
+  HealthTips: undefined;
+  HealthTipDetails: { tipId: string };
 };
 
 const Tab = createBottomTabNavigator();
@@ -178,5 +182,7 @@ export const MainNavigator = () => (
     <Stack.Screen name="MultiStoreCart" component={MultiStoreCartScreen} options={{ animation: 'slide_from_bottom' }} />
     <Stack.Screen name="LegalDoc" component={LegalDocScreen} options={{ animation: 'slide_from_right' }} />
     <Stack.Screen name="Favorites" component={FavoritesScreen} options={{ animation: 'slide_from_bottom' }} />
+    <Stack.Screen name="HealthTips" component={HealthTipsScreen} options={{ animation: 'slide_from_bottom' }} />
+    <Stack.Screen name="HealthTipDetails" component={HealthTipDetailsScreen} options={{ animation: 'slide_from_right' }} />
   </Stack.Navigator>
 );

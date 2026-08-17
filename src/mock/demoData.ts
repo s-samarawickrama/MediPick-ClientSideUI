@@ -1,4 +1,4 @@
-import { Pharmacy, MedicineItem, Order, PharmacyQuote, ChatMessage } from '../types';
+import { Pharmacy, MedicineItem, Order, PharmacyQuote, ChatMessage, HealthTip } from '../types';
 
 export const MOCK_PHARMACIES: Pharmacy[] = [
   {
@@ -507,4 +507,48 @@ export const MOCK_ORDERS: Order[] = [
     paymentMethod: 'ONLINE',
     createdAt: new Date(Date.now() - 72 * 3600 * 1000).toISOString(),
   },
+];
+
+
+export const HEALTH_TIPS: HealthTip[] = [
+  {
+    id: 'tip-1',
+    title: '5 Ways to Boost Immunity This Winter',
+    category: 'Immunity',
+    previewText: 'Simple lifestyle changes can dramatically increase your body\'s natural defenses.',
+    bodyText: 'With flu season around the corner, keeping your immune system strong is more important than ever.\n\n1. Stay Hydrated: Drink at least 8 glasses of water a day.\n2. Sleep Well: Aim for 7-9 hours of quality sleep.\n3. Eat Your Greens: Incorporate spinach and kale into your meals.\n4. Take Vitamin C: Citrus fruits or supplements can help.\n5. Exercise: 30 minutes of moderate activity daily.',
+    imageUrl: require('../../assets/images/tip_immunity.jpg'),
+    publishedAt: '2024-10-25',
+    readTimeMins: 3
+  },
+  {
+    id: 'tip-2',
+    title: 'The Secret to Glowing Skin',
+    category: 'Skincare',
+    previewText: 'Your skincare routine doesn\'t need to be 10 steps. Learn the basics.',
+    bodyText: 'Beautiful skin starts from within, but a solid routine helps.\n\nFirst, always cleanse before bed. Leaving makeup on can clog pores.\nSecond, moisturize immediately after washing your face to lock in hydration.\nFinally, never skip sunscreen, even on cloudy days. UV damage is the leading cause of premature aging.',
+    imageUrl: require('../../assets/images/tip_skincare.jpg'),
+    publishedAt: '2024-10-22',
+    readTimeMins: 4
+  },
+  {
+    id: 'tip-3',
+    title: 'Managing Chronic Stress',
+    category: 'Mental Health',
+    previewText: 'Stress affects your entire body. Here is how to manage it naturally.',
+    bodyText: 'Chronic stress can lead to physical ailments like headaches and high blood pressure.\n\nTry integrating mindfulness meditation into your morning routine. Even 5 minutes can make a huge difference. Deep breathing exercises (like the 4-7-8 method) can rapidly lower your heart rate during stressful moments. If you feel overwhelmed, do not hesitate to reach out to a professional.',
+    imageUrl: require('../../assets/images/cat_chronic.png'),
+    publishedAt: '2024-10-20',
+    readTimeMins: 5
+  },
+  {
+    id: 'tip-4',
+    title: 'First Aid Kit Essentials',
+    category: 'First Aid',
+    previewText: 'Every home should have a basic first aid kit. Here is what you need.',
+    bodyText: 'Accidents happen. Being prepared can prevent minor injuries from becoming major problems.\n\nMake sure your kit includes:\n- Adhesive bandages of various sizes\n- Sterile gauze pads and medical tape\n- Antiseptic wipes or hydrogen peroxide\n- Antibiotic ointment\n- Tweezers and scissors\n- A digital thermometer\n- Ibuprofen or acetaminophen',
+    imageUrl: require('../../assets/images/cat_firstaid.png'),
+    publishedAt: '2024-10-18',
+    readTimeMins: 2
+  }
 ];

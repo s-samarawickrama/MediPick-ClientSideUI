@@ -62,6 +62,17 @@ export interface Pharmacy {
   longitude?: number;
 }
 
+export interface HealthTip {
+  id: string;
+  title: string;
+  category: string;
+  previewText: string;
+  bodyText: string;
+  imageUrl?: string | any;
+  publishedAt: string;
+  readTimeMins: number;
+}
+
 export interface PrescriptionQuoteItem {
   medicineName: string;
   genericName: string;

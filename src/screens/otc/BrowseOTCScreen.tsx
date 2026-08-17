@@ -497,14 +497,14 @@ export const BrowseOTCScreen = () => {
                   </View>
                 ) : selectedMedModal.isRxRequired ? (
                   <TouchableOpacity
-                    style={[s.modalAddBtn, { backgroundColor: colors.limeWhisper }]}
+                    style={[s.modalAddBtn, { backgroundColor: colors.midTeal }]}
                     onPress={() => {
                       navigation.navigate('UploadPrescription', { pharmacyId: activeStore.id, pharmacyName: activeStore.name });
                       setSelectedMedModal(null);
                     }}
                     activeOpacity={0.88}
                   >
-                    <Text style={[s.modalAddBtnText, { color: colors.midTeal }]}>Prescription Required - Upload</Text>
+                    <Text style={[s.modalAddBtnText, { color: colors.textInverse }]}>Prescription Required - Upload</Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
@@ -866,14 +866,14 @@ export const BrowseOTCScreen = () => {
               {/* Modal Action Button */}
               {selectedMedModal.isRxRequired ? (
                 <TouchableOpacity
-                  style={[s.modalAddBtn, { backgroundColor: colors.limeWhisper }]}
+                  style={[s.modalAddBtn, { backgroundColor: colors.midTeal }]}
                   onPress={() => {
                     navigation.navigate('SelectPharmacy');
                     setSelectedMedModal(null);
                   }}
                   activeOpacity={0.88}
                 >
-                  <Text style={[s.modalAddBtnText, { color: colors.midTeal }]}>Prescription Required - Select Store</Text>
+                  <Text style={[s.modalAddBtnText, { color: colors.textInverse }]}>Prescription Required - Select Store</Text>
                 </TouchableOpacity>
               ) : !activeStore ? (
                 <TouchableOpacity

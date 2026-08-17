@@ -259,9 +259,7 @@ export const HomeScreen = () => {
 
           <TouchableOpacity
             style={s.quickPill}
-            onPress={() => Platform.OS === 'web'
-              ? window.alert('Health Tips coming soon!')
-              : Alert.alert('Health Tips', 'Personalized medication reminders and health tips coming soon!')}
+            onPress={() => (navigation as any).navigate('HealthTips')}
             activeOpacity={0.8}
           >
             <View style={[s.quickPillIcon, { backgroundColor: isDark ? '#1E1A26' : '#F5D7FF' }]}>
