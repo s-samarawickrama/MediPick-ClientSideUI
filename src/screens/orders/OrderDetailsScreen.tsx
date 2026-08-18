@@ -365,7 +365,6 @@ export const OrderDetailsScreen = () => {
                 <Button
                   title="Report an Issue"
                   variant="ghost"
-                  icon={<AlertTriangle color={colors.error} size={16} strokeWidth={2} />}
                   onPress={() => navigation.navigate('ReportIssue', { orderId: order.id })}
                   textStyle={{ color: colors.error }}
                   style={{ marginTop: 8 }}

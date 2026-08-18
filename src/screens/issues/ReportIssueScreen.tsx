@@ -301,7 +301,7 @@ export const ReportIssueScreen = () => {
         {/* Submit Button */}
         <Button
           title="Submit Report"
-          variant="primary"
+          variant="danger"
           onPress={handleSubmit}
           isLoading={isLoading}
           disabled={!issueType || !description.trim()}
