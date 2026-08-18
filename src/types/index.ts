@@ -4,6 +4,9 @@ export interface CustomerUser {
   email?: string;
   isLoggedIn: boolean;
   strikes: number;
+  strikeLimit: number;
+  isLocked: boolean;
+  lockedUntil: string | null;
 }
 
 export type FSMOrderState =
@@ -114,6 +117,7 @@ export interface Order {
   totalMrp: number;
   paymentMethod?: 'ONLINE' | 'PAY_AT_COUNTER';
   isPaid: boolean;
+  allowGenericSubstitutions?: boolean;
   rejectReason?: string;
   refundStatus?: 'REFUNDED';
   pickupOtp?: string;

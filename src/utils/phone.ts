@@ -1,5 +1,10 @@
 export const normalizePhoneNumber = (value: string): string => {
-  return value.replace(/[^\d+]/g, '').replace(/^00/, '+');
+  let cleaned = value.replace(/[^\d+]/g, '').replace(/^00/, '+');
+  if (cleaned.startsWith('0')) {
+    // Convert local 0... to +94...
+    cleaned = '+94' + cleaned.slice(1);
+  }
+  return cleaned;
 };
 
 export const formatPhoneNumber = (value: string): string => {

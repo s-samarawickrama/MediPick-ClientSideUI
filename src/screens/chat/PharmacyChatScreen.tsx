@@ -18,6 +18,8 @@ import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { useOrders } from '../../context/OrderContext';
+import { getMessages, sendMessage as sendApiMessage } from '../../api/messagesApi';
+import { subscribeToOrderChat, OrderSubscription } from '../../api/websocketApi';
 import { MOCK_PHARMACIES } from '../../mock/demoData';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
@@ -30,7 +32,7 @@ export const PharmacyChatScreen = () => {
   const route = useRoute<ChatRouteProp>();
   const orderId = route.params?.orderId || 'ord-101';
 
-  const { chatMessages, addChatMessage } = useOrders();
+  const { chatMessages, addChatMessage, setOrderMessages, receiveServerMessage } = useOrders();
   const messages = chatMessages[orderId] || [];
 
   const [input, setInput] = useState('');
@@ -39,30 +41,53 @@ export const PharmacyChatScreen = () => {
   const pharmacy = MOCK_PHARMACIES[0];
 
   useEffect(() => {
+    let sub: OrderSubscription | null = null;
+    let isMounted = true;
+
+    const initChat = async () => {
+      try {
+        // Fetch history
+        const history = await getMessages(orderId);
+        if (isMounted) setOrderMessages(orderId, history as any);
+
+        // Connect WebSocket
+        sub = await subscribeToOrderChat(orderId, (newMsg) => {
+          if (isMounted) receiveServerMessage(newMsg as any);
+        });
+      } catch (e) {
+        console.warn('Chat init failed:', e);
+      }
+    };
+
+    initChat();
+    return () => {
+      isMounted = false;
+      sub?.unsubscribe();
+    };
+  }, [orderId]);
+
+  useEffect(() => {
     StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
   }, []);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
+    if (!input.trim()) return;
     const text = input.trim();
-    if (!text) return;
+    setInput('');
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
 
+    // Optimistic UI update
     addChatMessage(orderId, {
       senderRole: 'CUSTOMER',
       senderName: 'You',
       text,
     });
 
-    setInput('');
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-
-    setTimeout(() => {
-      addChatMessage(orderId, {
-        senderRole: 'PHARMACIST',
-        senderName: 'Pharmacist',
-        text: 'Got it! Your items are safely stored until you arrive.',
-      });
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-    }, 1200);
+    try {
+      await sendApiMessage(orderId, { text });
+    } catch (e) {
+      console.warn('Failed to send message:', e);
+    }
   };
 
   return (
@@ -124,8 +149,7 @@ export const PharmacyChatScreen = () => {
             return (
               <View key={msg.id} style={s.systemBubbleWrap}>
                 <View style={s.systemBubble}>
-                  <Clock color={colors.textMuted} size={12} strokeWidth={2.5} style={{ marginTop: 1 }} />
-                  <Text style={s.systemText}>{msg.text}</Text>
+                  <Text style={s.systemText}>Out of Stock</Text>
                 </View>
                 <Text style={s.msgTimeCenter}>{msg.timestamp}</Text>
               </View>
@@ -159,12 +183,11 @@ export const PharmacyChatScreen = () => {
           returnKeyType="send"
         />
         <TouchableOpacity
-          style={[s.sendBtn, !input.trim() && s.sendBtnDisabled]}
-          onPress={sendMessage}
+          style={[s.sendBtn, !input.trim() && { backgroundColor: colors.surfaceSubtle }]}
           disabled={!input.trim()}
-          activeOpacity={0.8}
+          onPress={sendMessage}
         >
-          <Send color={input.trim() ? '#FFFFFF' : colors.textMuted} size={16} strokeWidth={2.5} />
+          <Send color={input.trim() ? colors.surfaceWhite : colors.textMuted} size={18} strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -222,7 +245,7 @@ const makeStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     borderColor: colors.borderSubtle,
   },
   systemText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textMuted },
-  msgTimeCenter: { fontFamily: FONTS.medium, fontSize: 10, color: colors.textDisabled, marginTop: 4 },
+  msgTimeCenter: { fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted, marginTop: 4 },
 
   bubbleWrap: { maxWidth: '82%', alignSelf: 'flex-start' },
   bubbleWrapCustomer: { alignSelf: 'flex-end' },

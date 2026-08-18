@@ -41,7 +41,6 @@ export const OrderDetailsScreen = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const opacity = useRef(new Animated.Value(0)).current;
-  const { addStrike } = useAuth();
   const { orders, cancelOrder } = useOrders();
 
   const orderId = route.params?.orderId;
@@ -72,7 +71,7 @@ export const OrderDetailsScreen = () => {
             style: 'destructive',
             onPress: () => {
               if (order) cancelOrder(order.id);
-              addStrike();
+              // Strikes are managed by backend automatically when cancellation rules apply
               showAlert('Order Cancelled', 'Your order has been cancelled and 1 Strike has been recorded.');
               navigation.goBack();
             }

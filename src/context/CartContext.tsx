@@ -27,6 +27,7 @@ export interface AttachedPrescription {
   note: string;
   pharmacyId: string;
   pharmacyName: string;
+  allowGenericSubstitutions?: boolean;
 }
 
 interface CartContextType {

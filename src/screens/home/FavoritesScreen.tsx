@@ -8,7 +8,7 @@ import { MOCK_PHARMACIES, togglePharmacyFavorite } from '../../mock/demoData';
 
 export const FavoritesScreen = () => {
   const { isDark, colors } = useTheme();
-  const s = makeStyles(colors);
+  const s = makeStyles(colors, isDark);
   const navigation = useNavigation();
   const [, setTick] = useState(0);
   const favoritePharmacies = MOCK_PHARMACIES.filter(p => p.isFavorite);
@@ -92,7 +92,7 @@ export const FavoritesScreen = () => {
   );
 };
 
-const makeStyles = (colors: ThemeColors) => StyleSheet.create({
+const makeStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bgWarm },
   nav: {
     flexDirection: 'row', alignItems: 'center',
@@ -120,12 +120,12 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   storeDistanceTag: {
     position: 'absolute', bottom: 10, left: 10,
-    backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+    backgroundColor: isDark ? 'rgba(13,27,28,0.88)' : 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
   },
   storeDistanceText: { fontFamily: FONTS.bold, fontSize: 11, color: colors.textDark },
   favBtn: {
     position: 'absolute', top: 10, right: 10,
-    backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 16, width: 32, height: 32,
+    backgroundColor: isDark ? 'rgba(13,27,28,0.80)' : 'rgba(255,255,255,0.9)', borderRadius: 16, width: 32, height: 32,
     justifyContent: 'center', alignItems: 'center',
   },
   storeMetaContainer: { padding: 14, gap: 2 },

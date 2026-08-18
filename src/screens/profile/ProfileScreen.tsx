@@ -14,25 +14,26 @@ import { MainStackParamList } from '../../navigation/MainNavigator';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { Moon } from 'lucide-react-native';
+import { initiatePhoneChange, verifyPhoneChange, updatePreferences } from '../../api/usersApi';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
 export const ProfileScreen = () => {
   const navigation = useNavigation<Nav>();
   const opacity = useRef(new Animated.Value(0)).current;
-  const { user, logout } = useAuth();
+  const { user, logout, reloadUser } = useAuth();
   const { isDark, toggleTheme, colors } = useTheme();
   const s = makeStyles(colors);
 
-  const [phone, setPhone]                 = useState('+1 (555) 019-2834');
   const [newPhone, setNewPhone]           = useState('');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [phoneStep, setPhoneStep]         = useState<'input' | 'otp'>('input');
   const [otp, setOtp]                     = useState('');
+  const [loading, setLoading]             = useState(false);
 
-  const [notifPush, setNotifPush]         = useState(true);
-  const [notifSms, setNotifSms]           = useState(true);
   const [showNotifModal, setShowNotifModal] = useState(false);
+
+  if (!user) return null;
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
@@ -45,24 +46,58 @@ export const ProfileScreen = () => {
     setOtp('');
   };
 
-  const handleUpdatePhone = () => {
+  const handleUpdatePhone = async () => {
     if (phoneStep === 'input') {
       if (newPhone.trim().length < 8) {
         Alert.alert('Invalid Number', 'Please enter a valid phone number.');
         return;
       }
-      setPhoneStep('otp');
+      setLoading(true);
+      try {
+        await initiatePhoneChange({ newPhoneNumber: newPhone.trim() });
+        setPhoneStep('otp');
+      } catch (e: any) {
+        Alert.alert('Error', e.message || 'Failed to request phone change');
+      } finally {
+        setLoading(false);
+      }
     } else {
       if (otp.length < 6) {
         Alert.alert('Invalid OTP', 'Please enter the 6-digit code.');
         return;
       }
-      setPhone(newPhone.trim());
-      setNewPhone('');
-      setOtp('');
-      setPhoneStep('input');
-      setShowPhoneModal(false);
-      Alert.alert('Phone Updated', 'Your phone number has been updated successfully.');
+      setLoading(true);
+      try {
+        await verifyPhoneChange({ newPhoneNumber: newPhone.trim(), otp });
+        await reloadUser();
+        setNewPhone('');
+        setOtp('');
+        setPhoneStep('input');
+        setShowPhoneModal(false);
+        Alert.alert('Phone Updated', 'Your phone number has been updated successfully.');
+      } catch (e: any) {
+        Alert.alert('Error', e.message || 'Invalid OTP');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleTogglePush = async (val: boolean) => {
+    try {
+      await updatePreferences({ pushNotificationsEnabled: val });
+      await reloadUser();
+    } catch (e: any) {
+      console.warn('Failed to update push pref', e);
+    }
+  };
+
+  const handleToggleEmail = async (val: boolean) => {
+    try {
+      await updatePreferences({ emailReceiptsEnabled: val });
+      await reloadUser();
+    } catch (e: any) {
+      console.warn('Failed to update email pref', e);
     }
   };
 
@@ -91,7 +126,7 @@ export const ProfileScreen = () => {
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                <Text style={s.userPhone}>{user.phoneNumber || phone}</Text>
+                <Text style={s.userPhone}>{user.phoneNumber}</Text>
                 {user.strikes > 0 && (
                   <View style={s.strikeTag}>
                     <AlertTriangle color={colors.warning} size={12} strokeWidth={2.5} />
@@ -144,7 +179,7 @@ export const ProfileScreen = () => {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.menuLabel}>Change Phone Number</Text>
-                <Text style={s.menuSub}>{phone}</Text>
+                <Text style={s.menuSub}>{user.phoneNumber}</Text>
               </View>
               <ChevronRight color={colors.textMuted} size={16} strokeWidth={2} />
             </Pressable>
@@ -234,7 +269,7 @@ export const ProfileScreen = () => {
 
             <Text style={s.modalTitle}>{phoneStep === 'input' ? 'Change Phone Number' : 'Verify New Number'}</Text>
             <Text style={s.modalSub}>
-              {phoneStep === 'input' ? `Current number: ${phone}` : `Enter the 6-digit code sent to ${newPhone}`}
+              {phoneStep === 'input' ? `Current number: ${user.phoneNumber}` : `Enter the 6-digit code sent to ${newPhone}`}
             </Text>
 
             {phoneStep === 'input' ? (
@@ -273,6 +308,7 @@ export const ProfileScreen = () => {
               variant="primary"
               onPress={handleUpdatePhone}
               style={{ marginTop: 6 }}
+              isLoading={loading}
             />
           </View>
         </KeyboardAvoidingView>
@@ -293,15 +329,15 @@ export const ProfileScreen = () => {
                 <Text style={s.switchTitle}>Push Notifications</Text>
                 <Text style={s.switchSub}>Real-time order quote and pickup alerts</Text>
               </View>
-              <Switch value={notifPush} onValueChange={setNotifPush} trackColor={{ false: '#CBD5E1', true: colors.midTeal }} />
+              <Switch value={user.pushNotificationsEnabled} onValueChange={handleTogglePush} trackColor={{ false: '#CBD5E1', true: colors.midTeal }} />
             </View>
 
             <View style={s.switchRow}>
               <View style={{ flex: 1 }}>
-                <Text style={s.switchTitle}>SMS Verification Alerts</Text>
-                <Text style={s.switchSub}>Text notifications for OTP codes</Text>
+                <Text style={s.switchTitle}>Email Receipts</Text>
+                <Text style={s.switchSub}>Get invoices & summaries via email</Text>
               </View>
-              <Switch value={notifSms} onValueChange={setNotifSms} trackColor={{ false: '#CBD5E1', true: colors.midTeal }} />
+              <Switch value={user.emailReceiptsEnabled} onValueChange={handleToggleEmail} trackColor={{ false: '#CBD5E1', true: colors.midTeal }} />
             </View>
 
             <Button

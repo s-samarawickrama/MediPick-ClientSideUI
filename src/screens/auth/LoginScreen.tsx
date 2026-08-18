@@ -17,14 +17,13 @@ import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { useAuth } from '../../context/AuthContext';
+import { requestOtp } from '../../api/authApi';
 import { isValidPhoneNumber, normalizePhoneNumber } from '../../utils/phone';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
-  const { login } = useAuth();
   const s = makeStyles(colors);
 
   const [phone,   setPhone]   = useState('');
@@ -61,15 +60,22 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     return ok;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
     const cleanedPhone = normalizePhoneNumber(phone.trim());
-    login(cleanedPhone, surname.trim(), email.trim() || undefined);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await requestOtp({
+        phoneNumber: cleanedPhone,
+        surname: surname.trim(),
+        email: email.trim() || undefined,
+      });
       navigation.navigate('OTP', { phone: cleanedPhone, surname: surname.trim() });
-    }, 600);
+    } catch (e: any) {
+      setPhoneErr(e.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

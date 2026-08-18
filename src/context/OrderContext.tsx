@@ -1,19 +1,24 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, FSMOrderState, PharmacyQuote, ChatMessage } from '../types';
-import { MOCK_ORDERS } from '../mock/demoData';
+import { listOrders, updateOrderState } from '../api/ordersApi';
+import { useAuth } from './AuthContext'; // to listen to auth changes if needed
 
 interface OrderContextType {
   orders: Order[];
+  isLoading: boolean;
   activeOrder: Order | null;
   chatMessages: Record<string, ChatMessage[]>;
+  fetchOrders: () => Promise<void>;
   createPrescriptionOrder: (pharmacyIds: string[], notes?: string) => Order;
   acceptQuote: (orderId: string, quote: PharmacyQuote) => void;
   requestPickupExtension: (orderId: string) => void;
-  reportIssue: (orderId: string, issueType: string, description: string) => void;
+  setOrderMessages: (orderId: string, messages: ChatMessage[]) => void;
+  receiveServerMessage: (message: ChatMessage) => void;
+  reportIssue: (orderId: string, issueType: string, description: string) => Promise<void>;
   setActiveOrder: (order: Order | null) => void;
   addChatMessage: (orderId: string, message: Omit<ChatMessage, 'id' | 'orderId' | 'timestamp'>) => void;
-  completeOrder: (orderId: string) => void;
-  cancelOrder: (orderId: string) => void;
+  completeOrder: (orderId: string) => Promise<void>;
+  cancelOrder: (orderId: string) => Promise<void>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -48,9 +53,33 @@ const INITIAL_CHAT: Record<string, ChatMessage[]> = {
 };
 
 export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
-  const [activeOrder, setActiveOrder] = useState<Order | null>(MOCK_ORDERS[0]);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [chatMessages, setChatMessages] = useState<Record<string, ChatMessage[]>>(INITIAL_CHAT);
+
+  const fetchOrders = async () => {
+    try {
+      setIsLoading(true);
+      const res = await listOrders();
+      const data = res.data as unknown as Order[];
+      setOrders(data);
+      if (data.length > 0 && !activeOrder) {
+        setActiveOrder(data[0]);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch orders:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchOrders();
+    }
+  }, [user]);
 
   const createPrescriptionOrder = (pharmacyIds: string[], notes?: string) => {
     const newOrder: Order = {
@@ -115,6 +144,22 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }));
   };
 
+  const setOrderMessages = (orderId: string, messages: ChatMessage[]) => {
+    setChatMessages((prev) => ({ ...prev, [orderId]: messages }));
+  };
+
+  const receiveServerMessage = (message: ChatMessage) => {
+    setChatMessages((prev) => {
+      const existing = prev[message.orderId] || [];
+      // Prevent duplicates if already added locally
+      if (existing.some(m => m.id === message.id)) return prev;
+      return {
+        ...prev,
+        [message.orderId]: [...existing, message],
+      };
+    });
+  };
+
   const requestPickupExtension = (orderId: string) => {
     setOrders((prev) =>
       prev.map((ord) => {
@@ -139,48 +184,34 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  const reportIssue = (orderId: string, issueType: string, description: string) => {
-    setOrders((prev) =>
-      prev.map((ord) => {
-        if (ord.id === orderId) {
-          return { ...ord, state: 'ISSUE_REPORTED' };
-        }
-        return ord;
-      })
-    );
+  const reportIssue = async (orderId: string, issueType: string, description: string) => {
+    await updateOrderState(orderId, 'ISSUE_REPORTED');
+    await fetchOrders();
   };
 
-  const completeOrder = (orderId: string) => {
-    setOrders((prev) =>
-      prev.map((ord) => {
-        if (ord.id === orderId) {
-          return { ...ord, state: 'COMPLETED' };
-        }
-        return ord;
-      })
-    );
+  const completeOrder = async (orderId: string) => {
+    await updateOrderState(orderId, 'COMPLETED');
+    await fetchOrders();
   };
 
-  const cancelOrder = (orderId: string) => {
-    setOrders((prev) =>
-      prev.map((ord) => {
-        if (ord.id === orderId) {
-          return { ...ord, state: 'CANCELLED' };
-        }
-        return ord;
-      })
-    );
+  const cancelOrder = async (orderId: string) => {
+    await updateOrderState(orderId, 'CANCELLED');
+    await fetchOrders();
   };
 
   return (
     <OrderContext.Provider
       value={{
         orders,
+        isLoading,
         activeOrder,
         chatMessages,
+        fetchOrders,
         createPrescriptionOrder,
         acceptQuote,
         requestPickupExtension,
+        setOrderMessages,
+        receiveServerMessage,
         reportIssue,
         setActiveOrder,
         addChatMessage,

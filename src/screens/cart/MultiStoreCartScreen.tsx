@@ -14,8 +14,9 @@ import { PaymentMethodSelector } from '../../components/common/PaymentMethodSele
 import { StripePaymentModal } from '../../components/common/StripePaymentModal';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { useCart, CartPharmacy } from '../../context/CartContext';
-import { FileText } from 'lucide-react-native';
+import { FileText, Loader2 } from 'lucide-react-native';
 import { Order, Pharmacy } from '../../types';
+import { createOrder } from '../../api/ordersApi';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -23,11 +24,13 @@ export const MultiStoreCartScreen = () => {
   const { isDark, colors } = useTheme();
   const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
-  const opacity = useRef(new Animated.Value(0)).current;
+  const [opacity] = useState(new Animated.Value(0));
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [payMethod, setPayMethod] = useState<'counter' | 'stripe'>('counter');
+  const [allowGenericSubstitutions, setAllowGenericSubstitutions] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [storeToCheckout, setStoreToCheckout] = useState<any>(null);
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const { cartItems, attachedPrescription, updateQuantity, removeFromCart, clearCart, removeStoreFromCart, setAttachedPrescription } = useCart();
 
@@ -154,54 +157,43 @@ export const MultiStoreCartScreen = () => {
     }
   };
 
-  const handleCreateOrderForStore = (storeGroup: typeof cartStores[0]) => {
+  const handleCreateOrderForStore = async (storeGroup: typeof cartStores[0]) => {
     const checkedMedicineItems = storeGroup.items.filter(item => selectedItems.has(`${storeGroup.pharmacy.id}_${item.id}`));
     const hasRx = storeGroup.hasPrescription && selectedItems.has(`${storeGroup.pharmacy.id}_rx`);
     
     if (checkedMedicineItems.length === 0 && !hasRx) return;
 
     const orderType = (hasRx && checkedMedicineItems.length > 0) ? 'MIXED' : (hasRx ? 'PRESCRIPTION' : 'OTC');
-    const stTotal = checkedMedicineItems.reduce((s, c) => s + c.pharmacyPrice * c.qty, 0);
-    const orderPharmacy: Pharmacy = {
-      id: storeGroup.pharmacy.id,
-      name: storeGroup.pharmacy.name,
-      address: storeGroup.pharmacy.address,
-      distance: storeGroup.pharmacy.distance,
-      rating: storeGroup.pharmacy.rating ?? 4.8,
-      nmraLicense: storeGroup.pharmacy.nmraLicense ?? 'Pending',
-      pharmacistName: storeGroup.pharmacy.pharmacistName ?? 'Pharmacist',
-      pharmacistRegNo: storeGroup.pharmacy.pharmacistRegNo ?? 'Pending',
-      estimatedResponseTime: storeGroup.pharmacy.estimatedResponseTime ?? 'TBD',
-      isOpen: storeGroup.pharmacy.isOpen ?? true,
-      image: storeGroup.pharmacy.image,
-      popularity: 0,
-    };
-
-    const newOrder: Order = {
-      id: `ord-new-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      orderNumber: `#MP${Math.floor(100000 + Math.random() * 900000)}`,
-      orderType: orderType as Order['orderType'],
-      state: 'WAITING_PHARMACY_CONFIRMATION',
-      pharmacy: orderPharmacy,
-      items: checkedMedicineItems.map(item => ({ medicine: item, quantity: item.qty, price: item.pharmacyPrice })),
-      totalAmount: stTotal,
-      totalMrp: stTotal + 100, // mock MRP
-      isPaid: payMethod === 'stripe',
-      paymentMethod: payMethod === 'stripe' ? 'ONLINE' : 'PAY_AT_COUNTER',
-      createdAt: new Date().toISOString(),
-    };
-
-    MOCK_ORDERS.unshift(newOrder);
     
-    // Remove these items from the cart
-    processCheckout(storeGroup.pharmacy.id);
+    setIsCheckingOut(storeGroup.pharmacy.id);
 
-    // Give a success alert and navigate to the orders tab
-    Alert.alert(
-      'Order Placed Successfully!',
-      `Your order for ${storeGroup.pharmacy.name} has been sent.`,
-      [{ text: 'View Orders', onPress: () => navigation.navigate('Tabs', { screen: 'Orders' }) }]
-    );
+    try {
+      await createOrder({
+        orderType: orderType as 'OTC' | 'PRESCRIPTION' | 'MIXED',
+        pharmacyId: storeGroup.pharmacy.id,
+        paymentMethod: payMethod === 'stripe' ? 'ONLINE' : 'PAY_AT_COUNTER',
+        items: checkedMedicineItems.map(item => ({
+          medicineId: item.id,
+          quantity: item.qty
+        })),
+        allowGenericSubstitutions: allowGenericSubstitutions || !!(hasRx && attachedPrescription?.allowGenericSubstitutions),
+        prescriptionId: hasRx && attachedPrescription ? attachedPrescription.image : undefined,
+      });
+
+      // Remove these items from the cart
+      processCheckout(storeGroup.pharmacy.id);
+
+      // Give a success alert and navigate to the orders tab
+      Alert.alert(
+        'Order Placed Successfully!',
+        `Your order for ${storeGroup.pharmacy.name} has been sent.`,
+        [{ text: 'View Orders', onPress: () => navigation.navigate('Tabs', { screen: 'Orders' }) }]
+      );
+    } catch (error: any) {
+      Alert.alert('Checkout Failed', error.message || 'Unable to place order at this time. Please try again.');
+    } finally {
+      setIsCheckingOut(null);
+    }
   };
 
   return (
@@ -389,9 +381,10 @@ export const MultiStoreCartScreen = () => {
                 <TouchableOpacity
                   style={[
                     s.checkoutBtn,
-                    (storeSubtotal === 0 && !(storeGroup.hasPrescription && selectedItems.has(`${storeGroup.pharmacy.id}_rx`))) && s.checkoutBtnDisabled
+                    (storeSubtotal === 0 && !(storeGroup.hasPrescription && selectedItems.has(`${storeGroup.pharmacy.id}_rx`))) && s.checkoutBtnDisabled,
+                    isCheckingOut === storeGroup.pharmacy.id && s.checkoutBtnDisabled
                   ]}
-                  disabled={storeSubtotal === 0 && !(storeGroup.hasPrescription && selectedItems.has(`${storeGroup.pharmacy.id}_rx`))}
+                  disabled={(storeSubtotal === 0 && !(storeGroup.hasPrescription && selectedItems.has(`${storeGroup.pharmacy.id}_rx`))) || isCheckingOut === storeGroup.pharmacy.id}
                   onPress={() => {
                     if (payMethod === 'stripe') {
                       setStoreToCheckout(storeGroup);
@@ -402,7 +395,14 @@ export const MultiStoreCartScreen = () => {
                   }}
                   activeOpacity={0.88}
                 >
-                  <Text style={s.checkoutBtnText}>Place Order</Text>
+                  {isCheckingOut === storeGroup.pharmacy.id ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Loader2 color="#FFFFFF" size={16} style={{ /* you might need rotation animation but for simplicity just show loader */ }} />
+                      <Text style={s.checkoutBtnText}>Processing...</Text>
+                    </View>
+                  ) : (
+                    <Text style={s.checkoutBtnText}>Place Order</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -427,10 +427,30 @@ export const MultiStoreCartScreen = () => {
 
         {/* Standardized Payment Method Selector */}
         {cartStores.length > 0 && !attachedPrescription && (
-          <PaymentMethodSelector
-            selectedMethod={payMethod}
-            onSelect={setPayMethod}
-          />
+          <View>
+            <TouchableOpacity 
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: colors.surfaceWhite, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}
+              activeOpacity={0.7}
+              onPress={() => setAllowGenericSubstitutions(!allowGenericSubstitutions)}
+            >
+              <View style={{ marginRight: 12 }}>
+                {allowGenericSubstitutions 
+                  ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
+                  : <Square color={colors.textMuted} size={22} strokeWidth={2.5} />}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>Allow Generic Substitutes</Text>
+                <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+                  If a medicine is out of stock, the pharmacist can swap it for an equivalent generic version.
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <PaymentMethodSelector
+              selectedMethod={payMethod}
+              onSelect={setPayMethod}
+            />
+          </View>
         )}
       </Animated.ScrollView>
 

@@ -18,16 +18,20 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import {
-  Search, Upload, Star, MapPin, Clock,
-  ChevronDown, ChevronRight, Bell, Store, ShoppingCart, X, Heart, Tag, Lightbulb,
-} from 'lucide-react-native';
+import { ShoppingCart, Bell, MapPin, Search, ChevronRight, X, ChevronDown, CheckCircle, Info, Heart, Upload, Lightbulb, Tag, Star, Clock, Store } from 'lucide-react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../context/AuthContext';
 import { PrescriptionHeroGraphic, CategoryTileGraphic } from '../../components/common/HeroIllustrations';
 import { useCart } from '../../context/CartContext';
 import { MedicineCard } from '../../components/common/MedicineCard';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { MOCK_PHARMACIES, MOCK_ORDERS, MOCK_MEDICINES, togglePharmacyFavorite } from '../../mock/demoData';
+import { listMedicines } from '../../api/medicinesApi';
+import type { Medicine } from '../../api/medicinesApi';
+import { pharmacyService } from '../../services/pharmacyService';
+import type { Pharmacy } from '../../api/pharmaciesApi';
+import { listOrders } from '../../api/ordersApi';
+import type { OrderSummary } from '../../api/ordersApi';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
@@ -87,7 +91,9 @@ export const HomeScreen = () => {
   const { isDark, colors } = useTheme();
   const s = makeStyles(colors, isDark);
   const navigation = useNavigation<Nav>();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const { cartItems } = useCart();
   const [, setFavTick] = useState(0);
   const [currentLocation, setCurrentLocation] = useState('Colombo 03 · Nearby Pharmacies');
@@ -97,6 +103,14 @@ export const HomeScreen = () => {
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(14)).current;
 
+  // Sync debounced search
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   useEffect(() => {
     StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
     Animated.parallel([
@@ -105,26 +119,46 @@ export const HomeScreen = () => {
     ]).start();
   }, []);
 
-  const handleToggleFav = (id: string) => {
-    togglePharmacyFavorite(id);
-    setFavTick((t) => t + 1);
+  const { data: medRes, isLoading: isMedLoading } = useQuery({
+    queryKey: ['medicines', debouncedSearch],
+    queryFn: () => listMedicines({ search: debouncedSearch, limit: debouncedSearch ? 10 : 4 }),
+  });
+
+  const { data: pharmRes, isLoading: isPharmLoading } = useQuery({
+    queryKey: ['pharmacies', debouncedSearch],
+    queryFn: () => pharmacyService.getPharmacies({ search: debouncedSearch, limit: debouncedSearch ? 10 : 6 }),
+  });
+
+  const { data: ordRes } = useQuery({
+    queryKey: ['activeOrders'],
+    queryFn: () => listOrders({ state: 'PREPARING,READY_FOR_PICKUP' }),
+  });
+
+  const isInitialLoading = isMedLoading || isPharmLoading;
+  const medicines = medRes?.data || [];
+  const pharmacies = pharmRes?.data || [];
+  const activeOrders = ordRes?.data || [];
+
+  const handleToggleFav = async (pharmacy: Pharmacy) => {
+    try {
+      const { isFavorite, favoriteId } = await pharmacyService.toggleFavorite(pharmacy);
+      
+      queryClient.setQueryData(['pharmacies', debouncedSearch], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.map((p: Pharmacy) => 
+            p.id === pharmacy.id ? { ...p, isFavorite, favoriteId } : p
+          )
+        };
+      });
+      
+    } catch (e) {
+      // Errors logged in service
+    }
   };
 
   const totalCartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const activeOrders = MOCK_ORDERS.filter((o) => o.state === 'PREPARING' || o.state === 'READY_FOR_PICKUP');
-
-  const q = searchQuery.trim().toLowerCase();
-  const filteredMedicines = q
-    ? MOCK_MEDICINES.filter(
-      (m) => m.name.toLowerCase().includes(q) || m.genericName.toLowerCase().includes(q) || m.category.toLowerCase().includes(q)
-    )
-    : MOCK_MEDICINES.slice(0, 4);
-
-  const filteredPharmacies = q
-    ? MOCK_PHARMACIES.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q)
-    )
-    : MOCK_PHARMACIES;
 
   const filteredLocations = LOCATIONS_LIST.filter((loc) =>
     loc.toLowerCase().includes(locationSearch.trim().toLowerCase())
@@ -270,6 +304,8 @@ export const HomeScreen = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Removed redundant Trending OTC section */}
+
         {/* Categories Carousel */}
         <View style={s.sectionHeader}>
           <Text style={s.sectionTitle}>Categories</Text>
@@ -300,8 +336,13 @@ export const HomeScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storeCarousel}>
-          {filteredPharmacies.map((p) => (
+        {isInitialLoading || isPharmLoading ? (
+          <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted }}>Loading pharmacies...</Text>
+          </View>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storeCarousel}>
+            {pharmacies.map((p) => (
             <Pressable
               key={p.id}
               style={({ pressed }) => [s.doorDashStoreCard, pressed && { opacity: 0.92 }]}
@@ -309,7 +350,7 @@ export const HomeScreen = () => {
             >
               <View style={s.storeHeroBanner}>
                 {p.image ? (
-                  <Image source={p.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="cover" />
+                  <Image source={typeof p.image === 'string' ? { uri: p.image } : p.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="cover" />
                 ) : (
                   <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.surfaceWhite, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
                     <Store color={colors.midTeal} size={26} strokeWidth={2.2} />
@@ -339,7 +380,7 @@ export const HomeScreen = () => {
 
                 <AnimatedHeartButton
                   isFavorite={!!p.isFavorite}
-                  onPress={() => handleToggleFav(p.id)}
+                  onPress={() => handleToggleFav(p)}
                   colors={colors}
                   s={s}
                 />
@@ -360,21 +401,29 @@ export const HomeScreen = () => {
               </View>
             </Pressable>
           ))}
+          {pharmacies.length === 0 && (
+            <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted, marginVertical: 20, textAlign: 'center', width: width - 40 }}>
+              No pharmacies found.
+            </Text>
+          )}
         </ScrollView>
+        )}
 
-        {/* Popular Healthcare Products Grid */}
+        {/* Popular Healthcare Products / Search Results Grid */}
         <View style={s.sectionHeader}>
-          <Text style={s.sectionTitle}>Popular Healthcare</Text>
-          <TouchableOpacity onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: 'All' } })}>
-            <Text style={s.seeAllText}>See All</Text>
-          </TouchableOpacity>
+          <Text style={s.sectionTitle}>{searchQuery ? 'Search Results' : 'Popular Healthcare'}</Text>
+          {!searchQuery && (
+            <TouchableOpacity onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: 'All' } })}>
+              <Text style={s.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={s.productGrid}>
-          {filteredMedicines.map((med) => (
+          {medicines.map((med) => (
             <MedicineCard
               key={med.id}
-              med={med}
+              med={med as unknown as any}
               onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: med.category || 'All' } })}
               isGlobal={true}
               onStoreSelectPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}

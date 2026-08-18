@@ -5,11 +5,15 @@ import { useAuth } from '../context/AuthContext';
 import { AuthNavigator } from './AuthNavigator';
 
 export const AppNavigator = () => {
-  const { user } = useAuth();
+  const { isLoggedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) {
+    return null; // Or render a splash screen
+  }
 
   return (
     <NavigationContainer>
-      {user.isLoggedIn ? <MainNavigator /> : <AuthNavigator />}
+      {isLoggedIn ? <MainNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
 };

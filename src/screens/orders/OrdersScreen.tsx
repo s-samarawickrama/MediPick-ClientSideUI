@@ -11,6 +11,7 @@ import { FONTS } from '../../theme/typography';
 import { useOrders } from '../../context/OrderContext';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Order } from '../../types';
+import { Loader2 } from 'lucide-react-native';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -149,12 +150,12 @@ const ActiveOrderCard = ({
 
       {/* Footer */}
       <View style={s.activeCardFooter}>
-        <View style={{ flex: 1, justifyContent: 'center' }}>
+        <View style={{ minWidth: 80, justifyContent: 'center' }}>
           <Text style={s.footerLabel}>Total</Text>
           <Text style={s.footerPrice}>LKR {(order.totalAmount || 0).toLocaleString()}</Text>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-end' }}>
           {isReady ? (
             <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={(e) => { e.stopPropagation(); onAction(); }}>
               <Text style={[s.footerBtnText, s.btnTealText]}>Show Pickup Code</Text>
@@ -208,7 +209,7 @@ export const OrdersScreen = () => {
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
-  const { orders } = useOrders();
+  const { orders, isLoading } = useOrders();
   const activeOrders    = orders.filter((o) => !['COMPLETED', 'CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state));
   const completedOrders = orders.filter((o) => o.state === 'COMPLETED');
   const cancelledOrders = orders.filter((o) => ['CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state));
@@ -279,22 +280,31 @@ export const OrdersScreen = () => {
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {displayed.map((o) => (
-          <ActiveOrderCard 
-            key={o.id} 
-            order={o} 
-            onPress={() => goToOrderDetails(o)} 
-            onAction={() => goToTracker(o)} 
-            onReportIssue={() => navigation.navigate('ReportIssue', { orderId: o.id })}
-          />
-        ))}
-
-        {displayed.length === 0 && (
-          <View style={s.emptyWrap}>
-            <Package color={colors.textMuted} size={44} strokeWidth={1.5} />
-            <Text style={s.emptyTitle}>No {tab} orders</Text>
-            <Text style={s.emptySub}>Your pharmacy orders will appear here</Text>
+        {isLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
+            <Loader2 color={colors.midTeal} size={32} style={{ opacity: 0.8 }} />
+            <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted, marginTop: 12 }}>Loading orders...</Text>
           </View>
+        ) : (
+          <>
+            {displayed.map((o) => (
+              <ActiveOrderCard 
+                key={o.id} 
+                order={o} 
+                onPress={() => goToOrderDetails(o)} 
+                onAction={() => goToTracker(o)} 
+                onReportIssue={() => navigation.navigate('ReportIssue', { orderId: o.id })}
+              />
+            ))}
+
+            {displayed.length === 0 && (
+              <View style={s.emptyWrap}>
+                <Package color={colors.textMuted} size={44} strokeWidth={1.5} />
+                <Text style={s.emptyTitle}>No {tab} orders</Text>
+                <Text style={s.emptySub}>Your pharmacy orders will appear here</Text>
+              </View>
+            )}
+          </>
         )}
       </Animated.ScrollView>
     </View>

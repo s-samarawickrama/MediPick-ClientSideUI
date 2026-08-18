@@ -9,6 +9,8 @@ import { ChevronLeft, Bell, CheckCircle2, Clock, PackageCheck, AlertCircle, Shop
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { listNotifications, markNotificationRead, Notification } from '../../api/notificationsApi';
+import { Loader2 } from 'lucide-react-native';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -18,43 +20,48 @@ export const NotificationsScreen = () => {
   const navigation = useNavigation<Nav>();
   const opacity    = useRef(new Animated.Value(0)).current;
 
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
-  const NOTIFICATIONS = [
-    {
-      id: '1',
-      title: 'Order Ready for Pickup!',
-      body: 'Your prescription #MP123456 is verified and ready at MediCare Central counter.',
-      time: '10 mins ago',
-      type: 'success',
-      read: false,
-      orderId: 'ord-101',
-      target: 'ReadyForPickup' as const,
-    },
-    {
-      id: '2',
-      title: 'New Pharmacy Quotation',
-      body: 'City Pharmacy sent a price quote of LKR 500 for Order #MP982311.',
-      time: '2 hours ago',
-      type: 'quote',
-      read: true,
-      orderId: 'ord-102',
-      target: 'Quotation' as const,
-    },
-    {
-      id: '3',
-      title: 'Prescription Verified',
-      body: 'AI Clarity check passed with 94% confidence rating.',
-      time: 'Yesterday',
-      type: 'info',
-      read: true,
-      orderId: 'ord-101',
-      target: 'OrderDetails' as const,
-    },
-  ];
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await listNotifications();
+        setNotifications(res.data);
+      } catch (err) {
+        console.warn('Failed to fetch notifications', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, []);
+
+  const handlePress = async (n: Notification) => {
+    if (!n.read) {
+      try {
+        await markNotificationRead(n.id);
+        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+      } catch (err) {
+        console.warn('Failed to mark read', err);
+      }
+    }
+
+    if (!n.orderId) return;
+
+    if (n.type === 'QUOTE_RECEIVED') {
+      navigation.navigate('Quotation', { orderId: n.orderId });
+    } else if (n.type === 'PICKUP_READY') {
+      navigation.navigate('ReadyForPickup', { orderId: n.orderId, isPaidOnline: false });
+    } else {
+      navigation.navigate('OrderDetails', { orderId: n.orderId });
+    }
+  };
 
   return (
     <View style={s.screen}>
@@ -73,41 +80,42 @@ export const NotificationsScreen = () => {
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {NOTIFICATIONS.map((n) => (
-          <Pressable
-            key={n.id}
-            onPress={() => {
-              if (n.target === 'Quotation') {
-                navigation.navigate('Quotation', { orderId: n.orderId });
-                return;
-              }
-
-              if (n.target === 'ReadyForPickup') {
-                navigation.navigate('ReadyForPickup', { orderId: n.orderId });
-                return;
-              }
-
-              navigation.navigate('OrderDetails', { orderId: n.orderId });
-            }}
-            style={({ pressed }) => [
-              s.card,
-              !n.read && s.cardUnread,
-              pressed && { opacity: 0.92 },
-            ]}
-          >
-            <View style={s.iconBox}>
-              <Bell color={colors.midTeal} size={20} strokeWidth={2} />
-            </View>
-
-            <View style={{ flex: 1, gap: 2 }}>
-              <View style={s.cardHeader}>
-                <Text style={s.cardTitle}>{n.title}</Text>
-                <Text style={s.cardTime}>{n.time}</Text>
+        {isLoading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
+            <Loader2 color={colors.midTeal} size={32} />
+            <Text style={{ marginTop: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>Loading...</Text>
+          </View>
+        ) : notifications.length === 0 ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 }}>
+            <Bell color={colors.textMuted} size={44} strokeWidth={1.5} />
+            <Text style={{ marginTop: 12, fontFamily: FONTS.bold, fontSize: 16, color: colors.textDark }}>No Notifications</Text>
+            <Text style={{ marginTop: 4, fontFamily: FONTS.medium, color: colors.textMuted }}>You're all caught up!</Text>
+          </View>
+        ) : (
+          notifications.map((n) => (
+            <Pressable
+              key={n.id}
+              onPress={() => handlePress(n)}
+              style={({ pressed }) => [
+                s.card,
+                !n.read && s.cardUnread,
+                pressed && { opacity: 0.92 },
+              ]}
+            >
+              <View style={s.iconBox}>
+                <Bell color={colors.midTeal} size={20} strokeWidth={2} />
               </View>
-              <Text style={s.cardBody}>{n.body}</Text>
-            </View>
-          </Pressable>
-        ))}
+
+              <View style={{ flex: 1, gap: 2 }}>
+                <View style={s.cardHeader}>
+                  <Text style={s.cardTitle}>{n.title}</Text>
+                  <Text style={s.cardTime}>Just now</Text>
+                </View>
+                <Text style={s.cardBody}>{n.body}</Text>
+              </View>
+            </Pressable>
+          ))
+        )}
       </Animated.ScrollView>
     </View>
   );

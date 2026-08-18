@@ -1,38 +1,49 @@
-import {
-  authApi,
-  RequestOtpPayload,
-  VerifyOtpPayload,
-} from '../api/authApi';
-import { ApiResponse, CustomerUserResponse } from '../types/api';
+import { validateToken, logout as apiLogout } from '../api/authApi';
+import { getAccessToken, AuthExpiredError } from '../api/client';
+import { AuthUser } from '../api/authApi';
 
+/**
+ * Authentication Service
+ * Implements the Service Layer pattern for the auth domain.
+ * Abstracts the raw API calls and handles complex business logic (lockouts, session syncing).
+ */
 export const authService = {
-  requestOtp: (payload: RequestOtpPayload, token?: string) =>
-    authApi.requestOtp(payload, token),
+  /**
+   * Syncs the local session with the backend.
+   * Returns the user profile if the session is valid, or throws an AuthExpiredError.
+   */
+  async syncSession(): Promise<AuthUser | null> {
+    const token = await getAccessToken();
+    if (!token) {
+      return null;
+    }
 
-  verifyOtp: (payload: VerifyOtpPayload, token?: string) =>
-    authApi.verifyOtp(payload, token),
+    try {
+      const response = await validateToken();
+      
+      // Business Logic: If the API says the user is locked, we can enforce UI behavior here.
+      if (response.user.isLocked) {
+        console.warn(`[AuthService] User account is locked until ${response.user.lockedUntil}`);
+      }
+      
+      return response.user;
+    } catch (e: any) {
+      if (e instanceof AuthExpiredError) {
+        throw e; // Handled by AuthContext (force logout)
+      }
+      console.warn('[AuthService] Failed to sync session', e);
+      throw e;
+    }
+  },
 
-  resendOtp: (phoneNumber: string, token?: string) =>
-    authApi.resendOtp(phoneNumber, token),
-
-  logout: (token?: string) => authApi.logout(token),
-
-  getMe: (token: string) => authApi.getMe(token),
-
-  updateProfile: (payload: Partial<CustomerUserResponse>, token: string) =>
-    authApi.updateProfile(payload, token),
-
-  updatePreferences: (
-    payload: { pushNotificationsEnabled?: boolean; emailReceiptsEnabled?: boolean },
-    token: string,
-  ) => authApi.updatePreferences(payload, token),
-
-  changePhone: (payload: { newPhoneNumber: string }, token: string) =>
-    authApi.changePhone(payload, token),
-
-  verifyNewPhone: (payload: { newPhoneNumber: string; otp: string }, token: string) =>
-    authApi.verifyNewPhone(payload, token),
+  /**
+   * Performs a complete logout sequence.
+   */
+  async logout(): Promise<void> {
+    try {
+      await apiLogout();
+    } catch (e) {
+      console.warn('[AuthService] Logout API failed, forcing local logout', e);
+    }
+  }
 };
-
-export type AuthService = typeof authService;
-export default authService;

@@ -35,7 +35,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
     >
       <View style={s.productImgBox}>
         {med.image ? (
-          <Image source={med.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
+          <Image source={med.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="contain" />
         ) : (
           <ShoppingBag color={colors.midTeal} size={28} strokeWidth={2} />
         )}
@@ -120,7 +120,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     marginBottom: 6,
-    padding: 6,
+    overflow: 'hidden', // Ensure image respects border radius
   },
   discTag: {
     position: 'absolute',

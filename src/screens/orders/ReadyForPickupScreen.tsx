@@ -15,8 +15,9 @@ import { StripePaymentModal } from '../../components/common/StripePaymentModal';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { useOrders } from '../../context/OrderContext';
-import { MOCK_ORDERS } from '../../mock/demoData';
+import { getOrder, Order } from '../../api/ordersApi';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { Loader2 } from 'lucide-react-native';
 
 import { PaymentMethodSelector } from '../../components/common/PaymentMethodSelector';
 
@@ -33,11 +34,12 @@ export const ReadyForPickupScreen = () => {
   
   console.log('[ReadyForPickupScreen] Rendered. route params:', route.params);
   
-  const { orders, requestPickupExtension, cancelOrder, completeOrder } = useOrders();
-  const order      = orders.find((o) => o.id === route.params?.orderId) ?? orders[1];
+  const { requestPickupExtension, cancelOrder, completeOrder } = useOrders();
   
-  console.log('[ReadyForPickupScreen] Found order:', order?.id);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // We map the backend state to our local UI state PREPARING | READY
   const [orderState, setOrderState]           = useState<'PREPARING' | 'READY'>('PREPARING');
   const [prepSecondsLeft, setPrepSecondsLeft] = useState<number>(5);
   const [payMethod, setPayMethod]             = useState<'counter' | 'stripe'>('counter');
@@ -45,18 +47,43 @@ export const ReadyForPickupScreen = () => {
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [showRateModal, setShowRateModal]     = useState(false);
 
-  const { addStrike } = useAuth();
+
 
   const opacity   = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.95)).current;
 
-  // Auto-transition from PREPARING to READY after 5 seconds
+  // Fetch exact order from backend
+  useEffect(() => {
+    let mounted = true;
+    const fetchIt = async () => {
+      try {
+        if (!route.params?.orderId) return;
+        const data = await getOrder(route.params.orderId);
+        if (mounted) {
+          setOrder(data as unknown as Order);
+          if (data.state === 'READY_FOR_PICKUP' || data.state === 'COMPLETED') {
+            setOrderState('READY');
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to get pickup order:', e);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+    fetchIt();
+    return () => { mounted = false; };
+  }, [route.params?.orderId]);
+
+  // Auto-transition from PREPARING to READY for demonstration
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
       Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, speed: 20 }),
     ]).start();
+
+    if (orderState === 'READY') return;
 
     const interval = setInterval(() => {
       setPrepSecondsLeft((prev) => {
@@ -70,7 +97,7 @@ export const ReadyForPickupScreen = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [orderState]);
 
   const handleCancelOrder = () => {
     Alert.alert(
@@ -81,9 +108,10 @@ export const ReadyForPickupScreen = () => {
         { 
           text: 'Cancel Order (Add Strike)', 
           style: 'destructive',
-          onPress: () => {
-            cancelOrder(order.id);
-            addStrike();
+          onPress: async () => {
+            if (!order) return;
+            await cancelOrder(order.id);
+            // Strikes managed by backend automatically
             Alert.alert('Order Cancelled', 'Your order has been cancelled and 1 Strike has been recorded.', [
               { text: 'OK', onPress: () => navigation.goBack() }
             ]);
@@ -94,9 +122,19 @@ export const ReadyForPickupScreen = () => {
   };
 
   const handleExtendPickup = () => {
+    if (!order) return;
     requestPickupExtension(order.id);
     navigation.navigate('PharmacyChat', { orderId: order.id });
   };
+
+  if (isLoading || !order) {
+    return (
+      <View style={[s.screen, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Loader2 color={colors.midTeal} size={32} />
+        <Text style={{ marginTop: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>Fetching order status...</Text>
+      </View>
+    );
+  }
 
   const otp = order.pickupOtp ?? '849201';
 

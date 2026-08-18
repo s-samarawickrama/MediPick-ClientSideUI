@@ -8,7 +8,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   ChevronLeft, ChevronRight, Camera, ImagePlus, CheckCircle2,
-  Trash2, MessageSquare, AlertCircle, ShoppingBag, Plus, Minus, Check, Store, Search, X, Info
+  Trash2, MessageSquare, AlertCircle, ShoppingBag, Plus, Minus, Check, Store, Search, X, Info, CheckSquare, Square
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '../../components/common/Button';
@@ -35,6 +35,7 @@ export const UploadPrescriptionScreen = () => {
 
   const [note, setNote]                   = useState('');
   const [image, setImage]                 = useState<string | null>(null);
+  const [allowGenericSubstitutions, setAllowGenericSubstitutions] = useState(false);
   
   // Track extra items quantity dictionary: { [itemId]: quantity }
   const [selectedItemQtys, setSelectedItemQtys] = useState<Record<string, number>>(
@@ -219,6 +220,7 @@ export const UploadPrescriptionScreen = () => {
         note,
         pharmacyId: targetPharmacyId,
         pharmacyName: targetPharmacyName,
+        allowGenericSubstitutions,
       });
 
       // Add all selected OTC items to the cart
@@ -412,7 +414,7 @@ export const UploadPrescriptionScreen = () => {
                     {/* Image Box — same as Browse productImgBox */}
                     <View style={[s.gridImgBox, isSelected && s.gridImgBoxSelected]}>
                       {item.image ? (
-                        <Image source={item.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="cover" />
+                        <Image source={item.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="contain" />
                       ) : (
                         <Image source={FUN_3D_BAG} style={{ width: 44, height: 44 }} resizeMode="contain" />
                       )}
@@ -510,6 +512,24 @@ export const UploadPrescriptionScreen = () => {
               </View>
             )}
           </View>
+
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}
+          activeOpacity={0.7}
+          onPress={() => setAllowGenericSubstitutions(!allowGenericSubstitutions)}
+        >
+          <View style={{ marginRight: 12 }}>
+            {allowGenericSubstitutions 
+              ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
+              : <Square color="#CBD5E1" size={22} strokeWidth={2.5} />}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>Allow Generic Substitutes</Text>
+            <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+              If an item is out of stock, the pharmacist can swap it for an equivalent generic version.
+            </Text>
+          </View>
+        </TouchableOpacity>
 
         <Button
           title="Continue to Quality Check"

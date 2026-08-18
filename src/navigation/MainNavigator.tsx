@@ -23,6 +23,7 @@ import { AIQualityCheckScreen } from '../screens/prescription/AIQualityCheckScre
 import { SelectPharmacyScreen } from '../screens/prescription/SelectPharmacyScreen';
 import { ReportIssueScreen } from '../screens/issues/ReportIssueScreen';
 
+
 import { MultiStoreCartScreen } from '../screens/cart/MultiStoreCartScreen';
 import { LegalDocScreen } from '../screens/legal/LegalDocScreen';
 import { HealthTipsScreen } from '../screens/health/HealthTipsScreen';
@@ -31,6 +32,7 @@ import { HealthTipDetailsScreen } from '../screens/health/HealthTipDetailsScreen
 export type MainStackParamList = {
   Tabs: { screen?: string; params?: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } } | undefined;
   Browse: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } | undefined;
+
   UploadPrescription: { pharmacyId?: string; pharmacyName?: string; initialSelectedExtraItems?: Record<string, number> } | undefined;
   AIQualityCheck: { clarityScore?: number; pharmacyId?: string; pharmacyName?: string; selectedItems?: string[]; selectedExtraItemsDict?: Record<string, number>; nextScreen?: string; nextParams?: any } | undefined;
 
@@ -169,6 +171,7 @@ const TabsNavigator = () => (
 export const MainNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Tabs" component={TabsNavigator} />
+
     <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
     <Stack.Screen name="UploadPrescription" component={UploadPrescriptionScreen} />
     <Stack.Screen name="AIQualityCheck" component={AIQualityCheckScreen} options={{ gestureEnabled: false }} />

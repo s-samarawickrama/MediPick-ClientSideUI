@@ -11,8 +11,10 @@ import {
 import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { MOCK_ORDERS, MOCK_PHARMACIES } from '../../mock/demoData';
+import { useOrders } from '../../context/OrderContext';
+import { getCurrentQuote, acceptQuote, declineQuote, Quote } from '../../api/quotesApi';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { Loader2 } from 'lucide-react-native';
 
 type Nav   = NativeStackNavigationProp<MainStackParamList>;
 type Route = RouteProp<MainStackParamList, 'Quotation'>;
@@ -39,11 +41,39 @@ export const QuotationScreen = () => {
   const s = makeStyles(colors);
   const navigation = useNavigation<Nav>();
   const route      = useRoute<Route>();
-  const order      = MOCK_ORDERS.find((o) => o.id === route.params?.orderId) ?? MOCK_ORDERS[1];
-  const pharmacyImage = order.pharmacy?.image ?? MOCK_PHARMACIES.find((p) => p.name === (order.pharmacy?.name ?? 'City Health Pharmacy'))?.image;
+  const { orders, fetchOrders } = useOrders();
+  
+  const order = orders.find((o) => o.id === route.params?.orderId);
+  const pharmacyImage = order?.pharmacy?.image;
+
+  const [quote, setQuote] = React.useState<Quote | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isProcessing, setIsProcessing] = React.useState(false);
 
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY  = useRef(new Animated.Value(10)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }),
+      Animated.spring(slideY, { toValue: 0, useNativeDriver: true, speed: 26 }),
+    ]).start();
+  }, []);
+
+  useEffect(() => {
+    const fetchQuote = async () => {
+      try {
+        if (!order) return;
+        const data = await getCurrentQuote(order.id);
+        setQuote(data);
+      } catch (err) {
+        console.warn('Failed to fetch quote:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchQuote();
+  }, [order]);
 
   const quoteBannerStyle = {
     flexDirection: 'row' as const,
@@ -94,18 +124,18 @@ export const QuotationScreen = () => {
     color: isDark ? '#FED7AA' : '#9A5600',
   };
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }),
-      Animated.spring(slideY, { toValue: 0, useNativeDriver: true, speed: 26 }),
-    ]).start();
-  }, []);
-
-  const handleConfirmOrder = () => {
-    if (order && order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
-      order.state = 'PREPARING';
+  const handleConfirmOrder = async () => {
+    if (!order) return;
+    setIsProcessing(true);
+    try {
+      await acceptQuote(order.id);
+      await fetchOrders(); // refresh global state
+      navigation.navigate('ReadyForPickup', { orderId: order.id, isPaidOnline: false });
+    } catch (e: any) {
+      showAlert('Error', e.message || 'Failed to accept quote.');
+    } finally {
+      setIsProcessing(false);
     }
-    navigation.navigate('ReadyForPickup', { orderId: order?.id ?? 'ord-102', isPaidOnline: false });
   };
 
   const handleDeclineOrder = () => {
@@ -117,35 +147,44 @@ export const QuotationScreen = () => {
         { 
           text: 'Decline Quote', 
           style: 'destructive',
-          onPress: () => {
-            if (order && order.state === 'WAITING_CUSTOMER_CONFIRMATION') {
-              order.state = 'REJECTED';
-              order.rejectReason = 'Customer declined the quotation offer.';
+          onPress: async () => {
+            if (!order) return;
+            setIsProcessing(true);
+            try {
+              await declineQuote(order.id);
+              await fetchOrders();
+              navigation.goBack();
+            } catch (e: any) {
+              showAlert('Error', e.message || 'Failed to decline quote.');
+              setIsProcessing(false);
             }
-            navigation.goBack();
           }
         }
       ]
     );
   };
 
-  // Create an offer dynamically from the order data
+  if (isLoading || !quote || !order) {
+    return (
+      <View style={[s.screen, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Loader2 color={colors.midTeal} size={32} />
+        <Text style={{ marginTop: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>Loading Quote...</Text>
+      </View>
+    );
+  }
+
+  // Create an offer dynamically from the quote data
   const offer = {
-    name: order.pharmacy?.name ?? 'MediCare Central',
-    address: order.pharmacy?.address ?? '124 Galle Rd, Colombo 03',
-    distance: order.pharmacy?.distance ?? '0.8 km',
-    totalOffered: order.totalAmount ?? 500,
-    totalMrp: order.totalMrp ?? 570,
-    items: order.items && order.items.length > 0 
-      ? order.items.map(i => ({
-          name: i.medicine.name + ' x ' + i.quantity,
-          mrp: (i.medicine.mrpPrice || i.price) * i.quantity,
-          offered: i.price * i.quantity
-        }))
-      : [
-          { name: 'Amoxicillin 500mg x 10', mrp: 450, offered: 400 },
-          { name: 'Panadol 500mg x 10',     mrp: 120, offered: 100 },
-        ],
+    name: quote.pharmacyName,
+    address: order?.pharmacy?.address ?? '',
+    distance: order?.pharmacy?.distance ?? '',
+    totalOffered: quote.totalAmount,
+    totalMrp: quote.totalMrp,
+    items: quote.items.map(i => ({
+      name: i.medicineName + (i.quantity > 1 ? ` x ${i.quantity}` : ''),
+      mrp: i.mrp * i.quantity,
+      offered: i.quotedPrice * i.quantity
+    })),
   };
 
   return (
@@ -259,18 +298,20 @@ export const QuotationScreen = () => {
         </View>
 
         {/* Actions */}
-        {order?.state === 'WAITING_CUSTOMER_CONFIRMATION' ? (
+        {quote.status === 'PENDING' ? (
           <>
             <Button
-              title="Confirm Quotation"
+              title={isProcessing ? "Processing..." : "Confirm Quotation"}
               variant="primary"
               onPress={handleConfirmOrder}
+              disabled={isProcessing}
               style={{ marginTop: 6, marginBottom: 4 }}
             />
             <Button
               title="Decline Offer"
               variant="ghost"
               onPress={handleDeclineOrder}
+              disabled={isProcessing}
               textStyle={{ color: colors.error }}
             />
           </>

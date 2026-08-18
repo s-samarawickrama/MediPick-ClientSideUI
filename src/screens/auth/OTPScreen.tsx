@@ -16,6 +16,7 @@ import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import { verifyOtp as apiVerifyOtp, resendOtp as apiResendOtp } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTP'>;
@@ -24,12 +25,13 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route }) => {
   const { isDark, colors } = useTheme();
   const s = makeStyles(colors);
   const { phone } = route.params;
-  const { verifyOtp } = useAuth();
+  const { reloadUser } = useAuth();
   const [otp,      setOtp]      = useState('');
   const [otpErr,   setOtpErr]   = useState('');
   const [loading,  setLoading]  = useState(false);
   const [seconds,  setSeconds]  = useState(59);
   const [canResend, setCanResend] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY  = useRef(new Animated.Value(16)).current;
@@ -49,29 +51,42 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route }) => {
     return () => clearInterval(t);
   }, []);
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (otp.length < 6) { setOtpErr('Enter 6-digit code'); return; }
     setOtpErr('');
     setLoading(true);
-    setTimeout(() => {
-      const ok = verifyOtp(otp);
-      setLoading(false);
-      if (ok) {
-        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    try {
+      await apiVerifyOtp({ phoneNumber: phone, otp });
+      await reloadUser();
+    } catch (e: any) {
+      if (e.code === 'ACCOUNT_LOCKED') {
+        setIsLocked(true);
+        setOtpErr(e.message);
+        setCanResend(false);
+      } else {
+        setOtpErr(e.message || 'Invalid code');
       }
-    }, 700);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (!canResend) return;
     setCanResend(false);
-    setSeconds(59);
-    const t = setInterval(() => {
-      setSeconds((s) => {
-        if (s <= 1) { clearInterval(t); setCanResend(true); return 0; }
-        return s - 1;
-      });
-    }, 1000);
+    try {
+      await apiResendOtp(phone);
+      setSeconds(59);
+      const t = setInterval(() => {
+        setSeconds((s) => {
+          if (s <= 1) { clearInterval(t); setCanResend(true); return 0; }
+          return s - 1;
+        });
+      }, 1000);
+    } catch (e: any) {
+      setOtpErr(e.message || 'Failed to resend code');
+      setCanResend(true);
+    }
   };
 
   return (
@@ -98,7 +113,8 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route }) => {
             <View key={i} style={[
               s.otpBox, 
               otp.length > i && s.otpBoxFilled,
-              !!otpErr && s.otpBoxError
+              !!otpErr && s.otpBoxError,
+              isLocked && { borderColor: colors.borderSoft, backgroundColor: colors.bgWarm }
             ]}>
               <Text style={s.otpText}>{otp[i] || ''}</Text>
             </View>
@@ -111,8 +127,9 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route }) => {
             onChangeText={(val) => {
               const numericVal = val.replace(/[^0-9]/g, '');
               setOtp(numericVal);
-              if (otpErr) setOtpErr('');
+              if (otpErr && !isLocked) setOtpErr('');
             }}
+            editable={!isLocked && !loading}
             autoFocus
           />
         </View>
@@ -168,6 +185,6 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   otpBoxFilled: { borderColor: colors.softLime, backgroundColor: colors.limeWhisper },
   otpBoxError: { borderColor: colors.error, backgroundColor: colors.errorLight },
   otpText: { fontFamily: FONTS.black, fontSize: 24, color: colors.textDark },
-  hiddenOtpInput: { position: 'absolute', width: '100%', height: '100%', opacity: 0 },
+  hiddenOtpInput: { position: 'absolute', width: '100%', height: '100%', color: 'transparent', backgroundColor: 'transparent' },
   errorText: { fontFamily: FONTS.medium, fontSize: 13, color: colors.error, marginTop: -12, marginBottom: 16 },
 });
