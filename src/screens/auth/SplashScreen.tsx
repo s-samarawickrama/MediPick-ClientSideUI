@@ -97,7 +97,7 @@ const makeStyles = (colors: ThemeColors, isDark: boolean) => StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 36,
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,

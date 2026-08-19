@@ -481,7 +481,7 @@ export const BrowseOTCScreen = () => {
                   {selectedMedModal.image ? (
                     <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="contain" />
                   ) : (
-                    <Image source={FUN_3D_BAG} style={{ width: 64, height: 64 }} resizeMode="contain" />
+                    <Image source={FUN_3D_BAG} style={{ width: 96, height: 96 }} resizeMode="contain" />
                   )}
                 </View>
 
@@ -831,7 +831,7 @@ export const BrowseOTCScreen = () => {
                 {selectedMedModal.image ? (
                   <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="contain" />
                 ) : (
-                  <ShoppingBag color={colors.midTeal} size={48} strokeWidth={2} />
+                  <Image source={FUN_3D_BAG} style={{ width: 96, height: 96 }} resizeMode="contain" />
                 )}
               </View>
 

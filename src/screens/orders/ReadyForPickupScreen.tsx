@@ -39,15 +39,13 @@ export const ReadyForPickupScreen = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // We map the backend state to our local UI state PREPARING | READY
-  const [orderState, setOrderState]           = useState<'PREPARING' | 'READY'>('PREPARING');
+  // We map the backend state to our local UI state PREPARING | READY | COMPLETED
+  const [orderState, setOrderState]           = useState<'PREPARING' | 'READY' | 'COMPLETED'>('PREPARING');
   const [prepSecondsLeft, setPrepSecondsLeft] = useState<number>(5);
   const [payMethod, setPayMethod]             = useState<'counter' | 'stripe'>('counter');
   const [isPaidOnline, setIsPaidOnline]       = useState<boolean>(route.params?.isPaidOnline ?? false);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [showRateModal, setShowRateModal]     = useState(false);
-
-
 
   const opacity   = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.95)).current;
@@ -61,7 +59,9 @@ export const ReadyForPickupScreen = () => {
         const data = await getOrder(route.params.orderId);
         if (mounted) {
           setOrder(data as unknown as Order);
-          if (data.state === 'READY_FOR_PICKUP' || data.state === 'COMPLETED') {
+          if (data.state === 'COMPLETED') {
+            setOrderState('COMPLETED');
+          } else if (data.state === 'READY_FOR_PICKUP') {
             setOrderState('READY');
           }
         }
@@ -74,6 +74,17 @@ export const ReadyForPickupScreen = () => {
     fetchIt();
     return () => { mounted = false; };
   }, [route.params?.orderId]);
+
+  const handleMockComplete = async () => {
+    if (orderState !== 'READY' || !order) return;
+    try {
+      await completeOrder(order.id);
+      setOrderState('COMPLETED');
+      Alert.alert("Demo Simulation", "Pharmacist scanned your OTP at the counter. Order is now picked up and completed!");
+    } catch (e) {
+      console.warn('Failed to complete order:', e);
+    }
+  };
 
   // Auto-transition from PREPARING to READY for demonstration
   useEffect(() => {
@@ -148,7 +159,7 @@ export const ReadyForPickupScreen = () => {
           <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.75}>
             <ChevronLeft color={colors.textDark} size={20} strokeWidth={2.5} />
           </TouchableOpacity>
-          <Text style={s.navTitle}>{orderState === 'PREPARING' ? 'Preparing Order...' : 'Ready for Pick Up'}</Text>
+          <Text style={s.navTitle}>{orderState === 'PREPARING' ? 'Preparing Order...' : orderState === 'COMPLETED' ? 'Order Picked Up' : 'Ready for Pick Up'}</Text>
           <View style={{ width: 36 }} />
         </View>
       </View>
@@ -167,6 +178,11 @@ export const ReadyForPickupScreen = () => {
                 <View style={[s.liveDot, { backgroundColor: '#D97706' }]} />
                 <Text style={[s.liveText, { color: '#B45309' }]}>Preparing ({prepSecondsLeft}s)</Text>
               </View>
+            ) : orderState === 'COMPLETED' ? (
+              <View style={[s.liveBadge, { backgroundColor: colors.limeWhisper }]}>
+                <View style={[s.liveDot, { backgroundColor: colors.midTeal }]} />
+                <Text style={[s.liveText, { color: colors.midTeal }]}>Pickup Completed</Text>
+              </View>
             ) : (
               <View style={s.liveBadge}>
                 <View style={s.liveDot} />
@@ -177,15 +193,15 @@ export const ReadyForPickupScreen = () => {
 
           <View style={s.stepperCol}>
             {/* Segment 1: Confirmed -> Preparing */}
-            <View style={[
+             <View style={[
               s.vStepLine, { top: 28 }, 
-              (orderState === 'PREPARING' || orderState === 'READY') && s.vStepLineDone
+              (orderState === 'PREPARING' || orderState === 'READY' || orderState === 'COMPLETED') && s.vStepLineDone
             ]} />
             
             {/* Segment 2: Preparing -> Ready */}
             <View style={[
               s.vStepLine, { top: 76 }, 
-              orderState === 'READY' && s.vStepLineDone,
+              (orderState === 'READY' || orderState === 'COMPLETED') && s.vStepLineDone,
               orderState === 'PREPARING' && s.vStepLineActiveToFuture
             ]} />
 
@@ -219,7 +235,11 @@ export const ReadyForPickupScreen = () => {
 
             {/* Step 3: Ready */}
             <View style={s.vStepItem}>
-              {orderState === 'READY' ? (
+              {orderState === 'COMPLETED' ? (
+                <View style={[s.vStepDot, s.vStepDotDone]}>
+                  <Check color={colors.midTeal} size={14} strokeWidth={3} />
+                </View>
+              ) : orderState === 'READY' ? (
                 <View style={[s.vStepDot, s.vStepDotActive]}>
                   <Clock color="#fff" size={14} strokeWidth={2.5} />
                 </View>
@@ -229,8 +249,12 @@ export const ReadyForPickupScreen = () => {
                 </View>
               )}
               <View style={s.vStepTextContainer}>
-                <Text style={orderState === 'READY' ? s.vStepTitleActive : s.vStepTitle}>Ready for Pickup</Text>
-                <Text style={s.vStepSub}>Waiting for you at the counter</Text>
+                <Text style={orderState === 'COMPLETED' ? s.vStepTitleDone : orderState === 'READY' ? s.vStepTitleActive : s.vStepTitle}>
+                  {orderState === 'COMPLETED' ? 'Picked Up' : 'Ready for Pickup'}
+                </Text>
+                <Text style={s.vStepSub}>
+                  {orderState === 'COMPLETED' ? 'Order completed successfully' : 'Waiting for you at the counter'}
+                </Text>
               </View>
             </View>
           </View>
@@ -261,11 +285,34 @@ export const ReadyForPickupScreen = () => {
               <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 }}>
                 The licensed pharmacy staff is assembling your items. Your 6-digit counter pickup OTP will display automatically once ready (in {prepSecondsLeft}s).
               </Text>
-
+            </View>
+          ) : orderState === 'COMPLETED' ? (
+            <View style={{ alignItems: 'center', paddingVertical: 16, gap: 10 }}>
+              <View style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: isDark ? colors.limeWhisper : '#EAF7E7',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                <CheckCircle2 color={colors.midTeal} size={22} strokeWidth={2.2} />
+              </View>
+              <Text style={{ fontFamily: FONTS.black, fontSize: 16, color: colors.textDark, textAlign: 'center' }}>
+                Pickup Completed
+              </Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textSecondary, textAlign: 'center', lineHeight: 18, paddingHorizontal: 10 }}>
+                Thank you! Your order has been successfully picked up from the pharmacy counter.
+              </Text>
             </View>
           ) : (
-            <>
+            <TouchableOpacity 
+              activeOpacity={0.9} 
+              onPress={handleMockComplete}
+              style={{ width: '100%', alignItems: 'center' }}
+            >
               <Text style={s.ticketHint}>Show this 6-digit OTP code at pharmacy counter</Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.midTeal, marginTop: 2, marginBottom: 8, opacity: 0.8 }}>(Demo: Tap here to simulate counter scan)</Text>
               {/* 6-Digit OTP */}
               <View style={s.otpContainer}>
                 <View style={s.otpRow}>
@@ -276,7 +323,7 @@ export const ReadyForPickupScreen = () => {
                   ))}
                 </View>
               </View>
-            </>
+            </TouchableOpacity>
           )}
         </Animated.View>
 
@@ -301,74 +348,67 @@ export const ReadyForPickupScreen = () => {
           </View>
         </View>
 
-        {/* Payment Method */}
-        <View style={s.paySection}>
-          {isPaidOnline ? (
-            <View style={s.paidCard}>
-              <CheckCircle2 color={colors.midTeal} size={22} strokeWidth={2.5} />
-              <View style={{ flex: 1 }}>
-                <Text style={s.paidTitle}>Payment Completed</Text>
-                <Text style={s.paidSub}>LKR {order.totalAmount || 500} paid via Stripe Online</Text>
-              </View>
-            </View>
-          ) : (
-            <>
-              <PaymentMethodSelector
-                selectedMethod={payMethod}
-                onSelect={setPayMethod}
-              />
-
-              {payMethod === 'stripe' && (
-                <Button
-                  title="Pay Now"
-                  variant="primary"
-                  icon={<CreditCard color="#fff" size={16} strokeWidth={2} />}
-                  style={{ marginTop: 4 }}
-                  onPress={() => setShowStripeModal(true)}
-                />
-              )}
-            </>
-          )}
-        </View>
-
-        {/* Actions */}
+        {/* Payment Method & Actions */}
         {orderState === 'READY' && (
           <>
+            {/* Payment Method Selector */}
+            <View style={s.paySection}>
+              {isPaidOnline ? (
+                <View style={s.paidCard}>
+                  <CheckCircle2 color={colors.midTeal} size={22} strokeWidth={2.5} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.paidTitle}>Payment Completed</Text>
+                    <Text style={s.paidSub}>LKR {order.totalAmount || 500} paid via Stripe Online</Text>
+                  </View>
+                </View>
+              ) : (
+                <>
+                  <PaymentMethodSelector
+                    selectedMethod={payMethod}
+                    onSelect={setPayMethod}
+                  />
+
+                  {payMethod === 'stripe' && (
+                    <Button
+                      title="Pay Now"
+                      variant="primary"
+                      icon={<CreditCard color="#fff" size={16} strokeWidth={2} />}
+                      style={{ marginTop: 8 }}
+                      onPress={() => setShowStripeModal(true)}
+                    />
+                  )}
+                </>
+              )}
+            </View>
+
+            {/* Actions for READY state */}
             {isPaidOnline ? (
               <Button
                 title="Request Time Extension"
                 variant="secondary"
                 onPress={handleExtendPickup}
-                style={{ marginTop: 6 }}
+                style={{ marginTop: 12 }}
               />
             ) : (
               <Text style={{ textAlign: 'center', marginTop: 12, marginBottom: 12, fontSize: 12, color: colors.textMuted, paddingHorizontal: 10 }}>
                 Cannot extend pickup time automatically for unpaid orders. Message the pharmacy to request an extension.
               </Text>
             )}
-            
-            {/* Dev Mock Complete Button */}
-            <Button
-              title="(Dev) Mock Pickup Complete"
-              variant="primary"
-              onPress={() => {
-                completeOrder(order.id);
-                navigation.navigate('Tabs', { screen: 'Orders' });
-              }}
-              style={{ marginTop: 12 }}
-            />
           </>
         )}
 
-        {/* Rate & Report */}
-        <Button
-          title="Rate Experience"
-          variant="primary"
-          icon={<Star color="#fff" size={16} strokeWidth={2.5} />}
-          onPress={() => setShowRateModal(true)}
-          style={{ marginTop: 6 }}
-        />
+        {/* Rate Experience (Completed Screen Primary CTA) */}
+        {orderState === 'COMPLETED' && (
+          <Button
+            title="Rate Experience"
+            variant="primary"
+            icon={<Star color="#fff" size={16} strokeWidth={2.5} />}
+            onPress={() => setShowRateModal(true)}
+            style={{ marginTop: 12 }}
+          />
+        )}
 
+        {/* Cancel Order (Only if preparing or ready) */}
         {(orderState === 'PREPARING' || orderState === 'READY') && (
           <Button
             title="Cancel Order"

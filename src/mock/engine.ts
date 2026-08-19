@@ -201,6 +201,7 @@ export async function dispatchMockRequest(
   else if (m === 'GET' && path === '/orders') response = await h.orders.handleListOrders(query, auth);
   else if (m === 'POST' && path === '/orders') response = await h.orders.handleCreateOrder(auth, body);
   else if (m === 'GET' && matchRoute('/orders/:id', path)) response = await h.orders.handleGetOrder(matchRoute('/orders/:id', path)!.params.id, auth);
+  else if (m === 'PATCH' && matchRoute('/orders/:id', path)) response = await h.orders.handleUpdateOrderState(matchRoute('/orders/:id', path)!.params.id, body, auth);
   else if (m === 'POST' && matchRoute('/orders/:id/cancel', path)) response = await h.orders.handleCancelOrder(matchRoute('/orders/:id/cancel', path)!.params.id, auth);
   else if (m === 'POST' && matchRoute('/orders/:id/reorder', path)) response = await h.orders.handleReorder(matchRoute('/orders/:id/reorder', path)!.params.id, auth);
   else if (m === 'POST' && matchRoute('/orders/:id/ratings', path)) response = await h.orders.handleSubmitRating(matchRoute('/orders/:id/ratings', path)!.params.id, body, auth);

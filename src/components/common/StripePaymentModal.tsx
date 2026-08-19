@@ -58,7 +58,7 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
               <Text style={s.stripeLogoText}>stripe</Text>
             </View>
             <TouchableOpacity style={s.closeBtn} onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <X color="#64748B" size={18} strokeWidth={2.5} />
+              <X color={colors.textMuted} size={18} strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
 
@@ -99,7 +99,7 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
                     value={cardNumber}
                     onChangeText={setCardNumber}
                     placeholder="Card number"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={colors.textMuted}
                     keyboardType="numeric"
                   />
                   <View style={s.cardBadgesRow}>
@@ -121,7 +121,7 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
                     value={expiry}
                     onChangeText={setExpiry}
                     placeholder="MM / YY"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={colors.textMuted}
                   />
                   <View style={s.verticalDivider} />
                   <TextInput
@@ -129,7 +129,7 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
                     value={cvc}
                     onChangeText={setCvc}
                     placeholder="CVC"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={colors.textMuted}
                     keyboardType="numeric"
                     secureTextEntry
                   />
@@ -139,7 +139,7 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
                     value={postalCode}
                     onChangeText={setPostalCode}
                     placeholder="ZIP"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={colors.textMuted}
                   />
                 </View>
               </View>
@@ -177,7 +177,7 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
 
               {/* Secure Footer */}
               <View style={s.footer}>
-                <Lock color="#94A3B8" size={12} strokeWidth={2} />
+                <Lock color={colors.textMuted} size={12} strokeWidth={2} />
                 <Text style={s.footerText}>Secured by Stripe · Terms & Privacy</Text>
               </View>
             </ScrollView>
@@ -194,18 +194,18 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     justifyContent: 'center', padding: 20,
   },
   sheet: {
-    backgroundColor: '#FFFFFF', borderRadius: 20,
+    backgroundColor: colors.surfaceWhite, borderRadius: 20,
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 28, maxHeight: '88%',
   },
   topBar: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+    paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
   stripeBranding: { flexDirection: 'row', alignItems: 'center' },
-  stripeBrandText: { fontFamily: FONTS.medium, fontSize: 12, color: '#64748B' },
+  stripeBrandText: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted },
   stripeLogoText: { fontFamily: FONTS.black, fontSize: 15, color: colors.midTeal, letterSpacing: -0.5 },
   closeBtn: {
-    width: 28, height: 28, borderRadius: 14, backgroundColor: '#F8FAFC',
+    width: 28, height: 28, borderRadius: 14, backgroundColor: colors.surfaceSubtle,
     justifyContent: 'center', alignItems: 'center',
   },
 
@@ -215,7 +215,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingBottom: 4,
   },
-  payToText: { fontFamily: FONTS.bold, fontSize: 14, color: '#1E293B' },
+  payToText: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textSecondary },
   amountText: { fontFamily: FONTS.black, fontSize: 20, color: colors.midTeal },
 
   expressBtn: {
@@ -226,37 +226,37 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   appleLogo: { fontFamily: FONTS.bold, fontSize: 17, color: '#FFFFFF' },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 2 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
-  dividerText: { fontFamily: FONTS.medium, fontSize: 12, color: '#94A3B8' },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.borderSoft },
+  dividerText: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted },
 
   // Unified Stripe Card Box
   stripeCardBox: {
-    backgroundColor: '#FFFFFF', borderRadius: 10, borderWidth: 1, borderColor: colors.midTeal,
+    backgroundColor: colors.surfaceSubtle, borderRadius: 10, borderWidth: 1, borderColor: colors.borderSoft,
     shadowColor: colors.midTeal, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6,
   },
   cardInputRow: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, height: 46,
   },
   cardNumberInput: {
-    flex: 1, fontFamily: FONTS.bold, fontSize: 14, color: '#0F172A',
+    flex: 1, fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark,
   },
   cardBadgesRow: { flexDirection: 'row', gap: 4 },
   cardChip: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   cardChipText: { fontFamily: FONTS.black, fontSize: 9, color: '#FFFFFF' },
 
-  cardBoxDivider: { height: 1, backgroundColor: '#E2E8F0' },
+  cardBoxDivider: { height: 1, backgroundColor: colors.borderSoft },
 
   cardBottomRow: { flexDirection: 'row', alignItems: 'center', height: 44, paddingHorizontal: 12 },
-  cardSubInput: { fontFamily: FONTS.bold, fontSize: 13, color: '#0F172A' },
-  verticalDivider: { width: 1, height: 24, backgroundColor: '#E2E8F0', marginHorizontal: 8 },
+  cardSubInput: { fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark },
+  verticalDivider: { width: 1, height: 24, backgroundColor: colors.borderSoft, marginHorizontal: 8 },
 
   linkCheckRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   checkbox: {
-    width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, borderColor: '#94A3B8',
-    justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF',
+    width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, borderColor: colors.borderSoft,
+    justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surfaceSubtle,
   },
   checkboxChecked: { backgroundColor: colors.midTeal, borderColor: colors.midTeal },
-  linkCheckText: { fontFamily: FONTS.medium, fontSize: 12, color: '#475569' },
+  linkCheckText: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textSecondary },
   linkBold: { fontFamily: FONTS.bold, color: colors.midTeal },
 
   // Brand Teal Primary CTA
@@ -270,13 +270,13 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   stripePayBtnText: { fontFamily: FONTS.bold, fontSize: 15, color: '#FFFFFF' },
 
   footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 4 },
-  footerText: { fontFamily: FONTS.medium, fontSize: 11, color: '#94A3B8' },
+  footerText: { fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted },
 
   successBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 36, gap: 12 },
   successIconCircle: {
     width: 60, height: 60, borderRadius: 30, backgroundColor: '#10B981',
     justifyContent: 'center', alignItems: 'center',
   },
-  successTitle: { fontFamily: FONTS.black, fontSize: 20, color: '#0F172A' },
-  successSub: { fontFamily: FONTS.medium, fontSize: 13, color: '#64748B' },
+  successTitle: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark },
+  successSub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted },
 });

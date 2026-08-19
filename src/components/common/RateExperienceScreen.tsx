@@ -42,7 +42,7 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
       {[1, 2, 3, 4, 5].map((star) => (
         <TouchableOpacity key={star} onPress={() => onSelect(star)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
           <Star
-            color={star <= currentRating ? '#F59E0B' : '#E2E8F0'}
+            color={star <= currentRating ? '#F59E0B' : colors.borderSoft}
             fill={star <= currentRating ? '#F59E0B' : 'transparent'}
             size={size}
             strokeWidth={2}
@@ -64,7 +64,7 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
           <View style={s.header}>
             <Text style={s.headerTitle}>Rate Your Experience</Text>
             <TouchableOpacity style={s.closeBtn} onPress={onClose}>
-              <X color="#64748B" size={18} strokeWidth={2.5} />
+              <X color={colors.textMuted} size={18} strokeWidth={2.5} />
             </TouchableOpacity>
           </View>
 
@@ -108,7 +108,7 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
                 <TextInput
                   style={s.textInput}
                   placeholder="Type here..."
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={colors.textMuted}
                   multiline
                   numberOfLines={3}
                   value={comments}
@@ -137,49 +137,49 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
 
 const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: {
-    flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: colors.surfaceWhite, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 28, maxHeight: '90%',
   },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+    paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
   },
-  headerTitle: { fontFamily: FONTS.black, fontSize: 18, color: '#0F172A' },
+  headerTitle: { fontFamily: FONTS.black, fontSize: 18, color: colors.textDark },
   closeBtn: {
-    width: 30, height: 30, borderRadius: 15, backgroundColor: '#F8FAFC',
+    width: 30, height: 30, borderRadius: 15, backgroundColor: colors.surfaceSubtle,
     justifyContent: 'center', alignItems: 'center',
   },
 
   content: { paddingTop: 16, gap: 16 },
 
   mainQuestionBox: { alignItems: 'center', gap: 10, paddingVertical: 4 },
-  mainQuestionLabel: { fontFamily: FONTS.bold, fontSize: 15, color: '#334155' },
+  mainQuestionLabel: { fontFamily: FONTS.bold, fontSize: 15, color: colors.textSecondary },
   starRow: { flexDirection: 'row', gap: 8, justifyContent: 'center' },
 
-  divider: { height: 1, backgroundColor: '#F1F5F9' },
+  divider: { height: 1, backgroundColor: colors.borderSoft },
 
   subQuestionsWrap: { gap: 14 },
   questionRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  questionLabel: { fontFamily: FONTS.medium, fontSize: 13, color: '#475569' },
+  questionLabel: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textSecondary },
 
   inputBox: { gap: 6 },
-  inputLabel: { fontFamily: FONTS.medium, fontSize: 12, color: '#64748B' },
+  inputLabel: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted },
   textInput: {
-    backgroundColor: '#F8FAFC', borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0',
+    backgroundColor: colors.surfaceSubtle, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft,
     padding: 12, height: 80, textAlignVertical: 'top',
-    fontFamily: FONTS.regular, fontSize: 13, color: '#0F172A',
+    fontFamily: FONTS.regular, fontSize: 13, color: colors.textDark,
   },
 
   skipBtn: { alignItems: 'center', paddingVertical: 8 },
   skipText: { fontFamily: FONTS.bold, fontSize: 14, color: colors.textMuted },
 
   successBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, gap: 10 },
-  successTitle: { fontFamily: FONTS.black, fontSize: 20, color: '#0F172A' },
-  successSub: { fontFamily: FONTS.medium, fontSize: 13, color: '#64748B', textAlign: 'center' },
+  successTitle: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark },
+  successSub: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted, textAlign: 'center' },
 });

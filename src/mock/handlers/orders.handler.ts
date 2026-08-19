@@ -204,3 +204,21 @@ export async function handlePickupExtension(orderId: string, authHeader: string 
   const updated = await OrderStore.update(orderId, { pickupExtensionRequested: true });
   return mockResponse(200, { message: 'Extension requested.', newDeadline: new Date(Date.now() + 86400000).toISOString() });
 }
+
+export async function handleUpdateOrderState(orderId: string, body: any, authHeader: string | null | undefined) {
+  const auth = await requireAuth(authHeader);
+  if ('error' in auth) return auth.error;
+
+  const order = await OrderStore.findById(orderId);
+  if (!order || order.customerId !== auth.payload.sub) {
+    return mockError(404, 'ORDER_NOT_FOUND', 'Order not found.');
+  }
+
+  const { state } = body as any;
+  if (!state) {
+    return mockError(400, 'BAD_REQUEST', 'State is required.');
+  }
+
+  const updated = await OrderStore.update(orderId, { state, updatedAt: new Date().toISOString() });
+  return mockResponse(200, updated);
+}
