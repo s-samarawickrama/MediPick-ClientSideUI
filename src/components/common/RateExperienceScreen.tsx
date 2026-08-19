@@ -55,10 +55,10 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={s.overlay}
+        style={[s.overlay, Platform.OS === 'web' && { height: '100vh', width: '100vw', position: 'fixed', top: 0, left: 0, zIndex: 9999 } as any]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Pressable style={{ flex: 1 }} onPress={onClose} />
+        <Pressable style={{ flex: 1, height: '100%', width: '100%', position: 'absolute' }} onPress={onClose} />
         <Pressable style={s.sheet} onPress={(e) => e.stopPropagation()}>
           {/* Header */}
           <View style={s.header}>
