@@ -99,7 +99,8 @@ export const ReadyForPickupScreen = () => {
       Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, speed: 20 }),
     ]).start();
 
-    if (orderState === 'READY' || error || !order) return;
+    // Prevent starting the PREPARING -> READY interval if we are already READY or COMPLETED
+    if (orderState === 'READY' || orderState === 'COMPLETED' || error || !order) return;
 
     const interval = setInterval(() => {
       setPrepSecondsLeft((prev) => {
