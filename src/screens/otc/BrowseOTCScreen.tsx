@@ -920,11 +920,13 @@ export const BrowseOTCScreen = () => {
               </TouchableOpacity>
 
               <View style={s.modalHeroImg}>
-                {selectedMedModal.image ? (
-                  <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                ) : (
-                  <Image source={FUN_3D_BAG} style={{ width: 96, height: 96 }} resizeMode="contain" />
-                )}
+                <View style={{ width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
+                  {selectedMedModal.image ? (
+                    <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%', transform: [{ scale: 1.25 }] }} resizeMode="cover" />
+                  ) : (
+                    <Image source={FUN_3D_BAG} style={{ width: 96, height: 96 }} resizeMode="contain" />
+                  )}
+                </View>
               </View>
 
               <Text style={s.modalTitle}>{selectedMedModal.name}</Text>
@@ -1283,7 +1285,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: 16,
     backgroundColor: colors.bgWarm, justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
-  modalHeroImg: { height: 160, borderRadius: 16, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  modalHeroImg: { height: 160, padding: 6, borderRadius: 16, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   modalTitle: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark },
   modalGeneric: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted },
   modalPriceRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },
