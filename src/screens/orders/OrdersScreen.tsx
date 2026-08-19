@@ -198,11 +198,20 @@ const ActiveOrderCard = ({
 
 export const OrdersScreen = () => {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<any>();
   const isFocused = useIsFocused();
   const { colors } = useTheme();
   const [tab, setTab] = useState<'active' | 'completed' | 'cancelled'>('active');
   const opacity = useRef(new Animated.Value(0)).current;
   const s = makeStyles(colors);
+
+  useEffect(() => {
+    if (route.params?.initialTab) {
+      setTab(route.params.initialTab);
+      // Clear the param so it doesn't force this tab on subsequent normal visits
+      navigation.setParams({ initialTab: undefined });
+    }
+  }, [route.params?.initialTab, navigation]);
 
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
