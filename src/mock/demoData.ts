@@ -458,6 +458,13 @@ export const MOCK_ORDERS: Order[] = [
     paymentMethod: 'PAY_AT_COUNTER',
     pickupOtp: '112233',
     pickupOtpVerified: true,
+    rating: {
+      overall: 5,
+      service: 5,
+      availability: 4,
+      pickup: 5,
+      comment: "Excellent service and the pharmacist was very helpful!",
+    },
     createdAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
   },
   {

@@ -2,14 +2,14 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Animated, TextInput, StatusBar, Pressable, Modal,
-  KeyboardAvoidingView, Platform, Image, Linking, Dimensions,
+  KeyboardAvoidingView, Platform, Image, Linking, Dimensions, ActivityIndicator
 } from 'react-native';
 import { Search, Pill, X, ShoppingBag, Store, Star, MapPin, Check, Plus, Minus, ChevronLeft, ChevronRight, PhoneCall, MessageSquare, ShoppingCart, FileText, Clock, Heart, Navigation, Phone, Camera } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { MOCK_MEDICINES, MOCK_PHARMACIES } from '../../mock/demoData';
+import { listMedicines } from '../../api/medicinesApi';
 import { pharmacyService } from '../../services/pharmacyService';
 import { MedicineItem as Medicine, Pharmacy } from '../../types';
 import { MainStackParamList } from '../../navigation/MainNavigator';
@@ -40,6 +40,17 @@ export const BrowseOTCScreen = () => {
   const [storeInfoModal,   setStoreInfoModal]   = useState(false);
   const [selectedMedForStores, setSelectedMedForStores] = useState<Medicine | null>(null);
   
+  const [debouncedQuery,   setDebouncedQuery]   = useState('');
+  const [debouncedStoreQuery, setDebouncedStoreQuery] = useState('');
+  
+  const [meds, setMeds] = useState<Medicine[]>([]);
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [storeMedsList, setStoreMedsList] = useState<Medicine[]>([]);
+  
+  const [isMedsLoading, setIsMedsLoading] = useState(false);
+  const [isPharmaciesLoading, setIsPharmaciesLoading] = useState(false);
+  const [isStoreMedsLoading, setIsStoreMedsLoading] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 4;
 
@@ -77,6 +88,17 @@ export const BrowseOTCScreen = () => {
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
+  // Debounce effects
+  useEffect(() => {
+    const handler = setTimeout(() => { setDebouncedQuery(query); }, 500);
+    return () => clearTimeout(handler);
+  }, [query]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => { setDebouncedStoreQuery(storeQuery); }, 500);
+    return () => clearTimeout(handler);
+  }, [storeQuery]);
+
   useFocusEffect(
     useCallback(() => {
       const storeId = route.params?.storeId;
@@ -84,11 +106,13 @@ export const BrowseOTCScreen = () => {
       const initialMode = route.params?.initialMode;
 
       if (storeId) {
-        const match = MOCK_PHARMACIES.find((p) => p.id === storeId);
-        if (match) {
-          setActiveStore(match);
-          setMode('pharmacies');
-        }
+        // Fetch pharmacy by ID
+        pharmacyService.getPharmacyById(storeId).then((res) => {
+          if (res) {
+            setActiveStore(res);
+            setMode('pharmacies');
+          }
+        }).catch(console.error);
       } else if (category) {
         setMedCategory(category);
         setMode('meds');
@@ -99,40 +123,75 @@ export const BrowseOTCScreen = () => {
     }, [route.params])
   );
 
-  const filteredMeds = MOCK_MEDICINES.filter((m) => {
-    const matchQ = m.name.toLowerCase().includes(query.toLowerCase()) || m.genericName.toLowerCase().includes(query.toLowerCase());
-    const matchC = medCategory === 'All' || m.category === medCategory;
-    return matchQ && matchC;
-  }).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  // Fetch global meds
+  useEffect(() => {
+    if (mode !== 'meds' || activeStore) return;
+    const fetchMeds = async () => {
+      setIsMedsLoading(true);
+      try {
+        const res = await listMedicines({ search: debouncedQuery, category: medCategory === 'All' ? undefined : (medCategory as any) });
+        setMeds(res.data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsMedsLoading(false);
+      }
+    };
+    fetchMeds();
+  }, [mode, activeStore, debouncedQuery, medCategory]);
 
-  const sortedPharmacies = [...MOCK_PHARMACIES].filter((p) => {
-    const matchQ = p.name.toLowerCase().includes(query.toLowerCase()) || p.address.toLowerCase().includes(query.toLowerCase());
-    const matchMed = selectedMedForStores 
-      ? selectedMedForStores.availableAtPharmacyIds?.includes(p.id) 
-      : true;
-    return matchQ && matchMed;
-  }).sort((a, b) => {
-    if (pharmacySort === 'distance') return parseFloat(a.distance) - parseFloat(b.distance);
-    return (b.popularity || b.rating) - (a.popularity || a.rating);
-  });
+  // Fetch pharmacies
+  useEffect(() => {
+    if (mode !== 'pharmacies' || activeStore) return;
+    const fetchPharmacies = async () => {
+      setIsPharmaciesLoading(true);
+      try {
+        const res = await pharmacyService.getPharmacies({ search: debouncedQuery });
+        let data = res.data;
+        if (selectedMedForStores) {
+          data = data.filter(p => selectedMedForStores.availableAtPharmacyIds?.includes(p.id));
+        }
+        setPharmacies(data.sort((a, b) => {
+          if (pharmacySort === 'distance') return parseFloat(a.distance) - parseFloat(b.distance);
+          return (b.popularity || b.rating) - (a.popularity || a.rating);
+        }));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsPharmaciesLoading(false);
+      }
+    };
+    fetchPharmacies();
+  }, [mode, activeStore, debouncedQuery, pharmacySort, selectedMedForStores]);
 
-  const storeMeds = MOCK_MEDICINES.filter((m) => {
-    const matchQ = m.name.toLowerCase().includes(storeQuery.toLowerCase()) || m.genericName.toLowerCase().includes(storeQuery.toLowerCase());
-    const matchC = medCategory === 'All' || m.category === medCategory;
-    return matchQ && matchC;
-  }).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  // Fetch store meds
+  useEffect(() => {
+    if (!activeStore) return;
+    const fetchStoreMeds = async () => {
+      setIsStoreMedsLoading(true);
+      try {
+        const res = await listMedicines({ search: debouncedStoreQuery, category: medCategory === 'All' ? undefined : (medCategory as any), pharmacyId: activeStore.id });
+        setStoreMedsList(res.data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsStoreMedsLoading(false);
+      }
+    };
+    fetchStoreMeds();
+  }, [activeStore, debouncedStoreQuery, medCategory]);
 
-  const totalMedPages = Math.max(1, Math.ceil(filteredMeds.length / ITEMS_PER_PAGE));
+  const totalMedPages = Math.max(1, Math.ceil(meds.length / ITEMS_PER_PAGE));
   const medStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedMeds = filteredMeds.slice(medStartIndex, medStartIndex + ITEMS_PER_PAGE);
+  const paginatedMeds = meds.slice(medStartIndex, medStartIndex + ITEMS_PER_PAGE);
 
-  const totalPharmPages = Math.max(1, Math.ceil(sortedPharmacies.length / ITEMS_PER_PAGE));
+  const totalPharmPages = Math.max(1, Math.ceil(pharmacies.length / ITEMS_PER_PAGE));
   const pharmStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedPharmacies = sortedPharmacies.slice(pharmStartIndex, pharmStartIndex + ITEMS_PER_PAGE);
+  const paginatedPharmacies = pharmacies.slice(pharmStartIndex, pharmStartIndex + ITEMS_PER_PAGE);
 
-  const totalStoreMedPages = Math.max(1, Math.ceil(storeMeds.length / ITEMS_PER_PAGE));
+  const totalStoreMedPages = Math.max(1, Math.ceil(storeMedsList.length / ITEMS_PER_PAGE));
   const storeMedStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedStoreMeds = storeMeds.slice(storeMedStartIndex, storeMedStartIndex + ITEMS_PER_PAGE);
+  const paginatedStoreMeds = storeMedsList.slice(storeMedStartIndex, storeMedStartIndex + ITEMS_PER_PAGE);
 
   const cartItems = globalCart.reduce((acc, item) => {
     // Only map quantities for the currently viewed store so they don't bleed across stores!
@@ -429,24 +488,33 @@ export const BrowseOTCScreen = () => {
 
           <View style={{ paddingHorizontal: 20, gap: 14, marginTop: 4 }}>
             {/* Store Available Medicines Grid */}
-            <Text style={s.sectionTitleText}>Available In Store ({storeMeds.length})</Text>
-            <View style={s.productGrid}>
-            {paginatedStoreMeds.map((med) => {
-              const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
-
-              return (
-                <MedicineCard
-                  key={med.id}
-                  med={med}
-                  onPress={() => setSelectedMedModal(med)}
-                  isGlobal={false}
-                  actionComponent={renderQtyStepper(med)}
-                />
-              );
-            })}
+            <Text style={s.sectionTitleText}>Available In Store ({storeMedsList.length})</Text>
+            {isStoreMedsLoading ? (
+              <View style={{ height: 150, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.midTeal} />
+                <Text style={{ marginTop: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>Loading inventory...</Text>
+              </View>
+            ) : storeMedsList.length === 0 ? (
+              <View style={{ height: 150, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontFamily: FONTS.bold, color: colors.textDark, fontSize: 16 }}>No items found</Text>
+              </View>
+            ) : (
+              <>
+                <View style={s.productGrid}>
+                  {paginatedStoreMeds.map((med) => (
+                    <MedicineCard
+                      key={med.id}
+                      med={med}
+                      onPress={() => setSelectedMedModal(med)}
+                      isGlobal={false}
+                      actionComponent={renderQtyStepper(med)}
+                    />
+                  ))}
+                </View>
+                {renderPagination(storeMedsList.length, totalStoreMedPages, storeMedStartIndex)}
+              </>
+            )}
           </View>
-          </View>
-          {renderPagination(storeMeds.length, totalStoreMedPages, storeMedStartIndex)}
           </View>
         </ScrollView>
 
@@ -767,35 +835,59 @@ export const BrowseOTCScreen = () => {
         {mode === 'meds' ? (
           /* Medicines 2-Column Product Grid */
           <View>
-            <View style={s.productGrid}>
-              {paginatedMeds.map((med) => {
-              const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
-
-              return (
-                <MedicineCard
-                  key={med.id}
-                  med={med}
-                  onPress={() => setSelectedMedModal(med)}
-                  isGlobal={true}
-                  onStoreSelectPress={() => {
-                    setSelectedMedForStores(med);
-                    setMode('pharmacies');
-                  }}
-                />
-              );
-            })}
-            </View>
-            {renderPagination(filteredMeds.length, totalMedPages, medStartIndex)}
+            {isMedsLoading ? (
+              <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.midTeal} />
+                <Text style={{ marginTop: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>Searching medicines...</Text>
+              </View>
+            ) : meds.length === 0 ? (
+              <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontFamily: FONTS.bold, color: colors.textDark, fontSize: 16 }}>No medicines found</Text>
+                <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted, marginTop: 4 }}>Try a different search term or category</Text>
+              </View>
+            ) : (
+              <>
+                <View style={s.productGrid}>
+                  {paginatedMeds.map((med) => (
+                    <MedicineCard
+                      key={med.id}
+                      med={med}
+                      onPress={() => setSelectedMedModal(med)}
+                      isGlobal={true}
+                      onStoreSelectPress={() => {
+                        setSelectedMedForStores(med);
+                        setMode('pharmacies');
+                      }}
+                    />
+                  ))}
+                </View>
+                {renderPagination(meds.length, totalMedPages, medStartIndex)}
+              </>
+            )}
           </View>
         ) : (
           /* Partner Pharmacies List */
           <View>
-            <View style={s.pharmacyList}>
-              {paginatedPharmacies.map((p) => (
-                <BrowsePharmacyCard key={p.id} p={p} onPress={() => setActiveStore(p)} s={s} colors={colors} />
-              ))}
-            </View>
-            {renderPagination(sortedPharmacies.length, totalPharmPages, pharmStartIndex)}
+            {isPharmaciesLoading ? (
+              <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.midTeal} />
+                <Text style={{ marginTop: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>Finding pharmacies...</Text>
+              </View>
+            ) : pharmacies.length === 0 ? (
+              <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontFamily: FONTS.bold, color: colors.textDark, fontSize: 16 }}>No pharmacies found</Text>
+                <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted, marginTop: 4 }}>Try a different search term</Text>
+              </View>
+            ) : (
+              <>
+                <View style={s.pharmacyList}>
+                  {paginatedPharmacies.map((p) => (
+                    <BrowsePharmacyCard key={p.id} p={p} onPress={() => setActiveStore(p)} s={s} colors={colors} />
+                  ))}
+                </View>
+                {renderPagination(pharmacies.length, totalPharmPages, pharmStartIndex)}
+              </>
+            )}
           </View>
         )}
       </ScrollView>

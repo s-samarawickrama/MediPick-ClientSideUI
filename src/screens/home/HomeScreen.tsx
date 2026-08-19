@@ -15,6 +15,7 @@ import {
   Platform,
   Alert,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -254,159 +255,162 @@ export const HomeScreen = () => {
           )}
         </View>
 
-        {/* Prescription Hero Banner Card */}
-        <TouchableOpacity
-          style={s.heroBannerCard}
-          onPress={() => navigation.navigate('SelectPharmacy')}
-          activeOpacity={0.92}
-        >
-          <View style={s.heroContent}>
-            <View style={s.discountBadge}>
-              <Text style={s.discountText}>Prescription Matching</Text>
-            </View>
-
-            <Text style={s.heroTitle}>Got a{'\n'}Prescription?</Text>
-            <Text style={s.heroSub}>Upload it and get quotes from top pharmacies instantly.</Text>
-
-            <View style={{ backgroundColor: colors.midTeal, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, marginTop: 10, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Upload color="#fff" size={14} strokeWidth={2.5} />
-              <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF' }}>Upload Prescription</Text>
-            </View>
-          </View>
-
-          <PrescriptionHeroGraphic />
-        </TouchableOpacity>
-
-        {/* Quick Access Pills: Favorites + Health Tips */}
-        <View style={s.quickAccessRow}>
-          <TouchableOpacity
-            style={s.quickPill}
-            onPress={() => (navigation as any).navigate('Favorites')}
-            activeOpacity={0.8}
-          >
-            <View style={s.quickPillIcon}>
-              <Heart color="#EF4444" size={16} strokeWidth={2.5} fill="#EF4444" />
-            </View>
-            <Text style={s.quickPillText}>Favorites</Text>
-            <ChevronRight color={colors.textMuted} size={14} strokeWidth={2} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={s.quickPill}
-            onPress={() => (navigation as any).navigate('HealthTips')}
-            activeOpacity={0.8}
-          >
-            <View style={[s.quickPillIcon, { backgroundColor: isDark ? '#1E1A26' : '#F5D7FF' }]}>
-              <Lightbulb color={colors.deepPlum} size={16} strokeWidth={2.5} />
-            </View>
-            <Text style={s.quickPillText}>Health Tips</Text>
-            <ChevronRight color={colors.textMuted} size={14} strokeWidth={2} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Removed redundant Trending OTC section */}
-
-        {/* Categories Carousel */}
-        <View style={s.sectionHeader}>
-          <Text style={s.sectionTitle}>Categories</Text>
-          <TouchableOpacity onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: 'All' } })}>
-            <Text style={s.seeAllText}>See all</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.categoriesScroll}>
-          {CATEGORIES_MEDICHY.map((cat) => (
+        {!searchQuery && (
+          <>
+            {/* Prescription Hero Banner Card */}
             <TouchableOpacity
-              key={cat.id}
-              style={s.catCardTile}
-              onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: cat.name } })}
-              activeOpacity={0.8}
+              style={s.heroBannerCard}
+              onPress={() => navigation.navigate('SelectPharmacy')}
+              activeOpacity={0.92}
             >
-              <CategoryTileGraphic type={cat.type} />
-              <Text style={s.catTileName} numberOfLines={1}>{cat.name}</Text>
+              <View style={s.heroContent}>
+                <View style={s.discountBadge}>
+                  <Text style={s.discountText}>Prescription Matching</Text>
+                </View>
+
+                <Text style={s.heroTitle}>Got a{'\n'}Prescription?</Text>
+                <Text style={s.heroSub}>Upload it and get quotes from top pharmacies instantly.</Text>
+
+                <View style={{ backgroundColor: colors.midTeal, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, marginTop: 10, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Upload color="#fff" size={14} strokeWidth={2.5} />
+                  <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF' }}>Upload Prescription</Text>
+                </View>
+              </View>
+
+              <PrescriptionHeroGraphic />
             </TouchableOpacity>
-          ))}
-        </ScrollView>
 
-        {/* Featured Pharmacies Carousel */}
-        <View style={s.sectionHeader}>
-          <Text style={s.sectionTitle}>Featured Pharmacies</Text>
-          <TouchableOpacity onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}>
-            <Text style={s.seeAllText}>See all</Text>
-          </TouchableOpacity>
-        </View>
+            {/* Quick Access Pills: Favorites + Health Tips */}
+            <View style={s.quickAccessRow}>
+              <TouchableOpacity
+                style={s.quickPill}
+                onPress={() => (navigation as any).navigate('Favorites')}
+                activeOpacity={0.8}
+              >
+                <View style={s.quickPillIcon}>
+                  <Heart color="#EF4444" size={16} strokeWidth={2.5} fill="#EF4444" />
+                </View>
+                <Text style={s.quickPillText}>Favorites</Text>
+                <ChevronRight color={colors.textMuted} size={14} strokeWidth={2} />
+              </TouchableOpacity>
 
-        {isInitialLoading || isPharmLoading ? (
-          <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted }}>Loading pharmacies...</Text>
-          </View>
-        ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storeCarousel}>
-            {pharmacies.map((p) => (
-            <Pressable
-              key={p.id}
-              style={({ pressed }) => [s.doorDashStoreCard, pressed && { opacity: 0.92 }]}
-              onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies', storeId: p.id } })}
-            >
-              <View style={s.storeHeroBanner}>
-                {p.image ? (
-                  <Image source={typeof p.image === 'string' ? { uri: p.image } : p.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="cover" />
-                ) : (
-                  <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.surfaceWhite, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
-                    <Store color={colors.midTeal} size={26} strokeWidth={2.2} />
+              <TouchableOpacity
+                style={s.quickPill}
+                onPress={() => (navigation as any).navigate('HealthTips')}
+                activeOpacity={0.8}
+              >
+                <View style={[s.quickPillIcon, { backgroundColor: isDark ? '#1E1A26' : '#F5D7FF' }]}>
+                  <Lightbulb color={colors.deepPlum} size={16} strokeWidth={2.5} />
+                </View>
+                <Text style={s.quickPillText}>Health Tips</Text>
+                <ChevronRight color={colors.textMuted} size={14} strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Categories Carousel */}
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>Categories</Text>
+              <TouchableOpacity onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: 'All' } })}>
+                <Text style={s.seeAllText}>See all</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.categoriesScroll}>
+              {CATEGORIES_MEDICHY.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={s.catCardTile}
+                  onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: cat.name } })}
+                  activeOpacity={0.8}
+                >
+                  <CategoryTileGraphic type={cat.type} />
+                  <Text style={s.catTileName} numberOfLines={1}>{cat.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Featured Pharmacies Carousel */}
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>Featured Pharmacies</Text>
+              <TouchableOpacity onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}>
+                <Text style={s.seeAllText}>See all</Text>
+              </TouchableOpacity>
+            </View>
+
+            {isInitialLoading || isPharmLoading ? (
+              <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.midTeal} />
+                <Text style={{ marginTop: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>Loading pharmacies...</Text>
+              </View>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storeCarousel}>
+                {pharmacies.map((p) => (
+                <Pressable
+                  key={p.id}
+                  style={({ pressed }) => [s.doorDashStoreCard, pressed && { opacity: 0.92 }]}
+                  onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies', storeId: p.id } })}
+                >
+                  <View style={s.storeHeroBanner}>
+                    {p.image ? (
+                      <Image source={typeof p.image === 'string' ? { uri: p.image } : p.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: colors.surfaceWhite, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, elevation: 2 }}>
+                        <Store color={colors.midTeal} size={26} strokeWidth={2.2} />
+                      </View>
+                    )}
+
+                    {/* Live Open/Closed Badge */}
+                    <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: isDark ? 'rgba(13,27,28,0.88)' : 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: p.isOpen ? '#10B981' : '#EF4444' }} />
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: colors.textDark }}>
+                        {p.isOpen ? 'Open Now' : 'Closed'}
+                      </Text>
+                    </View>
+
+                    {/* Orange Offer Badge */}
+                    {p.hasOffer && p.offerTag && (
+                      <View style={s.offerBadge}>
+                        <Tag color="#FFFFFF" size={9} strokeWidth={2.5} />
+                        <Text style={s.offerBadgeText}>{p.offerTag}</Text>
+                      </View>
+                    )}
+
+                    <View style={s.storeDistanceTag}>
+                      <MapPin color={colors.midTeal} size={11} strokeWidth={2.5} />
+                      <Text style={s.storeDistanceText}>{p.distance}</Text>
+                    </View>
+
+                    <AnimatedHeartButton
+                      isFavorite={!!p.isFavorite}
+                      onPress={() => handleToggleFav(p)}
+                      colors={colors}
+                      s={s}
+                    />
                   </View>
-                )}
 
-                {/* Live Open/Closed Badge */}
-                <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: isDark ? 'rgba(13,27,28,0.88)' : 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: p.isOpen ? '#10B981' : '#EF4444' }} />
-                  <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: colors.textDark }}>
-                    {p.isOpen ? 'Open Now' : 'Closed'}
+                  <View style={s.storeMetaContainer}>
+                    <Text style={s.storeTitle} numberOfLines={1}>{p.name}</Text>
+                    <Text style={s.storeSubText} numberOfLines={1}>{p.address}</Text>
+
+                    <View style={s.storeRatingRow}>
+                      <Star color="#F59E0B" size={12} fill="#F59E0B" />
+                      <Text style={s.ratingText}>{p.rating}</Text>
+                      <Text style={s.ratingCount}>(120+)</Text>
+                      <Text style={s.bullet}>·</Text>
+                      <Clock color={colors.textMuted} size={11} strokeWidth={2} />
+                      <Text style={s.timeText}>{p.estimatedResponseTime}</Text>
+                    </View>
+                  </View>
+                </Pressable>
+                ))}
+                {pharmacies.length === 0 && (
+                  <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted, marginVertical: 20, textAlign: 'center', width: width - 40 }}>
+                    No pharmacies found.
                   </Text>
-                </View>
-
-                {/* Orange Offer Badge */}
-                {p.hasOffer && p.offerTag && (
-                  <View style={s.offerBadge}>
-                    <Tag color="#FFFFFF" size={9} strokeWidth={2.5} />
-                    <Text style={s.offerBadgeText}>{p.offerTag}</Text>
-                  </View>
                 )}
-
-                <View style={s.storeDistanceTag}>
-                  <MapPin color={colors.midTeal} size={11} strokeWidth={2.5} />
-                  <Text style={s.storeDistanceText}>{p.distance}</Text>
-                </View>
-
-                <AnimatedHeartButton
-                  isFavorite={!!p.isFavorite}
-                  onPress={() => handleToggleFav(p)}
-                  colors={colors}
-                  s={s}
-                />
-              </View>
-
-              <View style={s.storeMetaContainer}>
-                <Text style={s.storeTitle} numberOfLines={1}>{p.name}</Text>
-                <Text style={s.storeSubText} numberOfLines={1}>{p.address}</Text>
-
-                <View style={s.storeRatingRow}>
-                  <Star color="#F59E0B" size={12} fill="#F59E0B" />
-                  <Text style={s.ratingText}>{p.rating}</Text>
-                  <Text style={s.ratingCount}>(120+)</Text>
-                  <Text style={s.bullet}>·</Text>
-                  <Clock color={colors.textMuted} size={11} strokeWidth={2} />
-                  <Text style={s.timeText}>{p.estimatedResponseTime}</Text>
-                </View>
-              </View>
-            </Pressable>
-          ))}
-          {pharmacies.length === 0 && (
-            <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted, marginVertical: 20, textAlign: 'center', width: width - 40 }}>
-              No pharmacies found.
-            </Text>
-          )}
-        </ScrollView>
+              </ScrollView>
+            )}
+          </>
         )}
 
         {/* Popular Healthcare Products / Search Results Grid */}
@@ -419,17 +423,28 @@ export const HomeScreen = () => {
           )}
         </View>
 
-        <View style={s.productGrid}>
-          {medicines.map((med) => (
-            <MedicineCard
-              key={med.id}
-              med={med as unknown as any}
-              onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: med.category || 'All' } })}
-              isGlobal={true}
-              onStoreSelectPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}
-            />
-          ))}
-        </View>
+        {isInitialLoading || isMedLoading ? (
+          <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted }}>Searching medicines...</Text>
+          </View>
+        ) : medicines.length === 0 ? (
+          <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontFamily: FONTS.bold, color: colors.textDark, fontSize: 16 }}>No medicines found</Text>
+            <Text style={{ fontFamily: FONTS.medium, color: colors.textMuted, marginTop: 4 }}>Try a different search term</Text>
+          </View>
+        ) : (
+          <View style={s.productGrid}>
+            {medicines.map((med) => (
+              <MedicineCard
+                key={med.id}
+                med={med as unknown as any}
+                onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: med.category || 'All' } })}
+                isGlobal={true}
+                onStoreSelectPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}
+              />
+            ))}
+          </View>
+        )}
 
       </Animated.ScrollView>
 

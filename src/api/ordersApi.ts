@@ -60,6 +60,13 @@ export interface Order {
   customerNote:               string | null;
   pickupOtp:                  string | null;
   pickupOtpVerified:          boolean;
+  rating?: {
+    overall: number;
+    service: number;
+    availability: number;
+    pickup: number;
+    comment?: string;
+  };
   pickupDeadline:             string | null;   // ISO 8601
   pickupExtensionRequested:   boolean;
   slaPharmacyReviewDeadline:  string | null;

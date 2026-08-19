@@ -1,8 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, StatusBar, Image, Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, MapPin, Receipt, ShieldCheck, CheckCircle2, XCircle, Clock, ChevronRight, FileText, Plus, Phone, MessageCircle } from 'lucide-react-native';
+import { ChevronLeft, MapPin, Receipt, ShieldCheck, CheckCircle2, XCircle, Clock, ChevronRight, FileText, Plus, Phone, MessageCircle, Star } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
@@ -11,6 +11,7 @@ import { useOrders } from '../../context/OrderContext';
 import { MOCK_ORDERS } from '../../mock/demoData';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Button } from '../../components/common/Button';
+import { RateExperienceScreen } from '../../components/common/RateExperienceScreen';
 import { AlertTriangle } from 'lucide-react-native';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
@@ -42,6 +43,7 @@ export const OrderDetailsScreen = () => {
   const route = useRoute<Route>();
   const opacity = useRef(new Animated.Value(0)).current;
   const { orders, cancelOrder } = useOrders();
+  const [showRateModal, setShowRateModal] = useState(false);
 
   const orderId = route.params?.orderId;
   const order = orders.find((o) => o.id === orderId) ?? orders[0];
@@ -316,6 +318,69 @@ export const OrderDetailsScreen = () => {
           </View>
         </View>
 
+        {/* Rating Section */}
+        {isCompleted && (
+          <View style={s.card}>
+            <View style={[s.sectionHeader, { marginBottom: 8 }]}>
+              <Text style={s.sectionTitle}>Your Rating</Text>
+            </View>
+            {order.rating ? (
+              <View style={{ gap: 12 }}>
+                {/* Overall Rating & Comment */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                  <View style={{ flexDirection: 'row', gap: 4, marginTop: 2 }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        color={star <= (order.rating?.overall ?? order.rating?.value ?? 0) ? '#F59E0B' : colors.borderSoft}
+                        fill={star <= (order.rating?.overall ?? order.rating?.value ?? 0) ? '#F59E0B' : 'transparent'}
+                        size={18}
+                        strokeWidth={2}
+                      />
+                    ))}
+                  </View>
+                  {order.rating.comment && (
+                    <Text style={{ fontFamily: FONTS.medium, fontSize: 13, color: colors.textSecondary, flex: 1, lineHeight: 20 }}>
+                      "{order.rating.comment}"
+                    </Text>
+                  )}
+                </View>
+
+                {/* Sub Ratings (if they exist) */}
+                {order.rating.service !== undefined && (
+                  <View style={{ marginTop: 8, padding: 12, backgroundColor: colors.background, borderRadius: 8, gap: 8 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary }}>Pharmacy Service</Text>
+                      <View style={{ flexDirection: 'row', gap: 2 }}>
+                        {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={12} fill={s <= order.rating!.service ? '#F59E0B' : 'transparent'} color={s <= order.rating!.service ? '#F59E0B' : colors.borderSoft} />)}
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary }}>Product Availability</Text>
+                      <View style={{ flexDirection: 'row', gap: 2 }}>
+                        {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={12} fill={s <= order.rating!.availability ? '#F59E0B' : 'transparent'} color={s <= order.rating!.availability ? '#F59E0B' : colors.borderSoft} />)}
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary }}>Counter Pick-up</Text>
+                      <View style={{ flexDirection: 'row', gap: 2 }}>
+                        {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={12} fill={s <= order.rating!.pickup ? '#F59E0B' : 'transparent'} color={s <= order.rating!.pickup ? '#F59E0B' : colors.borderSoft} />)}
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <Button 
+                title="Rate Your Experience" 
+                variant="secondary" 
+                icon={<Star color={colors.midTeal} size={16} />}
+                onPress={() => setShowRateModal(true)} 
+              />
+            )}
+          </View>
+        )}
+
         {/* Actions */}
         <View style={s.actionsWrapper}>
           {isActive ? (
@@ -375,6 +440,14 @@ export const OrderDetailsScreen = () => {
         </View>
 
       </Animated.ScrollView>
+
+      {/* Rating Modal */}
+      <RateExperienceScreen
+        visible={showRateModal}
+        onClose={() => setShowRateModal(false)}
+        pharmacyName={order.pharmacy?.name || 'MediCare Central Pharmacy'}
+        orderId={order.id}
+      />
     </View>
   );
 };

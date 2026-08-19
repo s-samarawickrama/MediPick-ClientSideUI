@@ -425,6 +425,7 @@ export const ReadyForPickupScreen = () => {
         visible={showRateModal}
         onClose={() => setShowRateModal(false)}
         pharmacyName={order.pharmacy?.name || 'MediCare Central Pharmacy'}
+        orderId={order.id}
       />
 
       {/* Stripe Payment Modal */}

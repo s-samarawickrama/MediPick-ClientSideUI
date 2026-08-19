@@ -48,9 +48,10 @@ export async function handleListOrders(
     totalMrp: o.totalMrp,
     totalAmount: o.totalAmount,
     savings: o.savings,
-    isPaid: o.isPaid,
+      isPaid: o.isPaid,
       paymentMethod: o.paymentMethod,
       createdAt: o.createdAt,
+      rating: o.rating,
     };
   });
 
@@ -197,6 +198,15 @@ export async function handleReorder(orderId: string, authHeader: string | null |
 }
 
 export async function handleSubmitRating(orderId: string, body: unknown, authHeader: string | null | undefined) {
+  const payload = body as any;
+  const rating = {
+    overall: payload.rating.overall,
+    service: payload.rating.service,
+    availability: payload.rating.availability,
+    pickup: payload.rating.pickup,
+    comment: payload.comment,
+  };
+  await OrderStore.update(orderId, { rating });
   return mockResponse(200, { message: 'Rating submitted.' });
 }
 

@@ -8,20 +8,25 @@ import { Star, CheckCircle2, X } from 'lucide-react-native';
 import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
+import { submitRating } from '../../api/ordersApi';
+import { useOrders } from '../../context/OrderContext';
 
 interface RateExperienceScreenProps {
   visible: boolean;
   onClose: () => void;
   pharmacyName?: string;
+  orderId?: string;
 }
 
 export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
   visible,
   onClose,
   pharmacyName = 'MediCare Central Pharmacy',
+  orderId,
 }) => {
   const { colors } = useTheme();
   const s = makeStyles(colors);
+  const { fetchOrders } = useOrders();
   const [overallRating, setOverallRating]   = useState(5);
   const [serviceRating, setServiceRating]   = useState(5);
   const [availRating, setAvailRating]       = useState(5);
@@ -29,7 +34,23 @@ export const RateExperienceScreen: React.FC<RateExperienceScreenProps> = ({
   const [comments, setComments]             = useState('');
   const [submitted, setSubmitted]           = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    try {
+      if (orderId) {
+        await submitRating(orderId, {
+          rating: {
+            overall: overallRating,
+            service: serviceRating,
+            availability: availRating,
+            pickup: pickupRating,
+          },
+          comment: comments,
+        });
+        await fetchOrders();
+      }
+    } catch (e) {
+      console.log('Failed to submit rating', e);
+    }
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);

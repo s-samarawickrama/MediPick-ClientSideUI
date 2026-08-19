@@ -124,6 +124,13 @@ export interface Order {
   refundStatus?: 'REFUNDED';
   pickupOtp?: string;
   pickupOtpVerified?: boolean;
+  rating?: {
+    overall: number;
+    service: number;
+    availability: number;
+    pickup: number;
+    comment?: string;
+  };
   pickupDeadline?: string;
   pickupExtensionRequested?: boolean;
   createdAt: string;

@@ -863,6 +863,13 @@ Terminal states: CANCELLED, REJECTED, CLOSED, RESOLVED
     "refundStatus":       null,
     "pickupOtp":          "849201",
     "pickupOtpVerified":  false,
+    "rating": {
+      "overall": 5,
+      "service": 5,
+      "availability": 4,
+      "pickup": 5,
+      "comment": "Very fast and accurate!"
+    },
     "pickupDeadline":     "2026-08-17T14:00:00Z",
     "pickupExtensionRequested": false,
     "slaPharmacyReviewDeadline": null,
@@ -953,12 +960,17 @@ Terminal states: CANCELLED, REJECTED, CLOSED, RESOLVED
 **Request Body:**
 ```json
 {
-  "rating":  5,
+  "rating": {
+    "overall": 5,
+    "service": 5,
+    "availability": 4,
+    "pickup": 5
+  },
   "comment": "Very fast and accurate!"
 }
 ```
 
-**Validation:** `rating` integer 1–5. Only callable when `state = COMPLETED`.
+**Validation:** `rating` integer 1–5 for all fields. Only callable when `state = COMPLETED`.
 
 **Response `201`:**
 ```json
@@ -966,7 +978,12 @@ Terminal states: CANCELLED, REJECTED, CLOSED, RESOLVED
   "success": true,
   "data": {
     "id":         "rat_01j4",
-    "rating":     5,
+    "rating": {
+      "overall": 5,
+      "service": 5,
+      "availability": 4,
+      "pickup": 5
+    },
     "orderId":    "ord-101",
     "pharmacyId": "pha_01j4"
   }
