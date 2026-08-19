@@ -30,8 +30,8 @@ import { HealthTipsScreen } from '../screens/health/HealthTipsScreen';
 import { HealthTipDetailsScreen } from '../screens/health/HealthTipDetailsScreen';
 
 export type MainStackParamList = {
-  Tabs: { screen?: string; params?: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } } | undefined;
-  Browse: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string } | undefined;
+  Tabs: { screen?: string; params?: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string; medId?: string } } | undefined;
+  Browse: { initialMode?: 'meds' | 'pharmacies'; category?: string; storeId?: string; medId?: string } | undefined;
 
   UploadPrescription: { pharmacyId?: string; pharmacyName?: string; initialSelectedExtraItems?: Record<string, number> } | undefined;
   AIQualityCheck: { clarityScore?: number; pharmacyId?: string; pharmacyName?: string; selectedItems?: string[]; selectedExtraItemsDict?: Record<string, number>; nextScreen?: string; nextParams?: any } | undefined;

@@ -168,11 +168,13 @@ export async function handleOtpVerify(body: unknown) {
   const refreshToken = generateRefreshToken();
   await RefreshTokenStore.create(customer.id, refreshToken);
 
-  // Seed demo orders if the user has none (for UI testing)
+  // Seed demo orders if the user has none or is missing some (for UI testing)
   const existingOrders = await OrderStore.findByCustomer(customer.id);
-  if (existingOrders.length === 0) {
-    for (let i = 0; i < MOCK_ORDERS.length; i++) {
-      const mo = MOCK_ORDERS[i];
+  const existingOrderNumbers = new Set(existingOrders.map(o => o.orderNumber));
+  
+  for (let i = 0; i < MOCK_ORDERS.length; i++) {
+    const mo = MOCK_ORDERS[i];
+    if (!existingOrderNumbers.has(mo.orderNumber)) {
       await OrderStore.create({
         ...mo,
         id: `ord-${Date.now()}-${i}`,

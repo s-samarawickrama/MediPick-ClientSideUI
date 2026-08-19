@@ -15,6 +15,8 @@ interface MedicineCardProps {
   
   // If provided, renders in place of the store select button (e.g. for qty stepper)
   actionComponent?: React.ReactNode;
+  forceOutOfStockBadge?: boolean;
+  activePharmacyId?: string;
 }
 
 export const MedicineCard: React.FC<MedicineCardProps> = ({
@@ -22,11 +24,15 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
   onPress,
   isGlobal = true,
   onStoreSelectPress,
-  actionComponent
+  actionComponent,
+  forceOutOfStockBadge,
+  activePharmacyId
 }) => {
   const { colors } = useTheme();
   const s = makeStyles(colors);
-  const disc = Math.round(((med.mrpPrice - med.pharmacyPrice) / med.mrpPrice) * 100);
+  
+  const activePrice = (activePharmacyId && med.pharmacyDiscounts?.[activePharmacyId]) ?? med.pharmacyPrice;
+  const disc = Math.round(((med.mrpPrice - activePrice) / med.mrpPrice) * 100);
 
   return (
     <Pressable
@@ -52,7 +58,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
               <Text style={s.rxBadgeText}>Prescription Needed</Text>
             </View>
           )}
-          {!med.inStock && (
+          {(!med.inStock || forceOutOfStockBadge) && (
             <View style={s.oosBadge}>
               <Text style={s.oosBadgeText}>Out of Stock</Text>
             </View>
@@ -84,15 +90,19 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
           >
             <Store color={colors.midTeal} size={12} strokeWidth={2.2} />
             <Text style={s.selectStoreBadgeText}>
-              {med.availableAtPharmacyIds?.length ? `Available at ${med.availableAtPharmacyIds.length} stores` : 'Unavailable'}
+              {!med.inStock 
+                ? 'Currently Unavailable' 
+                : med.availableAtPharmacyIds?.length 
+                  ? `Available at ${med.availableAtPharmacyIds.length} stores` 
+                  : 'Unavailable'}
             </Text>
           </TouchableOpacity>
         </>
       ) : (
         <View style={s.cardFooter}>
           <View>
-            <Text style={s.prodPrice}>LKR {med.pharmacyPrice}</Text>
-            {med.mrpPrice > med.pharmacyPrice && (
+            <Text style={s.prodPrice}>LKR {activePrice}</Text>
+            {med.mrpPrice > activePrice && (
               <Text style={s.prodMrp}>LKR {med.mrpPrice}</Text>
             )}
           </View>

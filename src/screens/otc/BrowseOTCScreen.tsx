@@ -9,7 +9,7 @@ import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navig
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { listMedicines } from '../../api/medicinesApi';
+import { listMedicines, getMedicine } from '../../api/medicinesApi';
 import { pharmacyService } from '../../services/pharmacyService';
 import { MedicineItem as Medicine, Pharmacy } from '../../types';
 import { MainStackParamList } from '../../navigation/MainNavigator';
@@ -104,6 +104,7 @@ export const BrowseOTCScreen = () => {
       const storeId = route.params?.storeId;
       const category = route.params?.category;
       const initialMode = route.params?.initialMode;
+      const medId = route.params?.medId;
 
       if (storeId) {
         // Fetch pharmacy by ID
@@ -119,6 +120,18 @@ export const BrowseOTCScreen = () => {
         setActiveStore(null);
       } else if (initialMode) {
         setMode(initialMode);
+      }
+
+      if (medId) {
+        getMedicine(medId).then((med) => {
+          if (med) {
+            if (initialMode === 'pharmacies') {
+              setSelectedMedForStores(med as unknown as Medicine);
+            } else {
+              setSelectedMedModal(med as unknown as Medicine);
+            }
+          }
+        }).catch(console.error);
       }
     }, [route.params])
   );
@@ -228,7 +241,8 @@ export const BrowseOTCScreen = () => {
   const renderQtyStepper = (med: Medicine) => {
     const qty = cartItems[med.id] || 0;
     
-    if (!med.inStock || med.isRxRequired) {
+    const isOutOfStockAtStore = activeStore && med.outOfStockPharmacyIds?.includes(activeStore.id);
+    if (!med.inStock || med.isRxRequired || (activeStore && !activeStore.isOpen) || isOutOfStockAtStore) {
       return <View style={{ width: 32, height: 32 }} />;
     }
 
@@ -437,12 +451,15 @@ export const BrowseOTCScreen = () => {
 
             {/* Store-Specific Prescription Attachment Card */}
             <TouchableOpacity
-              style={s.attachRxCard}
-              onPress={() => navigation.navigate('UploadPrescription', {
-                pharmacyId: activeStore.id,
-                pharmacyName: activeStore.name,
-              })}
-              activeOpacity={0.88}
+              style={[s.attachRxCard, !activeStore.isOpen && { opacity: 0.6 }]}
+              onPress={() => {
+                if (!activeStore.isOpen) return;
+                navigation.navigate('UploadPrescription', {
+                  pharmacyId: activeStore.id,
+                  pharmacyName: activeStore.name,
+                });
+              }}
+              activeOpacity={activeStore.isOpen ? 0.88 : 1}
             >
               <FileText color={colors.midTeal} size={20} strokeWidth={2} />
               <View style={{ flex: 1 }}>
@@ -507,6 +524,8 @@ export const BrowseOTCScreen = () => {
                       med={med}
                       onPress={() => setSelectedMedModal(med)}
                       isGlobal={false}
+                      activePharmacyId={activeStore?.id}
+                      forceOutOfStockBadge={activeStore ? med.outOfStockPharmacyIds?.includes(activeStore.id) : false}
                       actionComponent={renderQtyStepper(med)}
                     />
                   ))}
@@ -547,7 +566,7 @@ export const BrowseOTCScreen = () => {
 
                 <View style={s.modalHeroImg}>
                   {selectedMedModal.image ? (
-                    <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="contain" />
+                    <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="cover" />
                   ) : (
                     <Image source={FUN_3D_BAG} style={{ width: 96, height: 96 }} resizeMode="contain" />
                   )}
@@ -557,7 +576,7 @@ export const BrowseOTCScreen = () => {
                 <Text style={s.modalGeneric}>{selectedMedModal.genericName} · {selectedMedModal.dosage}</Text>
 
                 <View style={s.modalPriceRow}>
-                  <Text style={s.modalPrice}>LKR {selectedMedModal.pharmacyPrice}</Text>
+                  <Text style={s.modalPrice}>LKR {activeStore ? (selectedMedModal.pharmacyDiscounts?.[activeStore.id] ?? selectedMedModal.pharmacyPrice) : selectedMedModal.pharmacyPrice}</Text>
                   <Text style={s.modalMrp}>LKR {selectedMedModal.mrpPrice}</Text>
                 </View>
 
@@ -588,7 +607,7 @@ export const BrowseOTCScreen = () => {
                     }}
                     activeOpacity={0.88}
                   >
-                    <Text style={s.modalAddBtnText}>Add Item to Cart · LKR {selectedMedModal.pharmacyPrice}</Text>
+                    <Text style={s.modalAddBtnText}>Add Item to Cart · LKR {activeStore ? (selectedMedModal.pharmacyDiscounts?.[activeStore.id] ?? selectedMedModal.pharmacyPrice) : selectedMedModal.pharmacyPrice}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -933,7 +952,7 @@ export const BrowseOTCScreen = () => {
               <Text style={s.modalGeneric}>{selectedMedModal.genericName} · {selectedMedModal.dosage}</Text>
 
               <View style={s.modalPriceRow}>
-                <Text style={s.modalPrice}>LKR {selectedMedModal.pharmacyPrice}</Text>
+                <Text style={s.modalPrice}>LKR {activeStore ? (selectedMedModal.pharmacyDiscounts?.[activeStore.id] ?? selectedMedModal.pharmacyPrice) : selectedMedModal.pharmacyPrice}</Text>
                 <Text style={s.modalMrp}>LKR {selectedMedModal.mrpPrice}</Text>
               </View>
 
@@ -964,7 +983,11 @@ export const BrowseOTCScreen = () => {
                 >
                   <Text style={s.modalAddBtnText}>View Available Stores</Text>
                 </TouchableOpacity>
-              ) : !selectedMedModal.inStock ? (
+              ) : !activeStore.isOpen ? (
+                <View style={[s.modalAddBtn, { backgroundColor: colors.borderSoft }]}>
+                  <Text style={[s.modalAddBtnText, { color: colors.textMuted }]}>Pharmacy is Closed</Text>
+                </View>
+              ) : (!selectedMedModal.inStock || selectedMedModal.outOfStockPharmacyIds?.includes(activeStore.id)) ? (
                 <View style={[s.modalAddBtn, { backgroundColor: colors.borderSoft }]}>
                   <Text style={[s.modalAddBtnText, { color: colors.textMuted }]}>Out of Stock</Text>
                 </View>
@@ -977,7 +1000,7 @@ export const BrowseOTCScreen = () => {
                   }}
                   activeOpacity={0.88}
                 >
-                  <Text style={s.modalAddBtnText}>Add Item to Cart · LKR {selectedMedModal.pharmacyPrice}</Text>
+                  <Text style={s.modalAddBtnText}>Add Item to Cart · LKR {activeStore ? (selectedMedModal.pharmacyDiscounts?.[activeStore.id] ?? selectedMedModal.pharmacyPrice) : selectedMedModal.pharmacyPrice}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1412,8 +1435,10 @@ const BrowsePharmacyCard = ({ p, onPress, s, colors }: any) => {
           </Animated.View>
         </TouchableOpacity>
 
-        <View style={[s.viewStorePill, { marginTop: 'auto' }]}>
-          <Text style={s.viewStoreText}>Visit Store</Text>
+        <View style={[s.viewStorePill, { marginTop: 'auto', backgroundColor: p.isOpen ? colors.bgWarm : colors.borderSoft }]}>
+          <Text style={[s.viewStoreText, !p.isOpen && { color: colors.textMuted }]}>
+            {p.isOpen ? 'Visit Store' : 'Closed'}
+          </Text>
         </View>
       </View>
     </Pressable>

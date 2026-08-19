@@ -40,6 +40,8 @@ export interface MedicineItem {
   category: 'Cold & Flu' | 'First Aid' | 'Vitamins' | 'Personal Care' | 'Chronic' | 'Skincare' | 'Supplements';
   inStock: boolean;
   availableAtPharmacyIds?: string[]; // Array of pharmacy IDs where this is available
+  outOfStockPharmacyIds?: string[]; // Array of pharmacy IDs where this is currently out of stock
+  pharmacyDiscounts?: Record<string, number>; // Maps pharmacy ID to a custom discounted price. If missing, defaults to pharmacyPrice.
   popularity?: number; // 0-100 rating for sorting
   image?: string | any;
   description?: string;

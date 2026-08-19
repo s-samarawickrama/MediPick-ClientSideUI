@@ -148,7 +148,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const subtotal = cartItems.reduce((acc, item) => acc + item.medicine.pharmacyPrice * item.quantity, 0);
+  const subtotal = cartItems.reduce((acc, item) => {
+    const discountedPrice = item.medicine.pharmacyDiscounts?.[item.pharmacy.id] ?? item.medicine.pharmacyPrice;
+    return acc + discountedPrice * item.quantity;
+  }, 0);
   const totalMrp = cartItems.reduce((acc, item) => acc + item.medicine.mrpPrice * item.quantity, 0);
 
   return (

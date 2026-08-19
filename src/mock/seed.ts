@@ -126,9 +126,14 @@ export const SEED_MEDICINES = [
     isRxRequired: false,
     inStock: true,
     availableAtPharmacyIds: ['ph-1', 'ph-2', 'ph-4'],
+    outOfStockPharmacyIds: ['ph-4'],
+    pharmacyDiscounts: {
+      'ph-1': 100, 
+      'ph-2': 110, 
+    },
     popularity: 100,
     description: 'Fast-acting paracetamol for headaches, fever, and mild to moderate pain relief.',
-    image: require('../../Gemini_Generated_Image_xign6zxign6zxign.png'),
+    image: require('../../Gemini_Generated_Image_161io7161io7161i.png'),
   },
   {
     id: 'med-2',
@@ -142,9 +147,10 @@ export const SEED_MEDICINES = [
     isRxRequired: false,
     inStock: true,
     availableAtPharmacyIds: ['ph-1', 'ph-3', 'ph-5'],
+    outOfStockPharmacyIds: ['ph-1'],
     popularity: 85,
     description: 'High-strength Vitamin C effervescent tablets to support your immune system daily.',
-    image: require('../../Gemini_Generated_Image_72h90f72h90f72h9.png'),
+    image: require('../../Gemini_Generated_Image_xe039pxe039pxe03.png'),
   },
   {
     id: 'med-3',
@@ -160,7 +166,7 @@ export const SEED_MEDICINES = [
     availableAtPharmacyIds: ['ph-1', 'ph-2', 'ph-3', 'ph-4', 'ph-5'],
     popularity: 90,
     description: 'Broad-spectrum antibiotic for bacterial infections. Requires a valid prescription.',
-    image: require('../../Gemini_Generated_Image_mhgsf9mhgsf9mhgs.png'),
+    image: require('../../Gemini_Generated_Image_72h90f72h90f72h9.png'),
   },
   {
     id: 'med-4',
@@ -176,7 +182,7 @@ export const SEED_MEDICINES = [
     availableAtPharmacyIds: ['ph-1', 'ph-2', 'ph-3', 'ph-4', 'ph-5'],
     popularity: 75,
     description: 'Flexible waterproof adhesive bandages for cuts and minor wounds. Pack of 20.',
-    image: require('../../Gemini_Generated_Image_xe039pxe039pxe03.png'),
+    image: require('../../Gemini_Generated_Image_mhgsf9mhgsf9mhgs.png'),
   },
   {
     id: 'med-5',
@@ -192,7 +198,7 @@ export const SEED_MEDICINES = [
     availableAtPharmacyIds: ['ph-1', 'ph-5'],
     popularity: 95,
     description: 'Oral diabetes medication for type 2 diabetes management. Prescription only.',
-    image: require('../../Gemini_Generated_Image_161io7161io7161i.png'),
+    image: require('../../Gemini_Generated_Image_xign6zxign6zxign.png'),
   },
   {
     id: 'med-6',
@@ -224,7 +230,7 @@ export const SEED_MEDICINES = [
     availableAtPharmacyIds: ['ph-1', 'ph-2', 'ph-4', 'ph-5'],
     popularity: 87,
     description: 'Anti-inflammatory pain relief for headaches, muscle pain, and fever.',
-    image: require('../../Gemini_Generated_Image_72h90f72h90f72h9.png'),
+    image: require('../../Gemini_Generated_Image_161io7161io7161i.png'), // Using Panadol image
   },
   {
     id: 'med-8',

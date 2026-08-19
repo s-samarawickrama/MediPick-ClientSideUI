@@ -100,7 +100,7 @@ function parsePath(url: string, baseUrl: string): { path: string; query: Record<
   if (qs) {
     qs.split('&').forEach((pair) => {
       const [k, v] = pair.split('=');
-      if (k) query[decodeURIComponent(k)] = decodeURIComponent(v ?? '');
+      if (k) query[decodeURIComponent(k)] = decodeURIComponent((v ?? '').replace(/\+/g, '%20'));
     });
   }
   return { path: path ?? '/', query };

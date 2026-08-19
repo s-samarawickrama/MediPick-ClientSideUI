@@ -76,9 +76,13 @@ export const OrderDetailsScreen = () => {
 
     if (order.items && order.items.length > 0) {
       order.items.forEach((oi) => {
-        const fullMed = MOCK_MEDICINES.find((m) => m.id === oi.medicineId);
+        const medIdToMatch = oi.medicine?.id || (oi as any).medicineId;
+        const fullMed = MOCK_MEDICINES.find((m) => m.id === medIdToMatch);
         if (fullMed) {
-          if (fullMed.inStock) {
+          const isAvailableAtPharmacy = fullMed.availableAtPharmacyIds?.includes(order.pharmacy!.id) ?? true;
+          const isOutOfStockAtPharmacy = fullMed.outOfStockPharmacyIds?.includes(order.pharmacy!.id) ?? false;
+          
+          if (fullMed.inStock && isAvailableAtPharmacy && !isOutOfStockAtPharmacy) {
             validItems.push({
               medicine: fullMed,
               quantity: oi.quantity,

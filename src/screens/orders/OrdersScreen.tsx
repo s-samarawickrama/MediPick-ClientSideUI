@@ -9,9 +9,11 @@ import { Store, Clock, Package, Navigation2, FileText, Pill, Receipt, Camera, St
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { useOrders } from '../../context/OrderContext';
+import { useCart } from '../../context/CartContext';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Order } from '../../types';
 import { Loader2 } from 'lucide-react-native';
+import { MOCK_MEDICINES } from '../../mock/demoData';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -255,22 +257,28 @@ export const OrdersScreen = () => {
 
   const { processReorder } = useCart();
 
-  const handleReorder = (order: Order) => {
-    if (order.pharmacy && order.pharmacy.isOpen === false) {
+  const handleReorder = async (summaryOrder: Order) => {
+    if (summaryOrder.pharmacy && summaryOrder.pharmacy.isOpen === false) {
       showAlert('Pharmacy Closed', 'This pharmacy is currently closed. Please try again later.');
       return;
     }
+
+    try {
+      const { getOrder } = require('../../api/ordersApi');
+      const order = await getOrder(summaryOrder.id);
 
     const validItems: any[] = [];
     let hasOutOfStock = false;
 
     if (order.items && order.items.length > 0) {
       order.items.forEach((oi) => {
-        // MOCK_MEDICINES should be imported if not already, wait, it's used via useCart or we need to import it.
-        // I will import it if it's missing, let's see.
-        const fullMed = require('../../mock/demoData').MOCK_MEDICINES.find((m: any) => m.id === oi.medicineId);
+        const medIdToMatch = oi.medicine?.id || (oi as any).medicineId;
+        const fullMed = MOCK_MEDICINES.find((m: any) => m.id === medIdToMatch);
         if (fullMed) {
-          if (fullMed.inStock) {
+          const isAvailableAtPharmacy = fullMed.availableAtPharmacyIds?.includes(order.pharmacy!.id) ?? true;
+          const isOutOfStockAtPharmacy = fullMed.outOfStockPharmacyIds?.includes(order.pharmacy!.id) ?? false;
+          
+          if (fullMed.inStock && isAvailableAtPharmacy && !isOutOfStockAtPharmacy) {
             validItems.push({
               medicine: fullMed,
               quantity: oi.quantity,
@@ -299,11 +307,36 @@ export const OrdersScreen = () => {
     }
 
     if (hasOutOfStock) {
-      showAlert('Items Out of Stock', 'Some items from this order are currently out of stock and could not be added.');
+      if (Platform.OS === 'web') {
+        const proceed = window.confirm('Some items from this order are out of stock and could not be added. Proceed to cart with available items?');
+        if (!proceed) return;
+        processReorder(validItems, attachedRx);
+        navigation.navigate('MultiStoreCart');
+      } else {
+        const { Alert } = require('react-native');
+        Alert.alert(
+          'Items Out of Stock',
+          'Some items from this order are out of stock and could not be added. Proceed to cart with available items?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Proceed to Cart', 
+              onPress: () => {
+                processReorder(validItems, attachedRx);
+                navigation.navigate('MultiStoreCart');
+              }
+            }
+          ]
+        );
+      }
+    } else {
+      processReorder(validItems, attachedRx);
+      navigation.navigate('MultiStoreCart');
     }
-
-    processReorder(validItems, attachedRx);
-    navigation.navigate('Tabs', { screen: 'Cart' });
+    } catch (e) {
+      console.warn('Failed to fetch full order for reorder:', e);
+      showAlert('Error', 'Could not load order details for reordering.');
+    }
   };
 
   return (

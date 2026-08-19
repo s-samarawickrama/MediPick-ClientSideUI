@@ -441,9 +441,9 @@ export const HomeScreen = () => {
               <MedicineCard
                 key={med.id}
                 med={med as unknown as any}
-                onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: med.category || 'All' } })}
+                onPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'meds', category: med.category || 'All', medId: med.id } })}
                 isGlobal={true}
-                onStoreSelectPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies' } })}
+                onStoreSelectPress={() => (navigation as any).navigate('Tabs', { screen: 'Browse', params: { initialMode: 'pharmacies', medId: med.id } })}
               />
             ))}
           </View>

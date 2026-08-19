@@ -108,6 +108,12 @@ export const MOCK_MEDICINES: MedicineItem[] = [
     category: 'Cold & Flu',
     inStock: true,
     availableAtPharmacyIds: ['ph-1', 'ph-2', 'ph-4'],
+    outOfStockPharmacyIds: ['ph-4'],
+    pharmacyDiscounts: {
+      'ph-1': 100, // MediPick Pharmacy gets a deep discount
+      'ph-2': 110, // HealthFirst gets a small discount
+      // Others default to pharmacyPrice (100) or mrpPrice. Wait, if pharmacyPrice is 100, we should set it higher.
+    },
     popularity: 100,
     description: 'Fast-acting paracetamol for headaches, fever, and mild to moderate pain relief.',
     image: require('../../Gemini_Generated_Image_xign6zxign6zxign.png'),
@@ -121,8 +127,9 @@ export const MOCK_MEDICINES: MedicineItem[] = [
     pharmacyPrice: 790,
     isRxRequired: false,
     category: 'Vitamins',
-    inStock: false,
+    inStock: true,
     availableAtPharmacyIds: ['ph-1', 'ph-3', 'ph-5'],
+    outOfStockPharmacyIds: ['ph-1'],
     popularity: 85,
     description: 'High-strength Vitamin C effervescent tablets to support your immune system daily.',
     image: require('../../Gemini_Generated_Image_72h90f72h90f72h9.png'),
@@ -441,6 +448,24 @@ export const MOCK_ORDERS: Order[] = [
     totalMrp: 350,
     isPaid: false,
     createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'ord-112',
+    orderNumber: '#MP123599',
+    orderType: 'OTC',
+    state: 'COMPLETED',
+    pharmacy: MOCK_PHARMACIES[0],
+    items: [
+      { medicine: MOCK_MEDICINES[0], quantity: 2, price: 100 }, // in-stock
+      { medicine: MOCK_MEDICINES[1], quantity: 1, price: 790 }, // out-of-stock
+    ],
+    totalAmount: 990,
+    totalMrp: 1090,
+    isPaid: true,
+    paymentMethod: 'PAY_AT_COUNTER',
+    pickupOtp: '667788',
+    pickupOtpVerified: true,
+    createdAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
   },
   {
     id: 'ord-108',
