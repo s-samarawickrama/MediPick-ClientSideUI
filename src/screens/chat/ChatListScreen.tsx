@@ -10,6 +10,7 @@ import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MOCK_PHARMACIES } from '../../mock/demoData';
+import { useOrders } from '../../context/OrderContext';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -24,29 +25,12 @@ export const ChatListScreen = () => {
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
-  const CHAT_CONVERSATIONS = [
-    {
-      orderId: 'ord-1',
-      pharmacyName: 'MediCare Central Pharmacy',
-      lastMessage: 'Got it! Your items are safely stored until you arrive.',
-      time: '2:15 PM',
-      unread: 1,
-    },
-    {
-      orderId: 'ord-2',
-      pharmacyName: 'City Health Pharmacy',
-      lastMessage: 'We have quoted LKR 500 for Amoxicillin.',
-      time: 'Yesterday',
-      unread: 0,
-    },
-    {
-      orderId: 'ord-3',
-      pharmacyName: 'Wellness Care Pharmacy',
-      lastMessage: 'Thank you for your pickup confirmation.',
-      time: 'Jul 24',
-      unread: 0,
-    },
-  ];
+  const { orders } = useOrders();
+  
+  // Filter for active orders (that would have chats)
+  const activeChatOrders = orders.filter(
+    o => !['COMPLETED', 'CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state)
+  );
 
   return (
     <View style={s.screen}>
@@ -61,21 +45,23 @@ export const ChatListScreen = () => {
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {CHAT_CONVERSATIONS.map((chat) => {
-          const pharmData = MOCK_PHARMACIES.find(p => p.name === chat.pharmacyName);
+        {activeChatOrders.map((o) => {
+          const pharmName = o.pharmacy?.name || 'MediCare Central Pharmacy';
+          const pharmData = MOCK_PHARMACIES.find(p => p.name === pharmName);
           const pharmImg = pharmData?.image;
+          const isReady = o.state === 'READY_FOR_PICKUP';
 
           return (
             <Pressable
-              key={chat.orderId}
+              key={o.id}
               style={({ pressed }) => [s.chatCard, pressed && { opacity: 0.92 }]}
-              onPress={() => navigation.navigate('PharmacyChat', { orderId: chat.orderId })}
+              onPress={() => navigation.navigate('PharmacyChat', { orderId: o.id })}
             >
               {pharmImg ? (
                 <Image source={pharmImg} style={s.avatarImg} />
               ) : (
                 <View style={s.avatarBox}>
-                  <Text style={s.avatarInitial}>{chat.pharmacyName[0]}</Text>
+                  <Text style={s.avatarInitial}>{pharmName[0]}</Text>
                 </View>
               )}
 
@@ -83,21 +69,23 @@ export const ChatListScreen = () => {
                 <View style={s.cardTopRow}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, paddingRight: 8 }}>
                     <Text numberOfLines={1} style={{ flexShrink: 1, fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>
-                      {chat.pharmacyName}
+                      {pharmName}
                     </Text>
                     <View style={{ flexShrink: 0 }}>
                       <ShieldCheck color={colors.midTeal} size={13} strokeWidth={2.5} />
                     </View>
                   </View>
-                  <Text style={[s.timeText, { flexShrink: 0 }]} numberOfLines={1}>{chat.time}</Text>
+                  <Text style={[s.timeText, { flexShrink: 0 }]} numberOfLines={1}>Just now</Text>
                 </View>
 
-                <Text style={s.lastMsg} numberOfLines={1}>{chat.lastMessage}</Text>
+                <Text style={s.lastMsg} numberOfLines={1}>
+                  {isReady ? 'Your pickup code is ready!' : `Order #${o.orderNumber}`}
+                </Text>
               </View>
 
-              {chat.unread > 0 && (
+              {isReady && (
                 <View style={s.unreadBadge}>
-                  <Text style={s.unreadText}>{chat.unread}</Text>
+                  <Text style={s.unreadText}>1</Text>
                 </View>
               )}
             </Pressable>

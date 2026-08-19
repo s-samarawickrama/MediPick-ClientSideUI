@@ -32,8 +32,9 @@ export const PharmacyChatScreen = () => {
   const route = useRoute<ChatRouteProp>();
   const orderId = route.params?.orderId || 'ord-101';
 
-  const { chatMessages, addChatMessage, setOrderMessages, receiveServerMessage } = useOrders();
+  const { chatMessages, addChatMessage, setOrderMessages, receiveServerMessage, orders } = useOrders();
   const messages = chatMessages[orderId] || [];
+  const order = orders.find(o => o.id === orderId);
 
   const [input, setInput] = useState('');
   const scrollRef = useRef<ScrollView>(null);
@@ -126,13 +127,17 @@ export const PharmacyChatScreen = () => {
       </View>
 
       {/* Order Context Banner */}
-      <TouchableOpacity
-        style={s.contextBanner}
-        activeOpacity={0.85}
-        onPress={() => navigation.navigate('ReadyForPickup', { orderId })}
-      >
-        <Text style={s.contextText}>Order {orderId} · Pickup Code Ready</Text>
-      </TouchableOpacity>
+      {order && (['READY_FOR_PICKUP', 'PREPARING', 'CONFIRMED', 'SUBMITTED'].includes(order.state)) && (
+        <TouchableOpacity
+          style={s.contextBanner}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('ReadyForPickup', { orderId })}
+        >
+          <Text style={s.contextText}>
+            Order {order.orderNumber} · {order.state === 'READY_FOR_PICKUP' ? 'Pickup Code Ready' : 'Track Order'}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {/* Message List */}
       <ScrollView

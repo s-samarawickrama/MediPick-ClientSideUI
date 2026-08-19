@@ -50,6 +50,8 @@ export const ReadyForPickupScreen = () => {
   const opacity   = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.95)).current;
 
+  const [error, setError] = useState<string | null>(null);
+
   // Fetch exact order from backend
   useEffect(() => {
     let mounted = true;
@@ -65,8 +67,11 @@ export const ReadyForPickupScreen = () => {
             setOrderState('READY');
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         console.warn('Failed to get pickup order:', e);
+        if (mounted) {
+          setError(e.message || 'Failed to load order details.');
+        }
       } finally {
         if (mounted) setIsLoading(false);
       }
@@ -94,7 +99,7 @@ export const ReadyForPickupScreen = () => {
       Animated.spring(cardScale, { toValue: 1, useNativeDriver: true, speed: 20 }),
     ]).start();
 
-    if (orderState === 'READY') return;
+    if (orderState === 'READY' || error || !order) return;
 
     const interval = setInterval(() => {
       setPrepSecondsLeft((prev) => {
@@ -108,7 +113,7 @@ export const ReadyForPickupScreen = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [orderState]);
+  }, [orderState, error, order]);
 
   const handleCancelOrder = () => {
     Alert.alert(
@@ -132,17 +137,28 @@ export const ReadyForPickupScreen = () => {
     );
   };
 
-  const handleExtendPickup = () => {
+  const handleExtendPickup = async () => {
     if (!order) return;
-    requestPickupExtension(order.id);
+    await requestPickupExtension(order.id);
     navigation.navigate('PharmacyChat', { orderId: order.id });
   };
 
-  if (isLoading || !order) {
+  if (isLoading) {
     return (
       <View style={[s.screen, { justifyContent: 'center', alignItems: 'center' }]}>
         <Loader2 color={colors.midTeal} size={32} />
         <Text style={{ marginTop: 12, fontFamily: FONTS.medium, color: colors.textMuted }}>Fetching order status...</Text>
+      </View>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <View style={[s.screen, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <Text style={{ fontFamily: FONTS.bold, color: '#EF4444', fontSize: 16, marginBottom: 8 }}>{error || 'Order not found'}</Text>
+        <TouchableOpacity style={{ padding: 12, backgroundColor: colors.midTeal, borderRadius: 8 }} onPress={() => navigation.goBack()}>
+          <Text style={{ color: '#fff', fontFamily: FONTS.bold }}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }

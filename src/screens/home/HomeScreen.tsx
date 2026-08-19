@@ -130,9 +130,12 @@ export const HomeScreen = () => {
     queryFn: () => pharmacyService.getPharmacies({ search: debouncedSearch, limit: debouncedSearch ? 10 : 6 }),
   });
 
+  const { isLoggedIn } = useAuth();
+
   const { data: ordRes } = useQuery({
     queryKey: ['activeOrders'],
     queryFn: () => listOrders({ state: 'PREPARING,READY_FOR_PICKUP' }),
+    enabled: isLoggedIn,
   });
 
   const isInitialLoading = isMedLoading || isPharmLoading;

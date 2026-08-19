@@ -7,6 +7,7 @@
 import { OrderStore } from '../store';
 import { SEED_PHARMACIES, SEED_MEDICINES } from '../seed';
 import { mockResponse, mockError, parseBody, requireAuth } from '../engine';
+import { addSystemMockMessage } from './misc.handler';
 
 // Helper to generate IDs
 const uuid = () => Math.random().toString(36).substring(2, 10);
@@ -212,6 +213,7 @@ export async function handleSubmitRating(orderId: string, body: unknown, authHea
 
 export async function handlePickupExtension(orderId: string, authHeader: string | null | undefined) {
   const updated = await OrderStore.update(orderId, { pickupExtensionRequested: true });
+  addSystemMockMessage(orderId, 'Customer requested a 24-hour pickup window extension.');
   return mockResponse(200, { message: 'Extension requested.', newDeadline: new Date(Date.now() + 86400000).toISOString() });
 }
 
@@ -230,5 +232,8 @@ export async function handleUpdateOrderState(orderId: string, body: any, authHea
   }
 
   const updated = await OrderStore.update(orderId, { state, updatedAt: new Date().toISOString() });
+  if (state === 'READY_FOR_PICKUP') {
+    addSystemMockMessage(orderId, 'Your pickup code is ready! Please collect your items.');
+  }
   return mockResponse(200, updated);
 }

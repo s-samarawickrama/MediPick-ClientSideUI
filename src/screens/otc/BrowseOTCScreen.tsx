@@ -422,7 +422,7 @@ export const BrowseOTCScreen = () => {
             <View style={s.storeContactRow}>
               <TouchableOpacity
                 style={s.contactBtn}
-                onPress={() => navigation.navigate('PharmacyChat', { orderId: 'ord-1' })}
+                onPress={() => navigation.navigate('PharmacyChat', { orderId: 'general-inquiry' })}
                 activeOpacity={0.8}
               >
                 <MessageSquare color={colors.midTeal} size={16} strokeWidth={2} />
@@ -828,7 +828,7 @@ export const BrowseOTCScreen = () => {
       {/* Content List */}
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: totalCartCount > 0 ? 140 : 100 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -921,7 +921,7 @@ export const BrowseOTCScreen = () => {
 
               <View style={s.modalHeroImg}>
                 {selectedMedModal.image ? (
-                  <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%', borderRadius: 16 }} resizeMode="contain" />
+                  <Image source={selectedMedModal.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                 ) : (
                   <Image source={FUN_3D_BAG} style={{ width: 96, height: 96 }} resizeMode="contain" />
                 )}
@@ -1283,7 +1283,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: 16,
     backgroundColor: colors.bgWarm, justifyContent: 'center', alignItems: 'center', zIndex: 10,
   },
-  modalHeroImg: { height: 120, borderRadius: 16, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center' },
+  modalHeroImg: { height: 160, borderRadius: 16, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   modalTitle: { fontFamily: FONTS.black, fontSize: 20, color: colors.textDark },
   modalGeneric: { fontFamily: FONTS.medium, fontSize: 13, color: colors.textMuted },
   modalPriceRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },

@@ -413,11 +413,13 @@ export const UploadPrescriptionScreen = () => {
                   >
                     {/* Image Box — same as Browse productImgBox */}
                     <View style={[s.gridImgBox, isSelected && s.gridImgBoxSelected]}>
-                      {item.image ? (
-                        <Image source={item.image} style={{ width: '100%', height: '100%', borderRadius: 12 }} resizeMode="contain" />
-                      ) : (
-                        <Image source={FUN_3D_BAG} style={{ width: 44, height: 44 }} resizeMode="contain" />
-                      )}
+                      <View style={{ width: '100%', height: '100%', borderRadius: 8, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
+                        {item.image ? (
+                          <Image source={item.image} style={{ width: '100%', height: '100%', transform: [{ scale: 1.25 }] }} resizeMode="cover" />
+                        ) : (
+                          <Image source={FUN_3D_BAG} style={{ width: 44, height: 44 }} resizeMode="contain" />
+                        )}
+                      </View>
                       {/* Info overlay top-right */}
                       <TouchableOpacity
                         style={s.gridInfoBadge}

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, FSMOrderState, PharmacyQuote, ChatMessage } from '../types';
-import { listOrders, updateOrderState } from '../api/ordersApi';
+import { listOrders, updateOrderState, extendPickup } from '../api/ordersApi';
 import { useAuth } from './AuthContext'; // to listen to auth changes if needed
 
 interface OrderContextType {
@@ -160,28 +160,9 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
-  const requestPickupExtension = (orderId: string) => {
-    setOrders((prev) =>
-      prev.map((ord) => {
-        if (ord.id === orderId && ord.pickupDeadline) {
-          const currentDeadline = new Date(ord.pickupDeadline).getTime();
-          const extended = new Date(currentDeadline + 24 * 3600 * 1000).toISOString();
-          
-          addChatMessage(orderId, {
-            senderRole: 'SYSTEM',
-            senderName: 'System',
-            text: 'Customer requested a 24-hour pickup window extension.',
-          });
-
-          return {
-            ...ord,
-            pickupDeadline: extended,
-            pickupExtensionRequested: true,
-          };
-        }
-        return ord;
-      })
-    );
+  const requestPickupExtension = async (orderId: string) => {
+    await extendPickup(orderId);
+    await fetchOrders();
   };
 
   const reportIssue = async (orderId: string, issueType: string, description: string) => {

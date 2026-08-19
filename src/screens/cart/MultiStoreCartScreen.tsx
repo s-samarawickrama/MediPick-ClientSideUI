@@ -31,6 +31,7 @@ export const MultiStoreCartScreen = () => {
   const [isCheckingOut, setIsCheckingOut] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [storeToCheckout, setStoreToCheckout] = useState<any>(null);
+  const [successStore, setSuccessStore] = useState<{name: string, isQuote: boolean} | null>(null);
 
   const { cartItems, attachedPrescription, updateQuantity, removeFromCart, clearCart, removeStoreFromCart, setAttachedPrescription } = useCart();
 
@@ -183,12 +184,11 @@ export const MultiStoreCartScreen = () => {
       // Remove these items from the cart
       processCheckout(storeGroup.pharmacy.id);
 
-      // Give a success alert and navigate to the orders tab
-      Alert.alert(
-        'Order Placed Successfully!',
-        `Your order for ${storeGroup.pharmacy.name} has been sent.`,
-        [{ text: 'View Orders', onPress: () => navigation.navigate('Tabs', { screen: 'Orders' }) }]
-      );
+      // Set the success overlay instead of firing an alert
+      setSuccessStore({
+        name: storeGroup.pharmacy.name,
+        isQuote: orderType === 'PRESCRIPTION' || orderType === 'MIXED'
+      });
     } catch (error: any) {
       Alert.alert('Checkout Failed', error.message || 'Unable to place order at this time. Please try again.');
     } finally {
@@ -474,6 +474,46 @@ export const MultiStoreCartScreen = () => {
           setStoreToCheckout(null);
         }}
       />
+
+      {/* Success Overlay Modal */}
+      <Modal visible={!!successStore} transparent animationType="fade">
+        <View style={s.successModalOverlay}>
+          <View style={s.successModalContent}>
+            <View style={s.successIconCircle}>
+              <CheckSquare color="#FFFFFF" size={40} strokeWidth={2.5} />
+            </View>
+            <Text style={s.successTitle}>
+              {successStore?.isQuote ? 'Request Sent!' : 'Order Placed!'}
+            </Text>
+            <Text style={s.successSub}>
+              Your {successStore?.isQuote ? 'prescription/quote request' : 'order'} for <Text style={{ fontFamily: FONTS.bold }}>{successStore?.name}</Text> has been successfully submitted.
+            </Text>
+
+            <View style={s.successActions}>
+              <TouchableOpacity 
+                style={[s.successBtn, { backgroundColor: colors.surfaceWhite, borderWidth: 1, borderColor: colors.borderSoft }]} 
+                onPress={() => {
+                  setSuccessStore(null);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={[s.successBtnText, { color: colors.textDark }]}>Keep Browsing</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[s.successBtn, { backgroundColor: colors.midTeal }]} 
+                onPress={() => {
+                  setSuccessStore(null);
+                  navigation.navigate('Tabs', { screen: 'Orders' });
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={[s.successBtnText, { color: '#FFFFFF' }]}>View Orders</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -566,4 +606,35 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   attachedRxHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   attachedRxTitle: { fontFamily: FONTS.bold, fontSize: 13, color: colors.peacockBlue },
   attachedRxNote: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark },
+  
+  successModalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center', alignItems: 'center', padding: 24,
+  },
+  successModalContent: {
+    backgroundColor: colors.surfaceWhite, borderRadius: 24, padding: 32,
+    alignItems: 'center', width: '100%', maxWidth: 360,
+  },
+  successIconCircle: {
+    width: 80, height: 80, borderRadius: 40, backgroundColor: colors.midTeal,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 20,
+  },
+  successTitle: {
+    fontFamily: FONTS.black, fontSize: 24, color: colors.textDark,
+    marginBottom: 8, textAlign: 'center',
+  },
+  successSub: {
+    fontFamily: FONTS.medium, fontSize: 14, color: colors.textSecondary,
+    textAlign: 'center', marginBottom: 32, lineHeight: 22,
+  },
+  successActions: {
+    flexDirection: 'row', gap: 12, width: '100%',
+  },
+  successBtn: {
+    flex: 1, height: 48, borderRadius: 12,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  successBtnText: {
+    fontFamily: FONTS.bold, fontSize: 15,
+  }
 });
