@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ShoppingCart, Plus, Minus, ChevronLeft, Store, CreditCard, Trash2, CheckSquare, Square, MinusSquare } from 'lucide-react-native';
+import { ShoppingCart, Plus, Minus, ChevronLeft, Store, CreditCard, Trash2, CheckSquare, Square, MinusSquare, Check } from 'lucide-react-native';
 import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
@@ -480,7 +480,7 @@ export const MultiStoreCartScreen = () => {
         <View style={s.successModalOverlay}>
           <View style={s.successModalContent}>
             <View style={s.successIconCircle}>
-              <CheckSquare color="#FFFFFF" size={40} strokeWidth={2.5} />
+              <Check color={colors.midTeal} size={48} strokeWidth={3} />
             </View>
             <Text style={s.successTitle}>
               {successStore?.isQuote ? 'Request Sent!' : 'Order Placed!'}
@@ -491,13 +491,13 @@ export const MultiStoreCartScreen = () => {
 
             <View style={s.successActions}>
               <TouchableOpacity 
-                style={[s.successBtn, { backgroundColor: colors.surfaceWhite, borderWidth: 1, borderColor: colors.borderSoft }]} 
+                style={[s.successBtn, { backgroundColor: colors.bgWarm }]} 
                 onPress={() => {
                   setSuccessStore(null);
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={[s.successBtnText, { color: colors.textDark }]}>Keep Browsing</Text>
+                <Text style={[s.successBtnText, { color: colors.textSecondary }]}>Keep Browsing</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -608,30 +608,31 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   attachedRxNote: { fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark },
   
   successModalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center', alignItems: 'center', padding: 24,
   },
   successModalContent: {
-    backgroundColor: colors.surfaceWhite, borderRadius: 24, padding: 32,
+    backgroundColor: colors.surfaceWhite, borderRadius: 28, padding: 32,
     alignItems: 'center', width: '100%', maxWidth: 360,
+    elevation: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 24,
   },
   successIconCircle: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: colors.midTeal,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 20,
+    width: 88, height: 88, borderRadius: 44, backgroundColor: colors.limeWhisper,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 24,
   },
   successTitle: {
     fontFamily: FONTS.black, fontSize: 24, color: colors.textDark,
-    marginBottom: 8, textAlign: 'center',
+    marginBottom: 10, textAlign: 'center',
   },
   successSub: {
     fontFamily: FONTS.medium, fontSize: 14, color: colors.textSecondary,
-    textAlign: 'center', marginBottom: 32, lineHeight: 22,
+    textAlign: 'center', marginBottom: 32, lineHeight: 22, paddingHorizontal: 8,
   },
   successActions: {
     flexDirection: 'row', gap: 12, width: '100%',
   },
   successBtn: {
-    flex: 1, height: 48, borderRadius: 12,
+    flex: 1, height: 50, borderRadius: 14,
     justifyContent: 'center', alignItems: 'center',
   },
   successBtnText: {
