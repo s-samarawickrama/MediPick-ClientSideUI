@@ -209,7 +209,14 @@ export const OrdersScreen = () => {
     Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
   }, []);
 
-  const { orders, isLoading } = useOrders();
+  const { orders, isLoading, fetchOrders } = useOrders();
+  
+  useEffect(() => {
+    if (isFocused) {
+      fetchOrders();
+    }
+  }, [isFocused]);
+
   const activeOrders    = orders.filter((o) => !['COMPLETED', 'CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state));
   const completedOrders = orders.filter((o) => o.state === 'COMPLETED');
   const cancelledOrders = orders.filter((o) => ['CANCELLED', 'CLOSED', 'REJECTED'].includes(o.state));
