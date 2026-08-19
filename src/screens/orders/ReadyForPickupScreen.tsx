@@ -415,7 +415,7 @@ export const ReadyForPickupScreen = () => {
         )}
 
         {/* Rate Experience (Completed Screen Primary CTA) */}
-        {orderState === 'COMPLETED' && (
+        {orderState === 'COMPLETED' && !order.rating && (
           <Button
             title="Rate Experience"
             variant="primary"
@@ -423,6 +423,26 @@ export const ReadyForPickupScreen = () => {
             onPress={() => setShowRateModal(true)}
             style={{ marginTop: 12 }}
           />
+        )}
+        
+        {/* Submitted Rating Display */}
+        {orderState === 'COMPLETED' && order.rating && (
+          <View style={{ marginTop: 12, padding: 16, backgroundColor: colors.surfaceWhite, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Star color="#F59E0B" fill="#F59E0B" size={18} />
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 16, color: colors.textDark, marginLeft: 8 }}>
+                {order.rating.overall} / 5
+              </Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 13, color: colors.midTeal, marginLeft: 'auto' }}>
+                Thank you for rating!
+              </Text>
+            </View>
+            {order.rating.comment ? (
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary }}>
+                "{order.rating.comment}"
+              </Text>
+            ) : null}
+          </View>
         )}
 
         {/* Cancel Order (Only if preparing or ready) */}
@@ -440,7 +460,13 @@ export const ReadyForPickupScreen = () => {
       {/* Rating Modal */}
       <RateExperienceScreen
         visible={showRateModal}
-        onClose={() => setShowRateModal(false)}
+        onClose={() => {
+          setShowRateModal(false);
+          // Refetch order to get the updated rating data
+          if (route.params?.orderId) {
+            getOrder(route.params.orderId).then(data => setOrder(data as unknown as Order)).catch(console.error);
+          }
+        }}
         pharmacyName={order.pharmacy?.name || 'MediCare Central Pharmacy'}
         orderId={order.id}
       />
