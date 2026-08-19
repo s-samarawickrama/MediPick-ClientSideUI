@@ -466,8 +466,11 @@ export const ReadyForPickupScreen = () => {
         visible={showRateModal}
         onClose={() => {
           setShowRateModal(false);
-          // Unconditionally navigate back to Orders list
-          navigation.navigate('Tabs', { screen: 'Orders' });
+          // Stay on the screen and refresh the data to show the submitted rating
+          // or to keep the "Rate Experience" button visible if they skipped
+          if (route.params?.orderId) {
+            getOrder(route.params.orderId).then(data => setOrder(data as unknown as Order)).catch(console.error);
+          }
         }}
         pharmacyName={order.pharmacy?.name || 'MediCare Central Pharmacy'}
         orderId={order.id}

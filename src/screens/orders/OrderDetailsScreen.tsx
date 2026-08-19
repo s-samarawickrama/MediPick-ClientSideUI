@@ -219,6 +219,17 @@ export const OrderDetailsScreen = () => {
           </View>
         )}
 
+        {/* Rate Experience Button if skipped */}
+        {isCompleted && !order.rating && (
+          <Button
+            title="Rate Experience"
+            variant="primary"
+            icon={<Star color="#fff" size={16} strokeWidth={2.5} />}
+            onPress={() => setShowRateModal(true)}
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
         {/* Pharmacy Info */}
         <TouchableOpacity 
           style={s.card} 
