@@ -386,6 +386,7 @@ export const MultiStoreCartScreen = () => {
                   ]}
                   disabled={(storeSubtotal === 0 && !(storeGroup.hasPrescription && selectedItems.has(`${storeGroup.pharmacy.id}_rx`))) || isCheckingOut === storeGroup.pharmacy.id}
                   onPress={() => {
+                    console.log(`[Checkout] Place Order clicked for ${storeGroup.pharmacy.name}. Pay Method: ${payMethod}`);
                     if (payMethod === 'stripe') {
                       setStoreToCheckout(storeGroup);
                       setShowStripeModal(true);
@@ -426,25 +427,28 @@ export const MultiStoreCartScreen = () => {
         )}
 
         {/* Standardized Payment Method Selector */}
-        {cartStores.length > 0 && !attachedPrescription && (
+        {cartStores.length > 0 && (
           <View>
-            <TouchableOpacity 
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: colors.surfaceWhite, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}
-              activeOpacity={0.7}
-              onPress={() => setAllowGenericSubstitutions(!allowGenericSubstitutions)}
-            >
-              <View style={{ marginRight: 12 }}>
-                {allowGenericSubstitutions 
-                  ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
-                  : <Square color={colors.textMuted} size={22} strokeWidth={2.5} />}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>Allow Generic Substitutes</Text>
-                <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-                  If a medicine is out of stock, the pharmacist can swap it for an equivalent generic version.
-                </Text>
-              </View>
-            </TouchableOpacity>
+            {/* Show Generic Substitution Toggle ONLY if there is an attached prescription */}
+            {attachedPrescription && (
+              <TouchableOpacity 
+                style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: colors.surfaceWhite, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}
+                activeOpacity={0.7}
+                onPress={() => setAllowGenericSubstitutions(!allowGenericSubstitutions)}
+              >
+                <View style={{ marginRight: 12 }}>
+                  {allowGenericSubstitutions 
+                    ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
+                    : <Square color={colors.textMuted} size={22} strokeWidth={2.5} />}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>Allow Generic Substitutes</Text>
+                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+                    If a medicine is out of stock, the pharmacist can swap it for an equivalent generic version.
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
 
             <PaymentMethodSelector
               selectedMethod={payMethod}

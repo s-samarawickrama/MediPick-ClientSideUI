@@ -4,28 +4,37 @@ import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { Badge } from '../common/Badge';
 import { ShieldCheck, MapPin, Star, Clock, Heart } from 'lucide-react-native';
 import { Pharmacy } from '../../types';
-import { togglePharmacyFavorite } from '../../mock/demoData';
+import { pharmacyService } from '../../services/pharmacyService';
 
 interface PharmacyCardProps {
   pharmacy: Pharmacy;
   onSelect?: () => void;
+  onFavoriteToggled?: (pharmacyId: string, isFavorite: boolean, favoriteId: string | null) => void;
 }
 
-export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect }) => {
+export const PharmacyCard: React.FC<PharmacyCardProps> = ({ pharmacy, onSelect, onFavoriteToggled }) => {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [isFav, setIsFav] = useState(pharmacy.isFavorite || false);
+  const [favId, setFavId] = useState(pharmacy.favoriteId || null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handleFavorite = () => {
-    // Make the animation much more pronounced so it's easy to see
+  const handleFavorite = async () => {
+    // Animate the heart
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 1.6, duration: 150, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 40, useNativeDriver: true })
     ]).start();
 
-    togglePharmacyFavorite(pharmacy.id);
-    setIsFav(!isFav);
+    try {
+      const result = await pharmacyService.toggleFavorite(pharmacy, isFav, favId);
+      setIsFav(result.isFavorite);
+      setFavId(result.favoriteId);
+      onFavoriteToggled?.(pharmacy.id, result.isFavorite, result.favoriteId);
+    } catch (e) {
+      // Revert on failure
+      console.warn('[PharmacyCard] Favorite toggle failed', e);
+    }
   };
   return (
     <TouchableOpacity

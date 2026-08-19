@@ -19,10 +19,13 @@ export const pharmacyService = {
     return apiListFavorites();
   },
 
-  async toggleFavorite(pharmacy: Pharmacy): Promise<{ isFavorite: boolean; favoriteId: string | null }> {
+  async toggleFavorite(pharmacy: Pharmacy, currentIsFav?: boolean, currentFavId?: string | null): Promise<{ isFavorite: boolean; favoriteId: string | null }> {
     try {
-      if (pharmacy.isFavorite && pharmacy.favoriteId) {
-        await apiRemoveFavorite(pharmacy.id, pharmacy.favoriteId);
+      const isFav = currentIsFav !== undefined ? currentIsFav : pharmacy.isFavorite;
+      const favId = currentFavId !== undefined ? currentFavId : pharmacy.favoriteId;
+
+      if (isFav && favId) {
+        await apiRemoveFavorite(pharmacy.id, favId);
         return { isFavorite: false, favoriteId: null };
       } else {
         const res = await apiAddFavorite(pharmacy.id);

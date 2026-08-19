@@ -1,29 +1,46 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Pressable, Image, ActivityIndicator } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ChevronLeft, Store, Heart, Star, Clock } from 'lucide-react-native';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { MOCK_PHARMACIES, togglePharmacyFavorite } from '../../mock/demoData';
+import { pharmacyService } from '../../services/pharmacyService';
+import { Pharmacy } from '../../types';
 
 export const FavoritesScreen = () => {
   const { isDark, colors } = useTheme();
   const s = makeStyles(colors, isDark);
   const navigation = useNavigation();
-  const [, setTick] = useState(0);
-  const favoritePharmacies = MOCK_PHARMACIES.filter(p => p.isFavorite);
+  const [favoritePharmacies, setFavoritePharmacies] = useState<Pharmacy[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleToggle = (id: string) => {
-    togglePharmacyFavorite(id);
-    setTick(t => t + 1);
+  const loadFavorites = async () => {
+    try {
+      const res = await pharmacyService.getFavorites();
+      setFavoritePharmacies(res || []);
+    } catch (e) {
+      console.warn('[FavoritesScreen] Failed to load favorites', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useFocusEffect(
     useCallback(() => {
       StatusBar.setBarStyle('dark-content');
-      setTick(t => t + 1); // Force re-render to pick up new favorites
+      loadFavorites();
     }, [])
   );
+
+  const handleToggle = async (pharmacy: Pharmacy) => {
+    try {
+      await pharmacyService.toggleFavorite(pharmacy);
+      // Remove it from the local state list immediately
+      setFavoritePharmacies(prev => prev.filter(p => p.id !== pharmacy.id));
+    } catch (e) {
+      console.warn('[FavoritesScreen] Failed to remove favorite', e);
+    }
+  };
 
   return (
     <View style={s.screen}>
@@ -38,7 +55,11 @@ export const FavoritesScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        {favoritePharmacies.length > 0 ? (
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 40 }}>
+            <ActivityIndicator size="large" color={colors.midTeal} />
+          </View>
+        ) : favoritePharmacies.length > 0 ? (
           favoritePharmacies.map(p => (
             <Pressable
               key={p.id}
@@ -56,9 +77,7 @@ export const FavoritesScreen = () => {
                 </View>
                 <TouchableOpacity
                   style={s.favBtn}
-                  onPress={(e) => {
-                    handleToggle(p.id);
-                  }}
+                  onPress={() => handleToggle(p)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Heart color="#EF4444" size={20} strokeWidth={2} fill="#EF4444" />

@@ -27,22 +27,22 @@ export const formatPhoneNumber = (value: string): string => {
   return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 10)}`;
 };
 
-export const maskPhoneNumber = (value: string): string => {
+export const maskPhoneNumber = (value: string | null | undefined): string => {
+  if (!value) return '';
   const normalized = normalizePhoneNumber(value);
-  if (!normalized) return '';
-
-  const digits = normalized.replace(/\D/g, '');
-  if (digits.length <= 4) return '*'.repeat(digits.length);
-
-  const visibleStart = digits.length >= 10 ? 4 : 3;
-  const visibleEnd = 4;
-  const masked = digits.slice(0, visibleStart).replace(/\d/g, '*') + digits.slice(visibleStart, digits.length - visibleEnd).replace(/\d/g, '*') + digits.slice(-visibleEnd);
-
-  return masked.length > 0 ? masked : '';
+  if (!normalized || !normalized.startsWith('+94') || normalized.length !== 12) {
+    // Fallback for non-standard formats
+    return value.replace(/.(?=.{4})/g, '*');
+  }
+  const code = normalized.slice(3, 5); // e.g. "77" or "11"
+  const last = normalized.slice(8);     // e.g. "4567"
+  return `+94 ${code} *** ${last}`;
 };
 
 export const isValidPhoneNumber = (value: string): boolean => {
   const normalized = normalizePhoneNumber(value);
-  const regex = /^\+?94\d{9}$|^0\d{9}$/;
-  return regex.test(normalized);
+  // Mobile: 70, 71, 72, 74, 75, 76, 77, 78
+  // Landline: 11, 21, 23-27, 31-38, 41, 45, 47, 51, 52, 54, 55, 57, 63, 65-67, 81, 91
+  const slRegex = /^\+94(?:7[01245678]|11|2[13-7]|3[1-8]|4[157]|5[12457]|6[35-7]|81|91)\d{7}$/;
+  return slRegex.test(normalized);
 };

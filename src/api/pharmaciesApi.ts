@@ -22,18 +22,18 @@ export interface Pharmacy {
   nmraLicense:            string;
   pharmacistName:         string;
   pharmacistRegNo:        string;
-  latitude:               number;
-  longitude:              number;
+  latitude?:              number;
+  longitude?:             number;
   distance:               string;         // Human-readable e.g. "0.8 km" — computed server-side
   rating:                 number;         // 0.0–5.0
-  ratingCount:            number;
+  ratingCount?:           number;
   estimatedResponseTime:  string;         // e.g. "5 - 15 mins"
   isOpen:                 boolean;
-  hasOffer:               boolean;
-  offerTag:               string | null;
-  image:                  string | null;  // CDN URL
-  isFavorite:             boolean;        // Only present when authenticated
-  favoriteId:             string | null;  // The favorites row ID — needed for DELETE unfavorite
+  hasOffer?:              boolean;
+  offerTag?:              string | null;
+  image?:                 string | null;  // CDN URL
+  isFavorite?:            boolean;        // Only present when authenticated
+  favoriteId?:            string | null;  // The favorites row ID — needed for DELETE unfavorite
 }
 
 export interface PharmacyListQuery {

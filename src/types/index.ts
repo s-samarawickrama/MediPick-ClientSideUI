@@ -51,6 +51,7 @@ export interface Pharmacy {
   address: string;
   distance: string;
   rating: number;
+  ratingCount?: number;
   popularity?: number; // 0-100 rating for sorting
   nmraLicense: string;
   pharmacistName: string;
@@ -58,8 +59,9 @@ export interface Pharmacy {
   estimatedResponseTime: string;
   isOpen: boolean;
   isFavorite?: boolean;
+  favoriteId?: string | null;
   hasOffer?: boolean;
-  offerTag?: string;
+  offerTag?: string | null;
   image?: string | any;
   latitude?: number;
   longitude?: number;

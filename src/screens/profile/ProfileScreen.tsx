@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { Moon } from 'lucide-react-native';
 import { initiatePhoneChange, verifyPhoneChange, updatePreferences } from '../../api/usersApi';
+import { maskPhoneNumber, isValidPhoneNumber, normalizePhoneNumber } from '../../utils/phone';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -48,13 +49,14 @@ export const ProfileScreen = () => {
 
   const handleUpdatePhone = async () => {
     if (phoneStep === 'input') {
-      if (newPhone.trim().length < 8) {
-        Alert.alert('Invalid Number', 'Please enter a valid phone number.');
+      const normalized = normalizePhoneNumber(newPhone.trim());
+      if (!isValidPhoneNumber(normalized)) {
+        Alert.alert('Invalid Number', 'Please enter a valid Sri Lankan phone number.');
         return;
       }
       setLoading(true);
       try {
-        await initiatePhoneChange({ newPhoneNumber: newPhone.trim() });
+        await initiatePhoneChange({ newPhoneNumber: normalized });
         setPhoneStep('otp');
       } catch (e: any) {
         Alert.alert('Error', e.message || 'Failed to request phone change');
@@ -63,12 +65,13 @@ export const ProfileScreen = () => {
       }
     } else {
       if (otp.length < 6) {
-        Alert.alert('Invalid OTP', 'Please enter the 6-digit code.');
+        Alert.alert('Invalid OTP', 'Please enter a 6-digit verification code.');
         return;
       }
       setLoading(true);
       try {
-        await verifyPhoneChange({ newPhoneNumber: newPhone.trim(), otp });
+        const normalized = normalizePhoneNumber(newPhone.trim());
+        await verifyPhoneChange({ newPhoneNumber: normalized, otp });
         await reloadUser();
         setNewPhone('');
         setOtp('');
@@ -76,7 +79,7 @@ export const ProfileScreen = () => {
         setShowPhoneModal(false);
         Alert.alert('Phone Updated', 'Your phone number has been updated successfully.');
       } catch (e: any) {
-        Alert.alert('Error', e.message || 'Invalid OTP');
+        Alert.alert('Verification Failed', e.message || 'Incorrect OTP');
       } finally {
         setLoading(false);
       }
@@ -126,7 +129,7 @@ export const ProfileScreen = () => {
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                <Text style={s.userPhone}>{user.phoneNumber}</Text>
+                <Text style={s.userPhone}>{maskPhoneNumber(user.phoneNumber)}</Text>
                 {user.strikes > 0 && (
                   <View style={s.strikeTag}>
                     <AlertTriangle color={colors.warning} size={12} strokeWidth={2.5} />
@@ -179,7 +182,7 @@ export const ProfileScreen = () => {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.menuLabel}>Change Phone Number</Text>
-                <Text style={s.menuSub}>{user.phoneNumber}</Text>
+                <Text style={s.menuSub}>{maskPhoneNumber(user.phoneNumber)}</Text>
               </View>
               <ChevronRight color={colors.textMuted} size={16} strokeWidth={2} />
             </Pressable>
@@ -269,7 +272,7 @@ export const ProfileScreen = () => {
 
             <Text style={s.modalTitle}>{phoneStep === 'input' ? 'Change Phone Number' : 'Verify New Number'}</Text>
             <Text style={s.modalSub}>
-              {phoneStep === 'input' ? `Current number: ${user.phoneNumber}` : `Enter the 6-digit code sent to ${newPhone}`}
+              {phoneStep === 'input' ? `Current number: ${maskPhoneNumber(user.phoneNumber)}` : `Enter the 6-digit code sent to ${newPhone}`}
             </Text>
 
             {phoneStep === 'input' ? (

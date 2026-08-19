@@ -116,6 +116,54 @@ export class AuthExpiredError extends Error {
   }
 }
 
+// ─── Logging Helpers ──────────────────────────────────────────────────────────
+
+function logApiRequest(method: string, path: string, body?: unknown, headers?: Record<string, string>) {
+  const tag = `[API REQ] ${method.toUpperCase()} ${path}`;
+  // Always log a flat string so it shows up in Expo terminal and browser console immediately
+  console.log(`${tag} ${body ? JSON.stringify(body) : ''}`);
+
+  if (Platform.OS === 'web') {
+    console.groupCollapsed(
+      `%c${tag} (Details)`,
+      'color: #0284C7; font-weight: bold; background: #E0F2FE; padding: 2px 6px; border-radius: 4px;',
+    );
+    if (headers) console.log('Headers:', headers);
+    if (body !== undefined) console.log('Payload / Body:', body);
+    console.groupEnd();
+  }
+}
+
+function logApiResponse(method: string, path: string, status: number, durationMs: number, data: unknown) {
+  const tag = `[API RES] ${status} ${method.toUpperCase()} ${path} (${durationMs}ms)`;
+  // Always log flat string
+  console.log(`${tag} ${JSON.stringify(data).substring(0, 300)}${JSON.stringify(data).length > 300 ? '...' : ''}`);
+
+  if (Platform.OS === 'web') {
+    console.groupCollapsed(
+      `%c${tag} (Details)`,
+      'color: #16A34A; font-weight: bold; background: #DCFCE7; padding: 2px 6px; border-radius: 4px;',
+    );
+    console.log('Response Body:', data);
+    console.groupEnd();
+  }
+}
+
+function logApiError(method: string, path: string, status: number, durationMs: number, error: unknown) {
+  const tag = `[API ERR] ${status} ${method.toUpperCase()} ${path} (${durationMs}ms)`;
+  // Always log flat string
+  console.error(`${tag} ${JSON.stringify(error)}`);
+
+  if (Platform.OS === 'web') {
+    console.group(
+      `%c${tag} (Details)`,
+      'color: #DC2626; font-weight: bold; background: #FEE2E2; padding: 2px 6px; border-radius: 4px;',
+    );
+    console.error('Error Details:', error);
+    console.groupEnd();
+  }
+}
+
 // ─── Core Request Function ────────────────────────────────────────────────────
 
 let isRefreshing = false;
@@ -133,6 +181,8 @@ export async function apiRequest<T>(
   options: RequestInit = {},
   isRetry = false,
 ): Promise<ApiSuccessResponse<T>> {
+  const startTime = Date.now();
+  const method = (options.method ?? 'GET').toUpperCase();
   const accessToken = await getAccessToken();
 
   const headers: Record<string, string> = {
@@ -144,22 +194,32 @@ export async function apiRequest<T>(
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
+  const bodyStr = options.body as string | undefined;
+  let parsedBody: unknown = undefined;
+  if (bodyStr) {
+    try { parsedBody = JSON.parse(bodyStr); } catch { parsedBody = bodyStr; }
+  }
+
+  // Log outgoing request
+  logApiRequest(method, path, parsedBody, headers);
+
   // ── Mock Mode: intercept and route to mock engine ─────────────────────────
   if (MOCK_MODE) {
     const { dispatchMockRequest } = await import('../mock/engine');
-    const bodyStr = options.body as string | undefined;
-    const parsedBody = bodyStr ? JSON.parse(bodyStr) : undefined;
 
     const mockResult = await dispatchMockRequest(
       `${API_BASE_URL}${path}`,
       API_BASE_URL,
-      options.method ?? 'GET',
+      method,
       headers as Record<string, string | null>,
       parsedBody,
     );
 
+    const duration = Date.now() - startTime;
+
     // Handle 401 with silent refresh (same flow as real network)
     if (mockResult.status === 401 && !isRetry) {
+      logApiError(method, path, 401, duration, { reason: 'Unauthorized - attempting token refresh' });
       try {
         await silentRefresh();
         return apiRequest<T>(path, options, true);
@@ -172,21 +232,32 @@ export async function apiRequest<T>(
     const body = mockResult.body as ApiSuccessResponse<T> | ApiErrorResponse;
     if (mockResult.status < 200 || mockResult.status >= 300 || !body.success) {
       const err = body as ApiErrorResponse;
+      logApiError(method, path, mockResult.status, duration, err);
       throw new ApiError(err.error ?? 'UNKNOWN_ERROR', mockResult.status, err.message ?? 'An error occurred.');
     }
 
+    logApiResponse(method, path, mockResult.status, duration, body);
     return body as ApiSuccessResponse<T>;
   }
 
   // ── Real Network Mode ─────────────────────────────────────────────────────
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch (netErr) {
+    const duration = Date.now() - startTime;
+    logApiError(method, path, 0, duration, netErr);
+    throw netErr;
+  }
 
-    ...options,
-    headers,
-  });
+  const duration = Date.now() - startTime;
 
   // ── 401: Try silent token refresh, then retry original request once ────────
   if (response.status === 401 && !isRetry) {
+    logApiError(method, path, 401, duration, { reason: '401 - attempting token refresh' });
     try {
       const newAccessToken = await silentRefresh();
       return apiRequest<T>(path, options, true);
@@ -201,11 +272,13 @@ export async function apiRequest<T>(
   try {
     body = await response.json();
   } catch {
+    logApiError(method, path, response.status, duration, 'Failed to parse JSON response');
     throw new ApiError('PARSE_ERROR', response.status, 'Failed to parse server response.');
   }
 
   if (!response.ok || !body.success) {
     const err = body as ApiErrorResponse;
+    logApiError(method, path, response.status, duration, err);
     throw new ApiError(
       err.error ?? 'UNKNOWN_ERROR',
       response.status,
@@ -213,6 +286,7 @@ export async function apiRequest<T>(
     );
   }
 
+  logApiResponse(method, path, response.status, duration, body);
   return body as ApiSuccessResponse<T>;
 }
 

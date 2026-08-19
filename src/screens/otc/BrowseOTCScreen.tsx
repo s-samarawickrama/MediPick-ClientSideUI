@@ -9,7 +9,8 @@ import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navig
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { MOCK_MEDICINES, MOCK_PHARMACIES, togglePharmacyFavorite } from '../../mock/demoData';
+import { MOCK_MEDICINES, MOCK_PHARMACIES } from '../../mock/demoData';
+import { pharmacyService } from '../../services/pharmacyService';
 import { MedicineItem as Medicine, Pharmacy } from '../../types';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { MapPreview } from '../../components/MapPreview';
@@ -274,13 +275,17 @@ export const BrowseOTCScreen = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <TouchableOpacity
               style={s.headerCartBtn}
-              onPress={() => {
+              onPress={async () => {
                 Animated.sequence([
                   Animated.timing(heartScale, { toValue: 1.6, duration: 150, useNativeDriver: true }),
                   Animated.spring(heartScale, { toValue: 1, friction: 3, tension: 40, useNativeDriver: true })
                 ]).start();
-                togglePharmacyFavorite(activeStore.id);
-                setActiveStore({ ...activeStore, isFavorite: !activeStore.isFavorite });
+                try {
+                  const result = await pharmacyService.toggleFavorite(activeStore);
+                  setActiveStore({ ...activeStore, isFavorite: result.isFavorite, favoriteId: result.favoriteId });
+                } catch (e) {
+                  console.warn('Failed to toggle favorite', e);
+                }
               }}
               activeOpacity={0.8}
             >
@@ -546,7 +551,14 @@ export const BrowseOTCScreen = () => {
                     </View>
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TouchableOpacity onPress={() => { togglePharmacyFavorite(activeStore.id); setActiveStore({ ...activeStore, isFavorite: !activeStore.isFavorite }); }} style={{ width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={async () => {
+                      try {
+                        const result = await pharmacyService.toggleFavorite(activeStore);
+                        setActiveStore({ ...activeStore, isFavorite: result.isFavorite, favoriteId: result.favoriteId });
+                      } catch (e) {
+                        console.warn('Failed to toggle favorite', e);
+                      }
+                    }} style={{ width: 32, height: 32, justifyContent: 'center', alignItems: 'center' }}>
                       <Heart color={activeStore.isFavorite ? "#EF4444" : colors.textMuted} size={16} fill={activeStore.isFavorite ? "#EF4444" : "transparent"} strokeWidth={activeStore.isFavorite ? 0 : 2.5} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setStoreInfoModal(false)} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.bgWarm, justifyContent: 'center', alignItems: 'center' }}>
@@ -587,7 +599,7 @@ export const BrowseOTCScreen = () => {
                   <View style={{ flexDirection: 'row', gap: 12 }}>
                     <TouchableOpacity style={{ flex: 1, backgroundColor: colors.limeWhisper, padding: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
                       <Phone color={colors.midTeal} size={16} strokeWidth={2.5} />
-                      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.deepTeal }}>Call Store</Text>
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.midTeal }}>Call Store</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={{ flex: 1, backgroundColor: colors.bgWarm, padding: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
                       <Clock color={colors.textDark} size={16} strokeWidth={2.5} />
@@ -780,37 +792,8 @@ export const BrowseOTCScreen = () => {
           <View>
             <View style={s.pharmacyList}>
               {paginatedPharmacies.map((p) => (
-              <Pressable
-                key={p.id}
-                style={({ pressed }) => [s.pharmacyCard, pressed && { opacity: 0.92 }]}
-                onPress={() => setActiveStore(p)}
-              >
-                <View style={s.pharmAvatar}>
-                  {p.image ? (
-                    <Image source={p.image} style={{ width: '100%', height: '100%', borderRadius: 14 }} resizeMode="cover" />
-                  ) : (
-                    <Text style={s.pharmInitial}>{p.name[0]}</Text>
-                  )}
-                </View>
-
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={s.pharmName}>{p.name}</Text>
-                  <Text style={s.pharmAddr}>{p.address}</Text>
-
-                  <View style={s.pharmMetaRow}>
-                    <Star color="#F59E0B" size={12} fill="#F59E0B" />
-                    <Text style={s.metaText}>{p.rating}</Text>
-                    <Text style={s.sep}>·</Text>
-                    <MapPin color={colors.textMuted} size={11} strokeWidth={2} />
-                    <Text style={s.metaText}>{p.distance}</Text>
-                  </View>
-                </View>
-
-                <View style={s.viewStorePill}>
-                  <Text style={s.viewStoreText}>Visit Store</Text>
-                </View>
-              </Pressable>
-            ))}
+                <BrowsePharmacyCard key={p.id} p={p} onPress={() => setActiveStore(p)} s={s} colors={colors} />
+              ))}
             </View>
             {renderPagination(sortedPharmacies.length, totalPharmPages, pharmStartIndex)}
           </View>
@@ -1270,3 +1253,75 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     color: '#FFFFFF',
   },
 });
+
+const BrowsePharmacyCard = ({ p, onPress, s, colors }: any) => {
+  const [isFav, setIsFav] = useState(p.isFavorite);
+  const [favId, setFavId] = useState(p.favoriteId);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handleFavorite = async (e: any) => {
+    e.stopPropagation();
+    
+    // Animate the heart
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 1.6, duration: 150, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, friction: 3, tension: 40, useNativeDriver: true })
+    ]).start();
+
+    try {
+      const result = await pharmacyService.toggleFavorite(p, isFav, favId);
+      setIsFav(result.isFavorite);
+      setFavId(result.favoriteId);
+    } catch (error) {
+      console.warn('[BrowsePharmacyCard] Favorite toggle failed', error);
+    }
+  };
+
+  return (
+    <Pressable
+      style={({ pressed }) => [s.pharmacyCard, pressed && { opacity: 0.92 }]}
+      onPress={onPress}
+    >
+      <View style={s.pharmAvatar}>
+        {p.image ? (
+          <Image source={p.image} style={{ width: '100%', height: '100%', borderRadius: 14 }} resizeMode="cover" />
+        ) : (
+          <Text style={s.pharmInitial}>{p.name[0]}</Text>
+        )}
+      </View>
+
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={s.pharmName}>{p.name}</Text>
+        <Text style={s.pharmAddr}>{p.address}</Text>
+
+        <View style={s.pharmMetaRow}>
+          <Star color="#F59E0B" size={12} fill="#F59E0B" />
+          <Text style={s.metaText}>{p.rating}</Text>
+          <Text style={s.sep}>·</Text>
+          <MapPin color={colors.textMuted} size={11} strokeWidth={2} />
+          <Text style={s.metaText}>{p.distance}</Text>
+        </View>
+      </View>
+
+      <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', height: '100%' }}>
+        <TouchableOpacity 
+          onPress={handleFavorite} 
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          activeOpacity={0.7}
+        >
+          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+            <Heart 
+              color={isFav ? colors.error : colors.textMuted} 
+              size={18} 
+              fill={isFav ? colors.error : 'transparent'} 
+            />
+          </Animated.View>
+        </TouchableOpacity>
+
+        <View style={[s.viewStorePill, { marginTop: 'auto' }]}>
+          <Text style={s.viewStoreText}>Visit Store</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+};
