@@ -64,7 +64,7 @@ export async function handleCreatePaymentIntent(body: unknown, authHeader: strin
     clientSecret: 'mock_client_secret_xyz',
     amount: 1000,
     currency: 'LKR',
-    gateway: 'payhere',
+    gateway: 'stripe',
     orderId: (parseBody(body) as any).orderId,
   });
 }

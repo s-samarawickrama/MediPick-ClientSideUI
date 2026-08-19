@@ -16,10 +16,10 @@ import { api } from './client';
 
 export interface PaymentIntent {
   paymentIntentId: string;    // Internal payment record ID
-  clientSecret:    string;    // Passed to the payment gateway SDK (e.g. PayHere)
+  clientSecret:    string;    // Passed to the payment gateway SDK (e.g. Stripe)
   amount:          number;    // Total amount in LKR
   currency:        'LKR';
-  gateway:         string;    // e.g. "payhere"
+  gateway:         string;    // e.g. "stripe"
   orderId:         string;
 }
 
@@ -33,7 +33,7 @@ export interface CreatePaymentIntentPayload {
 /**
  * A8.1 — Create payment intent  🔒
  * Creates a payment intent for an ONLINE payment order.
- * The returned clientSecret is passed to the PayHere SDK / payment modal.
+ * The returned clientSecret is passed to the Stripe SDK / payment modal.
  *
  * Call this:
  *   - After createOrder() if paymentMethod = ONLINE (MultiStoreCartScreen)
@@ -52,8 +52,8 @@ export async function createPaymentIntent(
 
 /**
  * A8.2 — Payment webhook (server-to-server)
- * NOTE: This endpoint is called by PayHere's servers, NOT by the mobile app.
- *       It is secured by X-PayHere-Signature HMAC-SHA256 header verification.
+ * NOTE: This endpoint is called by Stripe's servers, NOT by the mobile app.
+ *       It is secured by Stripe webhook signature header verification.
  *       It is included here for completeness — the mobile app never calls this directly.
  *
  * This is a no-op on the client side. The server handles it and updates order.isPaid.

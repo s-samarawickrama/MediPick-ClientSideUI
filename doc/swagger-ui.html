@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MediPick REST API — Swagger Interactive Console</title>
+  <!-- Swagger UI style sheets -->
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.11.0/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.11.0/favicon-16x16.png" sizes="16x16" />
+  <style>
+    html {
+      box-sizing: border-box;
+      overflow: -y-scroll;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      margin: 0;
+      background: #fafafa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .header {
+      background: #1e293b;
+      padding: 16px 24px;
+      color: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+    .header .subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    /* Style overrides for premium look */
+    .swagger-ui .topbar {
+      display: none;
+    }
+    .swagger-ui .info {
+      margin: 30px 0;
+    }
+    .swagger-ui .info .title {
+      font-family: 'Segoe UI', sans-serif;
+      color: #0f172a;
+    }
+    .swagger-ui .scheme-container {
+      background: #f1f5f9;
+      box-shadow: none;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin: 20px 0;
+      padding: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div>
+      <h1>MediPick API Specification</h1>
+      <div class="subtitle">Interactive QA Playground & Documentation Suite</div>
+    </div>
+    <div style="font-size: 13px; background: #0ea5e9; padding: 6px 12px; border-radius: 6px; font-weight: 500;">
+      Target: Mock Engine (Port 8081)
+    </div>
+  </div>
+
+  <div id="swagger-ui"></div>
+
+  <!-- Swagger UI script bundles -->
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"> </script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"> </script>
+  <script>
+    window.onload = function() {
+      // Complete OpenAPI Specification matching MediPick_API_Design_Document.md
+      const spec = {
+        openapi: "3.0.3",
+        info: {
+          title: "MediPick Customer-Facing REST API",
+          description: "Official RESTful API specification for the MediPick marketplace. Aligned with mock engine handlers (port 8081) and client-side UI integrations.",
+          version: "3.0.0",
+          contact: {
+            name: "MediPick Developer Support",
+            url: "https://medipick.lk/support"
+          }
+        },
+        servers: [
+          {
+            url: "http://localhost:8081/v1",
+            description: "Local Mock Engine Server"
+          },
+          {
+            url: "https://api.medipick.lk/v1",
+            description: "Production Server"
+          }
+        ],
+        security: [
+          {
+            BearerAuth: []
+          }
+        ],
+        paths: {
+          "/auth/otp/request": {
+            post: {
+              tags: ["A1 Auth"],
+              summary: "Request OTP Code (A1.1)",
+              security: [],
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["phoneNumber", "surname"],
+                      properties: {
+                        phoneNumber: {
+                          type: "string",
+                          example: "+94771234567"
+                        },
+                        surname: {
+                          type: "string",
+                          minLength: 2,
+                          maxLength: 100,
+                          example: "Perera"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "OTP generated successfully",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        $ref: "#/components/schemas/SuccessEnvelope"
+                      }
+                    }
+                  }
+                },
+                400: {
+                  description: "Validation failure"
+                }
+              }
+            }
+          },
+          "/auth/otp/verify": {
+            post: {
+              tags: ["A1 Auth"],
+              summary: "Verify OTP Code (A1.2)",
+              security: [],
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["phoneNumber", "otp"],
+                      properties: {
+                        phoneNumber: {
+                          type: "string",
+                          example: "+94771234567"
+                        },
+                        otp: {
+                          type: "string",
+                          example: "123456"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "Successfully authenticated",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          success: { type: "boolean", example: true },
+                          data: {
+                            type: "object",
+                            properties: {
+                              accessToken: { type: "string" },
+                              refreshToken: { type: "string" },
+                              user: {
+                                type: "object",
+                                properties: {
+                                  id: { type: "string" },
+                                  phoneNumber: { type: "string" }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                400: {
+                  description: "OTP Invalid / Expired"
+                }
+              }
+            }
+          },
+          "/auth/otp/resend": {
+            post: {
+              tags: ["A1 Auth"],
+              summary: "Resend OTP Code (A1.3)",
+              security: [],
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["phoneNumber", "surname"],
+                      properties: {
+                        phoneNumber: { type: "string", example: "+94771234567" },
+                        surname: { type: "string", example: "Perera" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "OTP code resent"
+                }
+              }
+            }
+          },
+          "/auth/token/refresh": {
+            post: {
+              tags: ["A1 Auth"],
+              summary: "Refresh Access Token (A1.4)",
+              security: [],
+              requestBody: {
+                required: true,
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["refreshToken"],
+                      properties: {
+                        refreshToken: { type: "string", example: "rf_valid_001" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "Tokens rotated"
+                },
+                401: {
+                  description: "Refresh token revoked or expired"
+                }
+              }
+            }
+          },
+          "/auth/logout": {
+            post: {
+              tags: ["A1 Auth"],
+              summary: "Logout User Session (A1.5)",
+              responses: {
+                200: {
+                  description: "Successfully logged out"
+                }
+              }
+            }
+          },
+          "/auth/token/validate": {
+            get: {
+              tags: ["A1 Auth"],
+              summary: "Validate Bearer Access Token (A1.6)",
+              responses: {
+                200: {
+                  description: "Token is active and valid"
+                },
+                401: {
+                  description: "Invalid or expired token"
+                }
+              }
+            }
+          },
+          "/users/me": {
+            get: {
+              tags: ["A2 Users"],
+              summary: "Fetch Customer Profile (A2.1)",
+              responses: {
+                200: {
+                  description: "Profile record returned"
+                }
+              }
+            },
+            patch: {
+              tags: ["A2 Users"],
+              summary: "Update Profile Info (A2.2)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        surname: { type: "string", example: "Silva" },
+                        email: { type: "string", example: "silva@example.lk" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "Profile updated successfully"
+                }
+              }
+            }
+          },
+          "/users/me/preferences": {
+            patch: {
+              tags: ["A2 Users"],
+              summary: "Update Preferences (A2.3)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        pushNotificationsEnabled: { type: "boolean", example: false },
+                        emailReceiptsEnabled: { type: "boolean", example: true }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "Preferences updated"
+                }
+              }
+            }
+          },
+          "/users/me/phone": {
+            patch: {
+              tags: ["A2 Users"],
+              summary: "Initiate Phone Change (A2.4)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["newPhoneNumber"],
+                      properties: {
+                        newPhoneNumber: { type: "string", example: "+94768001122" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "OTP generated for new number"
+                }
+              }
+            }
+          },
+          "/users/me/phone/verify": {
+            post: {
+              tags: ["A2 Users"],
+              summary: "Verify and Confirm Phone Change (A2.5)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["newPhoneNumber", "otp"],
+                      properties: {
+                        newPhoneNumber: { type: "string", example: "+94768001122" },
+                        otp: { type: "string", example: "654321" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "Phone updated successfully"
+                }
+              }
+            }
+          },
+          "/users/me/push-token": {
+            post: {
+              tags: ["A2 Users"],
+              summary: "Register Expo Push Token (A2.6)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["pushToken"],
+                      properties: {
+                        pushToken: { type: "string", example: "ExponentPushToken[AbCdEf]" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "Push token registered"
+                }
+              }
+            }
+          },
+          "/pharmacies": {
+            get: {
+              tags: ["A3 Pharmacies"],
+              summary: "List and Filter Pharmacies (A3.1)",
+              security: [],
+              parameters: [
+                { name: "search", in: "query", schema: { type: "string" } },
+                { name: "isOpen", in: "query", schema: { type: "string" } },
+                { name: "sort", in: "query", schema: { type: "string" } },
+                { name: "latitude", in: "query", schema: { type: "string" } },
+                { name: "longitude", in: "query", schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "List of pharmacies matching search parameters"
+                }
+              }
+            }
+          },
+          "/pharmacies/{id}": {
+            get: {
+              tags: ["A3 Pharmacies"],
+              summary: "Get Pharmacy by ID (A3.2)",
+              security: [],
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Detailed pharmacy item with licensing info"
+                }
+              }
+            }
+          },
+          "/pharmacies/favorites": {
+            get: {
+              tags: ["A3 Pharmacies"],
+              summary: "List Favorite Pharmacies (A3.3)",
+              responses: {
+                200: {
+                  description: "Favorites list returned"
+                }
+              }
+            }
+          },
+          "/pharmacies/{id}/favorites": {
+            post: {
+              tags: ["A3 Pharmacies"],
+              summary: "Add Pharmacy to Favorites (A3.4)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                201: {
+                  description: "Added to favorites list"
+                }
+              }
+            }
+          },
+          "/pharmacies/{id}/favorites/{favoriteId}": {
+            delete: {
+              tags: ["A3 Pharmacies"],
+              summary: "Remove Pharmacy from Favorites (A3.5)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } },
+                { name: "favoriteId", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Removed from favorites"
+                }
+              }
+            }
+          },
+          "/medicines": {
+            get: {
+              tags: ["A4 Medicines"],
+              summary: "List and Filter Medicines (A4.1)",
+              security: [],
+              parameters: [
+                { name: "search", in: "query", schema: { type: "string" } },
+                { name: "category", in: "query", schema: { type: "string" } },
+                { name: "pharmacyId", in: "query", schema: { type: "string" } },
+                { name: "isRxRequired", in: "query", schema: { type: "string" } },
+                { name: "inStock", in: "query", schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Filtered catalog returned"
+                }
+              }
+            }
+          },
+          "/medicines/{id}": {
+            get: {
+              tags: ["A4 Medicines"],
+              summary: "Get Medicine by ID (A4.2)",
+              security: [],
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Medicine profile returned"
+                }
+              }
+            }
+          },
+          "/orders": {
+            get: {
+              tags: ["A5 Orders"],
+              summary: "List Customer Orders (A5.1)",
+              parameters: [
+                { name: "state", in: "query", schema: { type: "string" }, description: "Comma separated statuses" }
+              ],
+              responses: {
+                200: {
+                  description: "Filtered list of customer orders"
+                }
+              }
+            },
+            post: {
+              tags: ["A5 Orders"],
+              summary: "Create New Order (A5.2)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["orderType", "pharmacyId"],
+                      properties: {
+                        orderType: { type: "string", enum: ["OTC", "PRESCRIPTION"], example: "OTC" },
+                        pharmacyId: { type: "string", example: "ph-1" },
+                        prescriptionId: { type: "string", example: "rx_001" },
+                        items: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              medicineId: { type: "string", example: "med-1" },
+                              quantity: { type: "integer", example: 2 }
+                            }
+                          }
+                        },
+                        paymentMethod: { type: "string", enum: ["ONLINE", "CASH"], example: "ONLINE" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                201: {
+                  description: "Order created successfully"
+                }
+              }
+            }
+          },
+          "/orders/{id}": {
+            get: {
+              tags: ["A5 Orders"],
+              summary: "Get Order Details (A5.3)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Order item details returned"
+                }
+              }
+            }
+          },
+          "/orders/{id}/cancel": {
+            post: {
+              tags: ["A5 Orders"],
+              summary: "Cancel Order (A5.4)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Order moved to CANCELLED state"
+                }
+              }
+            }
+          },
+          "/orders/{id}/reorder": {
+            post: {
+              tags: ["A5 Orders"],
+              summary: "Reorder Past Order (A5.5)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                501: {
+                  description: "Not Implemented"
+                }
+              }
+            }
+          },
+          "/orders/{id}/ratings": {
+            post: {
+              tags: ["A5 Orders"],
+              summary: "Submit Rating & Review (A5.6)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["rating"],
+                      properties: {
+                        rating: { type: "integer", minimum: 1, maximum: 5, example: 5 },
+                        review: { type: "string", example: "Quick verification!" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                200: {
+                  description: "Rating saved"
+                }
+              }
+            }
+          },
+          "/orders/{id}/pickup/extension-requests": {
+            post: {
+              tags: ["A5 Orders"],
+              summary: "Request Pickup Deadline Extension (A5.7)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Pickup window extended by 24h"
+                }
+              }
+            }
+          },
+          "/prescriptions/upload-url": {
+            get: {
+              tags: ["A6 Prescriptions"],
+              summary: "Get Pre-Signed Upload S3 URL (A6.1)",
+              responses: {
+                200: {
+                  description: "Temporary pre-signed S3 URL generated"
+                }
+              }
+            }
+          },
+          "/prescriptions": {
+            get: {
+              tags: ["A6 Prescriptions"],
+              summary: "List Registered Prescriptions (A6.3)",
+              responses: {
+                200: {
+                  description: "List of upload histories"
+                }
+              }
+            },
+            post: {
+              tags: ["A6 Prescriptions"],
+              summary: "Register Uploaded Prescription (A6.2)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["fileKey"],
+                      properties: {
+                        fileKey: { type: "string", example: "prescriptions/mock/rx_001.jpg" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                201: {
+                  description: "Prescription record generated and AI check triggered"
+                }
+              }
+            }
+          },
+          "/prescriptions/{id}": {
+            get: {
+              tags: ["A6 Prescriptions"],
+              summary: "Get Prescription by ID (A6.4)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Prescription analysis object returned"
+                }
+              }
+            }
+          },
+          "/prescriptions/{id}/status": {
+            get: {
+              tags: ["A6 Prescriptions"],
+              summary: "Get Prescription AI Status (A6.5)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "State and AI score details"
+                }
+              }
+            }
+          },
+          "/orders/{orderId}/quotes/current": {
+            get: {
+              tags: ["A7 Quotes"],
+              summary: "Get Current Quotation (A7.1)",
+              parameters: [
+                { name: "orderId", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Quotation details returned"
+                },
+                404: {
+                  description: "No quote submitted yet"
+                }
+              }
+            }
+          },
+          "/orders/{orderId}/quotes/current/accept": {
+            post: {
+              tags: ["A7 Quotes"],
+              summary: "Accept Pharmacist Quote (A7.2)",
+              parameters: [
+                { name: "orderId", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Quote accepted; order state changes to PREPARING"
+                }
+              }
+            }
+          },
+          "/orders/{orderId}/quotes/current/decline": {
+            post: {
+              tags: ["A7 Quotes"],
+              summary: "Decline Pharmacist Quote (A7.3)",
+              parameters: [
+                { name: "orderId", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Quote declined; order state changes to DECLINED"
+                }
+              }
+            }
+          },
+          "/payments/intents": {
+            post: {
+              tags: ["A8 Payments"],
+              summary: "Generate Stripe Checkout Intent (A8.1)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["orderId"],
+                      properties: {
+                        orderId: { type: "string", example: "ord_103" }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                201: {
+                  description: "Client secret and gateway config generated"
+                }
+              }
+            }
+          },
+          "/orders/{orderId}/messages": {
+            get: {
+              tags: ["A9 Messages — Chat"],
+              summary: "Retrieve Chat History (A9.1)",
+              parameters: [
+                { name: "orderId", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Order conversation log returned"
+                }
+              }
+            },
+            post: {
+              tags: ["A9 Messages — Chat"],
+              summary: "Send Chat Message (A9.2)",
+              parameters: [
+                { name: "orderId", in: "path", required: true, schema: { type: "string" } }
+              ],
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["text"],
+                      properties: {
+                        text: { type: "string", example: "Will pick up at 5 PM." }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                201: {
+                  description: "Message dispatched"
+                }
+              }
+            }
+          },
+          "/notifications": {
+            get: {
+              tags: ["A10 Notifications"],
+              summary: "Get Notifications List (A10.1)",
+              responses: {
+                200: {
+                  description: "Notifications list returned"
+                }
+              }
+            }
+          },
+          "/notifications/{id}": {
+            patch: {
+              tags: ["A10 Notifications"],
+              summary: "Mark Notification Read (A10.2)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Marked read"
+                }
+              }
+            }
+          },
+          "/notifications/read-all": {
+            post: {
+              tags: ["A10 Notifications"],
+              summary: "Mark All Read (A10.3)",
+              responses: {
+                200: {
+                  description: "All notifications marked read"
+                }
+              }
+            }
+          },
+          "/health-tips": {
+            get: {
+              tags: ["A11 Health Tips"],
+              summary: "List Published Tips (A11.1)",
+              security: [],
+              parameters: [
+                { name: "category", in: "query", schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "List of tips matching query"
+                }
+              }
+            }
+          },
+          "/health-tips/{id}": {
+            get: {
+              tags: ["A11 Health Tips"],
+              summary: "Get Tip by ID (A11.2)",
+              security: [],
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Health tip object returned"
+                }
+              }
+            }
+          },
+          "/issues": {
+            get: {
+              tags: ["A12 Issues"],
+              summary: "List Reported Disputes (A12.1)",
+              responses: {
+                200: {
+                  description: "Dispute logs for authenticated customer"
+                }
+              }
+            },
+            post: {
+              tags: ["A12 Issues"],
+              summary: "File Post-Pickup Issue (A12.2)",
+              requestBody: {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["orderId", "issueType", "description"],
+                      properties: {
+                        orderId: { type: "string", example: "ord_104" },
+                        issueType: { type: "string", enum: ["Missing medicine", "Damaged / Expired", "Wrong quantity"], example: "Damaged / Expired" },
+                        description: { type: "string", example: "Seals were broken." },
+                        evidenceFileKeys: {
+                          type: "array",
+                          items: { type: "string", example: "evidence/mock/ev_01.jpg" }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              responses: {
+                201: {
+                  description: "Issue ticket opened"
+                }
+              }
+            }
+          },
+          "/issues/{id}": {
+            get: {
+              tags: ["A12 Issues"],
+              summary: "Get Ticket by ID (A12.3)",
+              parameters: [
+                { name: "id", in: "path", required: true, schema: { type: "string" } }
+              ],
+              responses: {
+                200: {
+                  description: "Ticket details returned"
+                }
+              }
+            }
+          }
+        },
+        components: {
+          securitySchemes: {
+            BearerAuth: {
+              type: "http",
+              scheme: "bearer",
+              bearerFormat: "JWT",
+              description: "Enter your Bearer Access Token. For testing, use `TOKEN_CUST_001` or another valid mock JWT."
+            }
+          },
+          schemas: {
+            SuccessEnvelope: {
+              type: "object",
+              properties: {
+                success: { type: "boolean", example: true },
+                data: { type: "object" },
+                meta: {
+                  type: "object",
+                  properties: {
+                    page: { type: "integer", example: 1 },
+                    limit: { type: "integer", example: 20 },
+                    total: { type: "integer", example: 1 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      // Build Swagger UI client
+      const ui = SwaggerUIBundle({
+        spec: spec,
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "BaseLayout"
+      });
+
+      window.ui = ui;
+    };
+  </script>
+</body>
+</html>

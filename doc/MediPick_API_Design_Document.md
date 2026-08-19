@@ -1224,7 +1224,7 @@ Only relevant when order `state = WAITING_CUSTOMER_CONFIRMATION`.
     "clientSecret": "pi_3xxx_secret_xxxx",
     "amount":       800,
     "currency":     "LKR",
-    "gateway":      "payhere"
+    "gateway":      "Stripe"
   }
 }
 ```
@@ -1233,9 +1233,9 @@ Only relevant when order `state = WAITING_CUSTOMER_CONFIRMATION`.
 
 ### A8.2 `POST /api/v1/payments/webhook`
 
-Secured via `X-PayHere-Signature` HMAC-SHA256 header verification — **not** customer JWT.
+Secured via `X-Stripe-Signature` HMAC-SHA256 header verification — **not** customer JWT.
 
-**Response:** `200 OK` (plain text, as required by PayHere).
+**Response:** `200 OK` (plain text, as required by Stripe).
 
 ---
 
@@ -2376,7 +2376,7 @@ CREATE INDEX idx_quote_items_quote ON quote_items (quote_id);
 
 ```sql
 -- One payment record per online payment attempt.
--- PayHere webhook updates status from PENDING → SUCCEEDED / FAILED.
+-- Stripe webhook updates status from PENDING → SUCCEEDED / FAILED.
 CREATE TABLE payments (
   id               UUID                 PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id         UUID                 NOT NULL REFERENCES orders(id),
@@ -2385,7 +2385,7 @@ CREATE TABLE payments (
   currency         VARCHAR(3)           NOT NULL DEFAULT 'LKR',
   method           payment_method_enum  NOT NULL,
   status           payment_status_enum  NOT NULL DEFAULT 'PENDING',
-  gateway          VARCHAR(50)          NOT NULL DEFAULT 'payhere',  -- Gateway name e.g. "payhere", "stripe"
+  gateway          VARCHAR(50)          NOT NULL DEFAULT 'Stripe',  -- Gateway name e.g. "Stripe", "stripe"
   gateway_txn_id   VARCHAR(200),                                     -- Transaction ID from the gateway
   gateway_payload  JSONB,                                            -- Full webhook payload (for audit)
   created_at       TIMESTAMPTZ          NOT NULL DEFAULT NOW(),
