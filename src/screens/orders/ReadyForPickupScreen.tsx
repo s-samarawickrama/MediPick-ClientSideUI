@@ -466,11 +466,8 @@ export const ReadyForPickupScreen = () => {
         visible={showRateModal}
         onClose={() => {
           setShowRateModal(false);
-          if (orderState === 'COMPLETED') {
-            navigation.navigate('Tabs', { screen: 'Orders' });
-          } else if (route.params?.orderId) {
-            getOrder(route.params.orderId).then(data => setOrder(data as unknown as Order)).catch(console.error);
-          }
+          // Unconditionally navigate back to Orders list
+          navigation.navigate('Tabs', { screen: 'Orders' });
         }}
         pharmacyName={order.pharmacy?.name || 'MediCare Central Pharmacy'}
         orderId={order.id}

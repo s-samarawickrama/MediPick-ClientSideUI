@@ -337,51 +337,12 @@ export interface MockOrder {
 export const OrderStore = {
   async findByCustomer(customerId: string): Promise<MockOrder[]> {
     const rows = await load<MockOrder>(KEYS.ORDERS);
-    
-    // Quick dev-hack to force the rating into the user's cached DB so they can see the demo
-    let modified = false;
-    rows.forEach((o) => {
-      if (o.state === 'COMPLETED') {
-        if (o.orderNumber === '#MP123502') { // City Health Pharmacy
-          // Add to City Health ONLY
-          if (!o.rating) {
-            o.rating = { overall: 5, service: 5, availability: 4, pickup: 5, comment: "Excellent service and the pharmacist was very helpful!" };
-            modified = true;
-          }
-        } else {
-          // Strip from EVERYTHING else
-          if (o.rating) {
-            delete o.rating;
-            modified = true;
-          }
-        }
-      }
-    });
-    if (modified) await save(KEYS.ORDERS, rows);
-
     return rows.filter((o) => o.customerId === customerId);
   },
 
   async findById(id: string): Promise<MockOrder | null> {
     const rows = await load<MockOrder>(KEYS.ORDERS);
-    const order = rows.find((o) => o.id === id) ?? null;
-    
-    // Quick dev-hack to force the rating into the user's cached DB
-    if (order && order.state === 'COMPLETED') {
-      if (order.orderNumber === '#MP123502') { // City Health Pharmacy
-        if (!order.rating) {
-          order.rating = { overall: 5, service: 5, availability: 4, pickup: 5, comment: "Excellent service and the pharmacist was very helpful!" };
-          await save(KEYS.ORDERS, rows);
-        }
-      } else {
-        if (order.rating) {
-          delete order.rating;
-          await save(KEYS.ORDERS, rows);
-        }
-      }
-    }
-    
-    return order;
+    return rows.find((o) => o.id === id) ?? null;
   },
 
   async create(order: MockOrder): Promise<MockOrder> {
