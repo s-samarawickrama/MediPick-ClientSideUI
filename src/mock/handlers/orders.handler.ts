@@ -8,6 +8,7 @@ import { OrderStore } from '../store';
 import { SEED_PHARMACIES, SEED_MEDICINES } from '../seed';
 import { mockResponse, mockError, parseBody, requireAuth } from '../engine';
 import { addSystemMockMessage } from './misc.handler';
+import { MOCK_ORDERS } from '../demoData';
 
 // Helper to generate IDs
 const uuid = () => Math.random().toString(36).substring(2, 10);
@@ -38,6 +39,7 @@ export async function handleListOrders(
   // Convert full orders to OrderSummary shape
   const data = sliced.map((o) => {
     const freshPharmacy = SEED_PHARMACIES.find(p => p.id === o.pharmacy?.id) || o.pharmacy;
+    const mockRef = MOCK_ORDERS.find(m => m.orderNumber === o.orderNumber);
     
     return {
       id: o.id,
@@ -46,13 +48,15 @@ export async function handleListOrders(
       state: o.state,
       pharmacy: freshPharmacy,
       itemCount: o.itemCount,
-    totalMrp: o.totalMrp,
-    totalAmount: o.totalAmount,
-    savings: o.savings,
+      items: mockRef ? mockRef.items : o.items,
+      allowGenericSubstitutions: mockRef && mockRef.allowGenericSubstitutions !== undefined ? mockRef.allowGenericSubstitutions : o.allowGenericSubstitutions,
+      totalMrp: o.totalMrp,
+      totalAmount: o.totalAmount,
+      savings: o.savings,
       isPaid: o.isPaid,
       paymentMethod: o.paymentMethod,
       createdAt: o.createdAt,
-      rating: o.rating,
+      rating: mockRef && mockRef.rating ? mockRef.rating : o.rating,
     };
   });
 
@@ -80,6 +84,18 @@ export async function handleGetOrder(
   if (order.pharmacy?.id) {
     const freshPharmacy = SEED_PHARMACIES.find(p => p.id === order.pharmacy.id);
     if (freshPharmacy) order.pharmacy = freshPharmacy;
+  }
+
+  // Overlay rich demo data (items with substitution flags, quotes, rating) from MOCK_ORDERS
+  const mockRef = MOCK_ORDERS.find((m: any) => m.orderNumber === order.orderNumber);
+  if (mockRef) {
+    if (mockRef.items && mockRef.items.length > 0) order.items = mockRef.items;
+    if (mockRef.quotes)                              order.quotes = mockRef.quotes;
+    if (mockRef.selectedQuote)                       order.selectedQuote = mockRef.selectedQuote;
+    if (mockRef.rating)                              order.rating = mockRef.rating;
+    if (mockRef.allowGenericSubstitutions !== undefined) {
+      order.allowGenericSubstitutions = mockRef.allowGenericSubstitutions;
+    }
   }
 
   // Re-hydrate medicine image references

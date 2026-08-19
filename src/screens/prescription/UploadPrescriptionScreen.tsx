@@ -356,6 +356,40 @@ export const UploadPrescriptionScreen = () => {
           />
         </View>
 
+        {/* Generic Substitution Toggle — Rx-only */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 12,
+            backgroundColor: allowGenericSubstitutions
+              ? (isDark ? '#1A2E1A' : colors.limeWhisper)
+              : colors.surfaceWhite,
+            borderRadius: 14,
+            padding: 14,
+            borderWidth: 1,
+            borderColor: allowGenericSubstitutions ? '#8BC34A' : colors.borderSoft,
+          }}
+          onPress={() => setAllowGenericSubstitutions(v => !v)}
+        >
+          <View style={{ marginTop: 2 }}>
+            {allowGenericSubstitutions
+              ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
+              : <Square color={colors.borderSoft} size={22} strokeWidth={2.5} />}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark }}>
+              Allow Generic Substitutions
+            </Text>
+            <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 3, lineHeight: 16 }}>
+              If a prescribed medicine is unavailable, the pharmacist may suggest a clinically equivalent generic alternative.{'\n'}
+              <Text style={{ fontFamily: FONTS.bold, color: colors.warning }}>⚠ Price may differ</Text>
+              {' '}— the pharmacy will quote before you pay.
+            </Text>
+          </View>
+        </TouchableOpacity>
+
         {/* Extra OTC Items Card */}
         <View style={s.extraItemsContainer}>
           <View style={s.extraHeaderBanner}>

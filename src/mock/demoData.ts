@@ -354,7 +354,7 @@ export const MOCK_ORDERS: Order[] = [
     state: 'READY_FOR_PICKUP',
     pharmacy: MOCK_PHARMACIES[0],
     items: [
-      { medicine: MOCK_MEDICINES[0], quantity: 2, price: 100 },
+      { medicine: MOCK_MEDICINES[0], quantity: 2, price: 100, isSubstitute: true, originalPrescribed: 'Aspirin 500mg' },
       { medicine: MOCK_MEDICINES[1], quantity: 1, price: 790 },
     ],
     totalAmount: 990,
@@ -364,6 +364,7 @@ export const MOCK_ORDERS: Order[] = [
     pickupOtp: '849201',
     pickupOtpVerified: false,
     pickupDeadline: new Date(Date.now() + 5 * 3600 * 1000).toISOString(), // 5 hours left
+    allowGenericSubstitutions: true,
     createdAt: new Date().toISOString(),
   },
   {
@@ -379,6 +380,7 @@ export const MOCK_ORDERS: Order[] = [
     totalMrp: 2100,
     isPaid: true,
     paymentMethod: 'ONLINE',
+    allowGenericSubstitutions: false,
     createdAt: new Date().toISOString(),
   },
   {
@@ -387,11 +389,22 @@ export const MOCK_ORDERS: Order[] = [
     orderType: 'PRESCRIPTION',
     state: 'WAITING_CUSTOMER_CONFIRMATION',
     pharmacy: MOCK_PHARMACIES[2],
-    items: [
-      { medicine: MOCK_MEDICINES[3], quantity: 1, price: 300 },
-    ],
-    totalAmount: 300,
-    totalMrp: 350,
+    items: [],
+    quotes: [{
+      pharmacyId: MOCK_PHARMACIES[2].id,
+      pharmacyName: MOCK_PHARMACIES[2].name,
+      pharmacistName: MOCK_PHARMACIES[2].pharmacistName,
+      pharmacistRegNo: MOCK_PHARMACIES[2].nmraLicense,
+      nmraLicense: MOCK_PHARMACIES[2].nmraLicense,
+      items: [
+        { medicineName: 'Panadol Advance 500mg', genericName: 'Paracetamol', mrp: 150, quotedPrice: 120, quantity: 1, isAlternative: true, originalPrescribed: 'Tylenol 500mg' }
+      ],
+      totalAmount: 120,
+      totalMrp: 150,
+      validUntil: new Date(Date.now() + 24 * 3600 * 1000).toISOString()
+    }],
+    totalAmount: 120,
+    totalMrp: 150,
     isPaid: false,
     createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
   },
@@ -465,6 +478,13 @@ export const MOCK_ORDERS: Order[] = [
     paymentMethod: 'PAY_AT_COUNTER',
     pickupOtp: '667788',
     pickupOtpVerified: true,
+    rating: {
+      overall: 4,
+      service: 5,
+      availability: 3,
+      pickup: 5,
+      comment: "Good experience, but they were out of stock of the bandages.",
+    },
     createdAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
   },
   {
@@ -507,6 +527,12 @@ export const MOCK_ORDERS: Order[] = [
     paymentMethod: 'ONLINE',
     pickupOtp: '456789',
     pickupOtpVerified: true,
+    rating: {
+      overall: 5,
+      service: 5,
+      availability: 5,
+      pickup: 5,
+    },
     createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(), // 2 hours ago (Recent)
   },
   {

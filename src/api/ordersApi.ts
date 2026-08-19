@@ -28,6 +28,8 @@ export interface OrderItem {
   unitMrp:     number;    // Price per unit at MRP in LKR
   unitPrice:   number;    // Price per unit at pharmacy price in LKR
   lineTotal:   number;    // unitPrice × quantity
+  isSubstitute?: boolean;
+  originalPrescribed?: string;
 }
 
 export interface OrderPharmacy {

@@ -27,7 +27,7 @@ export const MultiStoreCartScreen = () => {
   const [opacity] = useState(new Animated.Value(0));
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [payMethod, setPayMethod] = useState<'counter' | 'stripe'>('counter');
-  const [allowGenericSubstitutions, setAllowGenericSubstitutions] = useState(false);
+  const [allowGenericSubs, setAllowGenericSubs] = useState<Record<string, boolean>>({});
   const [isCheckingOut, setIsCheckingOut] = useState<string | null>(null);
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [storeToCheckout, setStoreToCheckout] = useState<any>(null);
@@ -177,7 +177,7 @@ export const MultiStoreCartScreen = () => {
           medicineId: item.id,
           quantity: item.qty
         })),
-        allowGenericSubstitutions: allowGenericSubstitutions || !!(hasRx && attachedPrescription?.allowGenericSubstitutions),
+        allowGenericSubstitutions: !!(allowGenericSubs[storeGroup.pharmacy.id] || (hasRx && attachedPrescription?.allowGenericSubstitutions)),
         prescriptionId: hasRx && attachedPrescription ? attachedPrescription.image : undefined,
       });
 
@@ -319,21 +319,43 @@ export const MultiStoreCartScreen = () => {
               {/* Items List */}
               <View style={s.itemList}>
                 {storeGroup.hasPrescription && attachedPrescription && (
-                  <View style={s.itemRow}>
-                    <TouchableOpacity onPress={() => toggleItemSelection(storeGroup.pharmacy.id, 'rx')} style={{ marginRight: 12, marginTop: 4 }}>
-                      {selectedItems.has(`${storeGroup.pharmacy.id}_rx`) 
-                        ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
-                        : <Square color="#CBD5E1" size={22} strokeWidth={2.5} />}
-                    </TouchableOpacity>
-                    <View style={[s.attachedRxCard, { flex: 1, marginTop: 0 }]}>
-                      <View style={s.attachedRxHeader}>
-                        <FileText color={colors.peacockBlue} size={20} strokeWidth={2} />
-                        <Text style={s.attachedRxTitle}>Attached Prescription</Text>
+                  <>
+                    <View style={s.itemRow}>
+                      <TouchableOpacity onPress={() => toggleItemSelection(storeGroup.pharmacy.id, 'rx')} style={{ marginRight: 12, marginTop: 4 }}>
+                        {selectedItems.has(`${storeGroup.pharmacy.id}_rx`) 
+                          ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
+                          : <Square color="#CBD5E1" size={22} strokeWidth={2.5} />}
+                      </TouchableOpacity>
+                      <View style={[s.attachedRxCard, { flex: 1, marginTop: 0 }]}>
+                        <View style={s.attachedRxHeader}>
+                          <FileText color={colors.peacockBlue} size={20} strokeWidth={2} />
+                          <Text style={s.attachedRxTitle}>Attached Prescription</Text>
+                        </View>
+                        <Text style={s.attachedRxNote}>{attachedPrescription.note || 'No special instructions.'}</Text>
+                        <Text style={s.itemPrice}>(Price will be quoted by pharmacy)</Text>
                       </View>
-                      <Text style={s.attachedRxNote}>{attachedPrescription.note || 'No special instructions.'}</Text>
-                      <Text style={s.itemPrice}>(Price will be quoted by pharmacy)</Text>
                     </View>
-                  </View>
+
+                    {/* Generic Substitution toggle — Rx only */}
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 4, padding: 10, backgroundColor: allowGenericSubs[storeGroup.pharmacy.id] ? colors.limeWhisper : colors.bgWarm, borderRadius: 10, borderWidth: 1, borderColor: allowGenericSubs[storeGroup.pharmacy.id] ? '#8BC34A' : colors.borderSoft }}
+                      onPress={() => setAllowGenericSubs(prev => ({ ...prev, [storeGroup.pharmacy.id]: !prev[storeGroup.pharmacy.id] }))}
+                    >
+                      <View style={{ marginTop: 1 }}>
+                        {allowGenericSubs[storeGroup.pharmacy.id]
+                          ? <CheckSquare color={colors.midTeal} size={18} strokeWidth={2.5} />
+                          : <Square color="#CBD5E1" size={18} strokeWidth={2.5} />}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark }}>Allow Generic Substitutions</Text>
+                        <Text style={{ fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted, marginTop: 2, lineHeight: 14 }}>
+                          Pharmacy may suggest a cheaper equivalent if prescribed item is unavailable.{' '}
+                          <Text style={{ color: colors.warning, fontFamily: FONTS.bold }}>Price may differ — quoted before payment.</Text>
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </>
                 )}
                 {storeGroup.items.map((item) => (
                   <View key={item.id} style={s.itemRow}>
@@ -368,6 +390,8 @@ export const MultiStoreCartScreen = () => {
                   </View>
                 ))}
               </View>
+
+
 
               <View style={s.storeFooter}>
                 <View>
@@ -429,27 +453,6 @@ export const MultiStoreCartScreen = () => {
         {/* Standardized Payment Method Selector */}
         {cartStores.length > 0 && (
           <View>
-            {/* Show Generic Substitution Toggle ONLY if there is an attached prescription */}
-            {attachedPrescription && (
-              <TouchableOpacity 
-                style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: colors.surfaceWhite, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}
-                activeOpacity={0.7}
-                onPress={() => setAllowGenericSubstitutions(!allowGenericSubstitutions)}
-              >
-                <View style={{ marginRight: 12 }}>
-                  {allowGenericSubstitutions 
-                    ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
-                    : <Square color={colors.textMuted} size={22} strokeWidth={2.5} />}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>Allow Generic Substitutes</Text>
-                  <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-                    If a medicine is out of stock, the pharmacist can swap it for an equivalent generic version.
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-
             <PaymentMethodSelector
               selectedMethod={payMethod}
               onSelect={setPayMethod}

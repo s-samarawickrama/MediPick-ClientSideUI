@@ -354,6 +354,18 @@ export const OrderDetailsScreen = () => {
                     {item.medicine.genericName && (
                       <Text style={s.itemSub}>{item.medicine.genericName}</Text>
                     )}
+                    {item.isSubstitute && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                        <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.limeWhisper, borderRadius: 4, borderWidth: 1, borderColor: '#D6EDA0' }}>
+                          <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: colors.midTeal }}>Generic Substitute</Text>
+                        </View>
+                        {item.originalPrescribed && (
+                          <Text style={{ fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted }}>
+                            for {item.originalPrescribed}
+                          </Text>
+                        )}
+                      </View>
+                    )}
                   </View>
                   <Text style={s.itemPrice}>LKR {item.price * item.quantity}</Text>
                 </View>
@@ -362,6 +374,15 @@ export const OrderDetailsScreen = () => {
               <Text style={s.noItemsText}>Prescription-only order or items not listed.</Text>
             )}
           </View>
+
+          {order.allowGenericSubstitutions && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, padding: 12, backgroundColor: isDark ? colors.plumLight : colors.limeWhisper, borderRadius: 8 }}>
+              <CheckCircle2 color={colors.midTeal} size={16} strokeWidth={2.5} />
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark }}>
+                Generic substitutions allowed by you
+              </Text>
+            </View>
+          )}
 
           {/* Totals */}
           <View style={s.totalsDivider} />

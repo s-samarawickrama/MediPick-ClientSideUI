@@ -183,7 +183,9 @@ export const QuotationScreen = () => {
     items: quote.items.map(i => ({
       name: i.medicineName + (i.quantity > 1 ? ` x ${i.quantity}` : ''),
       mrp: i.mrp * i.quantity,
-      offered: i.quotedPrice * i.quantity
+      offered: i.quotedPrice * i.quantity,
+      isAlternative: i.isAlternative,
+      originalPrescribed: i.originalPrescribed
     })),
   };
 
@@ -265,7 +267,21 @@ export const QuotationScreen = () => {
 
           {offer.items.slice(0, 1).map((item, i) => (
             <View key={i} style={[s.itemRow, s.itemBorder]}>
-              <Text style={s.itemName}>{item.name}</Text>
+              <View style={{ flex: 1, paddingRight: 8 }}>
+                <Text style={s.itemName}>{item.name}</Text>
+                {item.isAlternative && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                    <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.limeWhisper, borderRadius: 4, borderWidth: 1, borderColor: '#D6EDA0' }}>
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: colors.midTeal }}>Generic Substitute</Text>
+                    </View>
+                    {item.originalPrescribed && (
+                      <Text style={{ fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted }}>
+                        for {item.originalPrescribed}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </View>
               <View style={{ alignItems: 'flex-end', flexDirection: 'row', gap: 8 }}>
                 <Text style={s.itemMrp}>LKR {item.mrp}</Text>
                 <Text style={s.itemOffer}>LKR {item.offered}</Text>
@@ -280,7 +296,21 @@ export const QuotationScreen = () => {
 
           {offer.items.slice(1).map((item, i) => (
             <View key={i} style={[s.itemRow, i < offer.items.slice(1).length - 1 && s.itemBorder]}>
-              <Text style={s.itemName}>{item.name}</Text>
+              <View style={{ flex: 1, paddingRight: 8 }}>
+                <Text style={s.itemName}>{item.name}</Text>
+                {item.isAlternative && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                    <View style={{ paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.limeWhisper, borderRadius: 4, borderWidth: 1, borderColor: '#D6EDA0' }}>
+                      <Text style={{ fontFamily: FONTS.bold, fontSize: 10, color: colors.midTeal }}>Generic Substitute</Text>
+                    </View>
+                    {item.originalPrescribed && (
+                      <Text style={{ fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted }}>
+                        for {item.originalPrescribed}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </View>
               <View style={{ alignItems: 'flex-end', flexDirection: 'row', gap: 8 }}>
                 <Text style={s.itemMrp}>LKR {item.mrp}</Text>
                 <Text style={s.itemOffer}>LKR {item.offered}</Text>

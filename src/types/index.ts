@@ -114,6 +114,8 @@ export interface Order {
     medicine: MedicineItem;
     quantity: number;
     price: number;
+    isSubstitute?: boolean;
+    originalPrescribed?: string;
   }>;
   quotes?: PharmacyQuote[];
   selectedQuote?: PharmacyQuote;
