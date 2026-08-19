@@ -40,6 +40,7 @@ interface CartContextType {
   updateQuantity: (medicineId: string, pharmacyId: string, delta: number) => void;
   setSelectedPharmacy: (pharmacy: Pharmacy | null) => void;
   setAttachedPrescription: (prescription: AttachedPrescription | null) => void;
+  processReorder: (items: CartItem[], attachedRx?: AttachedPrescription) => void;
   clearCart: () => void;
   subtotal: number;
   totalMrp: number;
@@ -127,6 +128,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAttachedPrescription(null);
   };
 
+  const processReorder = (items: CartItem[], attachedRx?: AttachedPrescription) => {
+    if (attachedRx) {
+      setAttachedPrescription(attachedRx);
+    }
+    setCartItems((prev) => {
+      let nextCart = [...prev];
+      items.forEach((newItem) => {
+        const existingIndex = nextCart.findIndex(
+          (item) => item.medicine.id === newItem.medicine.id && item.pharmacy.id === newItem.pharmacy.id
+        );
+        if (existingIndex >= 0) {
+          nextCart[existingIndex].quantity += newItem.quantity;
+        } else {
+          nextCart.push(newItem);
+        }
+      });
+      return nextCart;
+    });
+  };
+
   const subtotal = cartItems.reduce((acc, item) => acc + item.medicine.pharmacyPrice * item.quantity, 0);
   const totalMrp = cartItems.reduce((acc, item) => acc + item.medicine.mrpPrice * item.quantity, 0);
 
@@ -142,6 +163,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateQuantity,
         setSelectedPharmacy,
         setAttachedPrescription,
+        processReorder,
         clearCart,
         subtotal,
         totalMrp,

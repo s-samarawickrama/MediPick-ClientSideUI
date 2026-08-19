@@ -55,11 +55,13 @@ const ActiveOrderCard = ({
   order,
   onPress,
   onAction,
+  onReorder,
   onReportIssue,
 }: {
   order: Order;
   onPress: () => void;
   onAction: () => void;
+  onReorder?: () => void;
   onReportIssue?: () => void;
 }) => {
   const { colors } = useTheme();
@@ -171,7 +173,7 @@ const ActiveOrderCard = ({
                   <Text style={[s.footerBtnText, s.btnLightGrayText]}>Report Issue</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={(e) => { e.stopPropagation(); showAlert('Added to Cart', 'Items have been added to your cart for reorder.'); }}>
+              <TouchableOpacity style={[s.footerBtn, s.btnTeal]} onPress={(e) => { e.stopPropagation(); onReorder?.(); }}>
                 <Text style={[s.footerBtnText, s.btnTealText]}>Reorder</Text>
               </TouchableOpacity>
             </>
@@ -251,6 +253,59 @@ export const OrdersScreen = () => {
     }
   };
 
+  const { processReorder } = useCart();
+
+  const handleReorder = (order: Order) => {
+    if (order.pharmacy && order.pharmacy.isOpen === false) {
+      showAlert('Pharmacy Closed', 'This pharmacy is currently closed. Please try again later.');
+      return;
+    }
+
+    const validItems: any[] = [];
+    let hasOutOfStock = false;
+
+    if (order.items && order.items.length > 0) {
+      order.items.forEach((oi) => {
+        // MOCK_MEDICINES should be imported if not already, wait, it's used via useCart or we need to import it.
+        // I will import it if it's missing, let's see.
+        const fullMed = require('../../mock/demoData').MOCK_MEDICINES.find((m: any) => m.id === oi.medicineId);
+        if (fullMed) {
+          if (fullMed.inStock) {
+            validItems.push({
+              medicine: fullMed,
+              quantity: oi.quantity,
+              pharmacy: order.pharmacy
+            });
+          } else {
+            hasOutOfStock = true;
+          }
+        }
+      });
+    }
+
+    let attachedRx = undefined;
+    if (order.prescriptionId) {
+      attachedRx = {
+        image: order.prescriptionId,
+        note: 'Reorder from previous prescription',
+        pharmacyId: order.pharmacy!.id,
+        pharmacyName: order.pharmacy!.name
+      };
+    }
+
+    if (validItems.length === 0 && !attachedRx) {
+      showAlert('Cannot Reorder', 'None of the items from your previous order are currently available.');
+      return;
+    }
+
+    if (hasOutOfStock) {
+      showAlert('Items Out of Stock', 'Some items from this order are currently out of stock and could not be added.');
+    }
+
+    processReorder(validItems, attachedRx);
+    navigation.navigate('Tabs', { screen: 'Cart' });
+  };
+
   return (
     <View style={s.screen}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.bgWarm} />
@@ -309,7 +364,8 @@ export const OrdersScreen = () => {
                 order={o} 
                 onPress={() => goToOrderDetails(o)} 
                 onAction={() => goToTracker(o)} 
-                onReportIssue={() => navigation.navigate('ReportIssue', { orderId: o.id })}
+                onReorder={() => handleReorder(o)}
+                onReportIssue={o.state === 'COMPLETED' ? () => navigation.navigate('ReportIssue', { orderId: o.id }) : undefined}
               />
             ))}
 

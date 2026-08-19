@@ -8,7 +8,8 @@ import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { useOrders } from '../../context/OrderContext';
-import { MOCK_ORDERS } from '../../mock/demoData';
+import { useCart } from '../../context/CartContext';
+import { MOCK_ORDERS, MOCK_MEDICINES } from '../../mock/demoData';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Button } from '../../components/common/Button';
 import { RateExperienceScreen } from '../../components/common/RateExperienceScreen';
@@ -57,9 +58,61 @@ export const OrderDetailsScreen = () => {
   const isCancelled = ['CANCELLED', 'CLOSED', 'REJECTED'].includes(order.state);
   const isReupload  = order.state === 'REUPLOAD_REQUESTED';
   const isQuote     = order.state === 'WAITING_CUSTOMER_CONFIRMATION';
-  const isIssue     = order.state === 'ISSUE_REPORTED';
-  const isActive = !isCompleted && !isCancelled;
   const isRecentCompleted = isCompleted && !order.refundStatus && !order.rejectReason && new Date(order.createdAt).getTime() > Date.now() - 24 * 3600 * 1000;
+  const isActive = !isCompleted && !isCancelled;
+  const isIssue = order.state === 'ISSUE_REPORTED' || order.state === 'UNDER_REVIEW';
+
+  const { processReorder } = useCart();
+
+  const handleReorder = () => {
+    if (!order) return;
+    if (order.pharmacy && order.pharmacy.isOpen === false) {
+      showAlert('Pharmacy Closed', 'This pharmacy is currently closed. Please try again later.');
+      return;
+    }
+
+    const validItems: any[] = [];
+    let hasOutOfStock = false;
+
+    if (order.items && order.items.length > 0) {
+      order.items.forEach((oi) => {
+        const fullMed = MOCK_MEDICINES.find((m) => m.id === oi.medicineId);
+        if (fullMed) {
+          if (fullMed.inStock) {
+            validItems.push({
+              medicine: fullMed,
+              quantity: oi.quantity,
+              pharmacy: order.pharmacy
+            });
+          } else {
+            hasOutOfStock = true;
+          }
+        }
+      });
+    }
+
+    let attachedRx = undefined;
+    if (order.prescriptionId) {
+      attachedRx = {
+        image: order.prescriptionId,
+        note: 'Reorder from previous prescription',
+        pharmacyId: order.pharmacy!.id,
+        pharmacyName: order.pharmacy!.name
+      };
+    }
+
+    if (validItems.length === 0 && !attachedRx) {
+      showAlert('Cannot Reorder', 'None of the items from your previous order are currently available.');
+      return;
+    }
+
+    if (hasOutOfStock) {
+      showAlert('Items Out of Stock', 'Some items from this order are currently out of stock and could not be added.');
+    }
+
+    processReorder(validItems, attachedRx);
+    navigation.navigate('Tabs', { screen: 'Cart' });
+  };
 
   const handleCancelOrder = () => {
     if (['PREPARING', 'READY_FOR_PICKUP'].includes(order.state)) {
@@ -429,7 +482,7 @@ export const OrderDetailsScreen = () => {
             </>
           ) : isCompleted ? (
             <>
-              <Button title="Reorder Items" variant="primary" onPress={() => {}} />
+              <Button title="Reorder Items" variant="primary" onPress={handleReorder} />
               {isRecentCompleted && (
                 <Button
                   title="Report an Issue"

@@ -121,7 +121,7 @@ export const MOCK_MEDICINES: MedicineItem[] = [
     pharmacyPrice: 790,
     isRxRequired: false,
     category: 'Vitamins',
-    inStock: true,
+    inStock: false,
     availableAtPharmacyIds: ['ph-1', 'ph-3', 'ph-5'],
     popularity: 85,
     description: 'High-strength Vitamin C effervescent tablets to support your immune system daily.',
