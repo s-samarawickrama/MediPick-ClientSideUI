@@ -85,7 +85,11 @@ export const ReadyForPickupScreen = () => {
     try {
       await completeOrder(order.id);
       setOrderState('COMPLETED');
-      Alert.alert("Demo Simulation", "Pharmacist scanned your OTP at the counter. Order is now picked up and completed!");
+      Alert.alert(
+        "Demo Simulation", 
+        "Pharmacist scanned your OTP at the counter. Order is now picked up and completed!",
+        [{ text: 'OK', onPress: () => setShowRateModal(true) }]
+      );
     } catch (e) {
       console.warn('Failed to complete order:', e);
     }
@@ -462,8 +466,9 @@ export const ReadyForPickupScreen = () => {
         visible={showRateModal}
         onClose={() => {
           setShowRateModal(false);
-          // Refetch order to get the updated rating data
-          if (route.params?.orderId) {
+          if (orderState === 'COMPLETED') {
+            navigation.navigate('Tabs', { screen: 'Orders' });
+          } else if (route.params?.orderId) {
             getOrder(route.params.orderId).then(data => setOrder(data as unknown as Order)).catch(console.error);
           }
         }}

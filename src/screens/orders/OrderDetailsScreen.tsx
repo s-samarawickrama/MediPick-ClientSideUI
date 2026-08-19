@@ -199,6 +199,26 @@ export const OrderDetailsScreen = () => {
           </View>
         )}
 
+        {/* Submitted Rating Display */}
+        {isCompleted && order.rating && (
+          <View style={{ marginBottom: 16, padding: 16, backgroundColor: colors.surfaceWhite, borderRadius: 16, borderWidth: 1, borderColor: colors.borderSoft }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Star color="#F59E0B" fill="#F59E0B" size={18} />
+              <Text style={{ fontFamily: FONTS.bold, fontSize: 16, color: colors.textDark, marginLeft: 8 }}>
+                {order.rating.overall} / 5
+              </Text>
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 13, color: colors.midTeal, marginLeft: 'auto' }}>
+                Thank you for rating!
+              </Text>
+            </View>
+            {order.rating.comment ? (
+              <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary }}>
+                "{order.rating.comment}"
+              </Text>
+            ) : null}
+          </View>
+        )}
+
         {/* Pharmacy Info */}
         <TouchableOpacity 
           style={s.card} 
