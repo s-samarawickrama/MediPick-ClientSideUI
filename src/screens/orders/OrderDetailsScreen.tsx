@@ -96,9 +96,9 @@ export const OrderDetailsScreen = () => {
     }
 
     let attachedRx = undefined;
-    if (order.prescriptionId) {
+    if (order.prescriptionUri) {
       attachedRx = {
-        image: order.prescriptionId,
+        image: order.prescriptionUri,
         note: 'Reorder from previous prescription',
         pharmacyId: order.pharmacy!.id,
         pharmacyName: order.pharmacy!.name

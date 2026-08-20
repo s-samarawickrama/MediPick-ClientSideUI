@@ -337,24 +337,26 @@ export const MultiStoreCartScreen = () => {
                     </View>
 
                     {/* Generic Substitution toggle — Rx only */}
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 4, padding: 10, backgroundColor: allowGenericSubs[storeGroup.pharmacy.id] ? colors.limeWhisper : colors.bgWarm, borderRadius: 10, borderWidth: 1, borderColor: allowGenericSubs[storeGroup.pharmacy.id] ? '#8BC34A' : colors.borderSoft }}
-                      onPress={() => setAllowGenericSubs(prev => ({ ...prev, [storeGroup.pharmacy.id]: !prev[storeGroup.pharmacy.id] }))}
-                    >
-                      <View style={{ marginTop: 1 }}>
-                        {allowGenericSubs[storeGroup.pharmacy.id]
-                          ? <CheckSquare color={colors.midTeal} size={18} strokeWidth={2.5} />
-                          : <Square color="#CBD5E1" size={18} strokeWidth={2.5} />}
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark }}>Allow Generic Substitutions</Text>
-                        <Text style={{ fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted, marginTop: 2, lineHeight: 14 }}>
-                          Pharmacy may suggest a cheaper equivalent if prescribed item is unavailable.{' '}
-                          <Text style={{ color: colors.warning, fontFamily: FONTS.bold }}>Price may differ — quoted before payment.</Text>
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
+                    {selectedItems.has(`${storeGroup.pharmacy.id}_rx`) && (
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 4, padding: 10, backgroundColor: allowGenericSubs[storeGroup.pharmacy.id] ? colors.limeWhisper : colors.bgWarm, borderRadius: 10, borderWidth: 1, borderColor: allowGenericSubs[storeGroup.pharmacy.id] ? '#8BC34A' : colors.borderSoft }}
+                        onPress={() => setAllowGenericSubs(prev => ({ ...prev, [storeGroup.pharmacy.id]: !prev[storeGroup.pharmacy.id] }))}
+                      >
+                        <View style={{ marginTop: 1 }}>
+                          {allowGenericSubs[storeGroup.pharmacy.id]
+                            ? <CheckSquare color={colors.midTeal} size={18} strokeWidth={2.5} />
+                            : <Square color="#CBD5E1" size={18} strokeWidth={2.5} />}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontFamily: FONTS.bold, fontSize: 12, color: colors.textDark }}>Allow Generic Substitutions</Text>
+                          <Text style={{ fontFamily: FONTS.medium, fontSize: 10, color: colors.textMuted, marginTop: 2, lineHeight: 14 }}>
+                            Pharmacy may suggest a cheaper equivalent if prescribed item is unavailable.{' '}
+                            <Text style={{ color: colors.warning, fontFamily: FONTS.bold }}>Price may differ — quoted before payment.</Text>
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    )}
                   </>
                 )}
                 {storeGroup.items.map((item) => (

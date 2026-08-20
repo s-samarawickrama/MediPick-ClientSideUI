@@ -1,0 +1,46 @@
+openapi: 3.0.0
+info:
+  title: MediPick API
+  version: 1.0.0
+servers:
+  - url: http://localhost:4010
+paths:
+  /v1/auth/otp/request:
+    post:
+      summary: Request OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phoneNumber:
+                  type: string
+                  example: "+94771234567"
+                surname:
+                  type: string
+                  example: "Perera"
+                email:
+                  type: string
+                  example: "p@example.com"
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "OTP sent to +94771234567"
+                      expiresIn:
+                        type: integer
+                        example: 300

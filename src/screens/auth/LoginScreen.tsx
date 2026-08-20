@@ -31,6 +31,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email,   setEmail]   = useState('');
   const [phoneErr,   setPhoneErr]   = useState('');
   const [surnameErr, setSurnameErr] = useState('');
+  const [emailErr,   setEmailErr]   = useState('');
   const [loading,    setLoading]    = useState(false);
 
   const opacity = useRef(new Animated.Value(0)).current;
@@ -57,6 +58,19 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setSurnameErr('Enter surname');
       ok = false;
     } else setSurnameErr('');
+
+    if (email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        setEmailErr('Enter a valid email address');
+        ok = false;
+      } else {
+        setEmailErr('');
+      }
+    } else {
+      setEmailErr('');
+    }
+    
     return ok;
   };
 
@@ -131,6 +145,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              error={emailErr}
               icon={<Mail color={colors.textMuted} size={16} strokeWidth={2} />}
             />
           </View>

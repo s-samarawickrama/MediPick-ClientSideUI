@@ -550,7 +550,7 @@ export const UploadPrescriptionScreen = () => {
           </View>
 
         <TouchableOpacity 
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}
+          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: colors.surfaceWhite, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}
           activeOpacity={0.7}
           onPress={() => setAllowGenericSubstitutions(!allowGenericSubstitutions)}
         >

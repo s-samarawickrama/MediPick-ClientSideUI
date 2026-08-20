@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order, FSMOrderState, PharmacyQuote, ChatMessage } from '../types';
-import { listOrders, updateOrderState, extendPickup } from '../api/ordersApi';
+import { listOrders, updateOrderState, requestPickupExtension as apiRequestPickupExtension } from '../api/ordersApi';
 import { useAuth } from './AuthContext'; // to listen to auth changes if needed
 
 interface OrderContextType {
@@ -161,7 +161,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const requestPickupExtension = async (orderId: string) => {
-    await extendPickup(orderId);
+    await apiRequestPickupExtension(orderId);
     await fetchOrders();
   };
 

@@ -1,0 +1,1366 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MediPick Customer-Facing REST API",
+    "description": "Official RESTful API specification for the MediPick marketplace. Aligned with mock engine handlers (port 8081) and client-side UI integrations.",
+    "version": "3.0.0",
+    "contact": {
+      "name": "MediPick Developer Support",
+      "url": "https://medipick.lk/support"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4010",
+      "description": "Local Prism Mock Server"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/otp/request": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request OTP Code",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "phoneNumber",
+                  "surname"
+                ],
+                "properties": {
+                  "phoneNumber": {
+                    "type": "string",
+                    "example": "+94771234567"
+                  },
+                  "surname": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100,
+                    "example": "Perera"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure"
+          }
+        }
+      }
+    },
+    "/auth/otp/verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify OTP Code",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "phoneNumber",
+                  "otp"
+                ],
+                "properties": {
+                  "phoneNumber": {
+                    "type": "string",
+                    "example": "+94771234567"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string"
+                        },
+                        "refreshToken": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "phoneNumber": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "OTP Invalid / Expired"
+          }
+        }
+      }
+    },
+    "/auth/otp/resend": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Resend OTP Code",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "phoneNumber",
+                  "surname"
+                ],
+                "properties": {
+                  "phoneNumber": {
+                    "type": "string",
+                    "example": "+94771234567"
+                  },
+                  "surname": {
+                    "type": "string",
+                    "example": "Perera"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP code resent"
+          }
+        }
+      }
+    },
+    "/auth/token/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Refresh Access Token",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "example": "rf_valid_001"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens rotated"
+          },
+          "401": {
+            "description": "Refresh token revoked or expired"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logout User Session",
+        "responses": {
+          "200": {
+            "description": "Successfully logged out"
+          }
+        }
+      }
+    },
+    "/auth/token/validate": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Validate Bearer Access Token",
+        "responses": {
+          "200": {
+            "description": "Token is active and valid"
+          },
+          "401": {
+            "description": "Invalid or expired token"
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Fetch Customer Profile",
+        "responses": {
+          "200": {
+            "description": "Profile record returned"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update Profile Info",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "surname": {
+                    "type": "string",
+                    "example": "Silva"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "silva@example.lk"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully"
+          }
+        }
+      }
+    },
+    "/users/me/preferences": {
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update Preferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pushNotificationsEnabled": {
+                    "type": "boolean",
+                    "example": false
+                  },
+                  "emailReceiptsEnabled": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preferences updated"
+          }
+        }
+      }
+    },
+    "/users/me/phone": {
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Initiate Phone Change",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "newPhoneNumber"
+                ],
+                "properties": {
+                  "newPhoneNumber": {
+                    "type": "string",
+                    "example": "+94768001122"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP generated for new number"
+          }
+        }
+      }
+    },
+    "/users/me/phone/verify": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Verify and Confirm Phone Change",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "newPhoneNumber",
+                  "otp"
+                ],
+                "properties": {
+                  "newPhoneNumber": {
+                    "type": "string",
+                    "example": "+94768001122"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "example": "654321"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Phone updated successfully"
+          }
+        }
+      }
+    },
+    "/users/me/push-token": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Register Expo Push Token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "pushToken"
+                ],
+                "properties": {
+                  "pushToken": {
+                    "type": "string",
+                    "example": "ExponentPushToken[AbCdEf]"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Push token registered"
+          }
+        }
+      }
+    },
+    "/pharmacies": {
+      "get": {
+        "tags": [
+          "Pharmacies"
+        ],
+        "summary": "List and Filter Pharmacies",
+        "security": [],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isOpen",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "latitude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of pharmacies matching search parameters"
+          }
+        }
+      }
+    },
+    "/pharmacies/{id}": {
+      "get": {
+        "tags": [
+          "Pharmacies"
+        ],
+        "summary": "Get Pharmacy by ID",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed pharmacy item with licensing info"
+          }
+        }
+      }
+    },
+    "/pharmacies/favorites": {
+      "get": {
+        "tags": [
+          "Pharmacies"
+        ],
+        "summary": "List Favorite Pharmacies",
+        "responses": {
+          "200": {
+            "description": "Favorites list returned"
+          }
+        }
+      }
+    },
+    "/pharmacies/{id}/favorites": {
+      "post": {
+        "tags": [
+          "Pharmacies"
+        ],
+        "summary": "Add Pharmacy to Favorites",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Added to favorites list"
+          }
+        }
+      }
+    },
+    "/pharmacies/{id}/favorites/{favoriteId}": {
+      "delete": {
+        "tags": [
+          "Pharmacies"
+        ],
+        "summary": "Remove Pharmacy from Favorites",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "favoriteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed from favorites"
+          }
+        }
+      }
+    },
+    "/medicines": {
+      "get": {
+        "tags": [
+          "Medicines"
+        ],
+        "summary": "List and Filter Medicines",
+        "security": [],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pharmacyId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isRxRequired",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inStock",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered catalog returned"
+          }
+        }
+      }
+    },
+    "/medicines/{id}": {
+      "get": {
+        "tags": [
+          "Medicines"
+        ],
+        "summary": "Get Medicine by ID",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Medicine profile returned"
+          }
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "List Customer Orders",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma separated statuses"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered list of customer orders"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Create New Order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "orderType",
+                  "pharmacyId"
+                ],
+                "properties": {
+                  "orderType": {
+                    "type": "string",
+                    "enum": [
+                      "OTC",
+                      "PRESCRIPTION"
+                    ],
+                    "example": "OTC"
+                  },
+                  "pharmacyId": {
+                    "type": "string",
+                    "example": "ph-1"
+                  },
+                  "prescriptionId": {
+                    "type": "string",
+                    "example": "rx_001"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "medicineId": {
+                          "type": "string",
+                          "example": "med-1"
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "example": 2
+                        }
+                      }
+                    }
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "enum": [
+                      "ONLINE",
+                      "CASH"
+                    ],
+                    "example": "ONLINE"
+                  },
+                  "allowGenericSubstitutions": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully"
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Get Order Details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order item details returned"
+          }
+        }
+      }
+    },
+    "/orders/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Cancel Order",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order moved to CANCELLED state"
+          }
+        }
+      }
+    },
+    "/orders/{id}/reorder": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Reorder Past Order",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "501": {
+            "description": "Not Implemented"
+          }
+        }
+      }
+    },
+    "/orders/{id}/ratings": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Submit Rating & Review",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rating"
+                ],
+                "properties": {
+                  "rating": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5,
+                    "example": 5
+                  },
+                  "review": {
+                    "type": "string",
+                    "example": "Quick verification!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rating saved"
+          }
+        }
+      }
+    },
+    "/orders/{id}/pickup/extension-requests": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Request Pickup Deadline Extension",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pickup window extended by 24h"
+          }
+        }
+      }
+    },
+    "/prescriptions/upload-url": {
+      "get": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "Get Pre-Signed Upload S3 URL",
+        "responses": {
+          "200": {
+            "description": "Temporary pre-signed S3 URL generated"
+          }
+        }
+      }
+    },
+    "/prescriptions": {
+      "get": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "List Registered Prescriptions",
+        "responses": {
+          "200": {
+            "description": "List of upload histories"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "Register Uploaded Prescription",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fileKey"
+                ],
+                "properties": {
+                  "fileKey": {
+                    "type": "string",
+                    "example": "prescriptions/mock/rx_001.jpg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Prescription record generated and AI check triggered"
+          }
+        }
+      }
+    },
+    "/prescriptions/{id}": {
+      "get": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "Get Prescription by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prescription analysis object returned"
+          }
+        }
+      }
+    },
+    "/prescriptions/{id}/status": {
+      "get": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "Get Prescription AI Status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "State and AI score details"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/quotes/current": {
+      "get": {
+        "tags": [
+          "Quotes"
+        ],
+        "summary": "Get Current Quotation",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quotation details returned"
+          },
+          "404": {
+            "description": "No quote submitted yet"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/quotes/current/accept": {
+      "post": {
+        "tags": [
+          "Quotes"
+        ],
+        "summary": "Accept Pharmacist Quote",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quote accepted; order state changes to PREPARING"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/quotes/current/decline": {
+      "post": {
+        "tags": [
+          "Quotes"
+        ],
+        "summary": "Decline Pharmacist Quote",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quote declined; order state changes to DECLINED"
+          }
+        }
+      }
+    },
+    "/payments/intents": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Generate Stripe Checkout Intent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "orderId"
+                ],
+                "properties": {
+                  "orderId": {
+                    "type": "string",
+                    "example": "ord_103"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Client secret and gateway config generated"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/messages": {
+      "get": {
+        "tags": [
+          "Messages & Chat"
+        ],
+        "summary": "Retrieve Chat History",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order conversation log returned"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Messages & Chat"
+        ],
+        "summary": "Send Chat Message",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Will pick up at 5 PM."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message dispatched"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Get Notifications List",
+        "responses": {
+          "200": {
+            "description": "Notifications list returned"
+          }
+        }
+      }
+    },
+    "/notifications/{id}": {
+      "patch": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark Notification Read",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marked read"
+          }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark All Read",
+        "responses": {
+          "200": {
+            "description": "All notifications marked read"
+          }
+        }
+      }
+    },
+    "/health-tips": {
+      "get": {
+        "tags": [
+          "Health Tips"
+        ],
+        "summary": "List Published Tips",
+        "security": [],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tips matching query"
+          }
+        }
+      }
+    },
+    "/health-tips/{id}": {
+      "get": {
+        "tags": [
+          "Health Tips"
+        ],
+        "summary": "Get Tip by ID",
+        "security": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Health tip object returned"
+          }
+        }
+      }
+    },
+    "/issues": {
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "List Reported Disputes",
+        "responses": {
+          "200": {
+            "description": "Dispute logs for authenticated customer"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "File Post-Pickup Issue",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "orderId",
+                  "issueType",
+                  "description"
+                ],
+                "properties": {
+                  "orderId": {
+                    "type": "string",
+                    "example": "ord_104"
+                  },
+                  "issueType": {
+                    "type": "string",
+                    "enum": [
+                      "Missing medicine",
+                      "Damaged / Expired",
+                      "Wrong quantity"
+                    ],
+                    "example": "Damaged / Expired"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Seals were broken."
+                  },
+                  "evidenceFileKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "example": "evidence/mock/ev_01.jpg"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Issue ticket opened"
+          }
+        }
+      }
+    },
+    "/issues/{id}": {
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "summary": "Get Ticket by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket details returned"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your Bearer Access Token. For testing, use `TOKEN_CUST_001` or another valid mock JWT."
+      }
+    },
+    "schemas": {
+      "SuccessEnvelope": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "example": 1
+              },
+              "limit": {
+                "type": "integer",
+                "example": 20
+              },
+              "total": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
