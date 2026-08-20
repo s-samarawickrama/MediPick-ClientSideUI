@@ -6,7 +6,7 @@ import { MainStackParamList } from '../../navigation/MainNavigator';
 import { useTheme } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { ChevronLeft, Share2, Calendar } from 'lucide-react-native';
-import { HEALTH_TIPS } from '../../mock/demoData';
+
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 type DetailsRouteProp = RouteProp<MainStackParamList, 'HealthTipDetails'>;
@@ -16,7 +16,6 @@ export const HealthTipDetailsScreen = () => {
   const route = useRoute<DetailsRouteProp>();
   const { colors, isDark } = useTheme();
   
-  const tip = HEALTH_TIPS.find(t => t.id === route.params.tipId) || HEALTH_TIPS[0];
 
   const s = StyleSheet.create({
     screen: {
@@ -146,29 +145,29 @@ export const HealthTipDetailsScreen = () => {
         </View>
 
         {/* Hero Image */}
-        <Image source={tip.imageUrl} style={s.heroImage} />
+        <Image source={{ uri: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=80' }} style={s.heroImage} />
 
         {/* Content */}
         <View style={s.contentContainer}>
           <View style={s.metaRow}>
             <View style={s.categoryPill}>
-              <Text style={s.categoryText}>{tip.category}</Text>
+              <Text style={s.categoryText}>Wellness</Text>
             </View>
             <View style={s.dateRow}>
               <Calendar color={colors.textMuted} size={14} />
-              <Text style={s.dateText}>{tip.publishedAt}</Text>
+              <Text style={s.dateText}>Just now</Text>
             </View>
           </View>
 
-          <Text style={s.title}>{tip.title}</Text>
+          <Text style={s.title}>Health Tip Details</Text>
           
           <Text style={s.bodyText}>
-            {tip.bodyText}
+            Details will be loaded here.
           </Text>
           
           <View style={s.footerCTA}>
             <Text style={s.ctaTitle}>Stay Healthy</Text>
-            <Text style={s.ctaText}>Browse our selection of {tip.category.toLowerCase()} products to support your wellness journey.</Text>
+            <Text style={s.ctaText}>Browse our selection of wellness products to support your journey.</Text>
             <TouchableOpacity 
               style={s.ctaBtn} 
               activeOpacity={0.8}

@@ -9,7 +9,7 @@ import { MessageSquare, ChevronRight, ShieldCheck, Clock } from 'lucide-react-na
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
-import { MOCK_PHARMACIES } from '../../mock/demoData';
+
 import { useOrders } from '../../context/OrderContext';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
@@ -47,8 +47,7 @@ export const ChatListScreen = () => {
       >
         {activeChatOrders.map((o) => {
           const pharmName = o.pharmacy?.name || 'MediCare Central Pharmacy';
-          const pharmData = MOCK_PHARMACIES.find(p => p.name === pharmName);
-          const pharmImg = pharmData?.image;
+          const pharmImg = o.pharmacy?.image;
           const isReady = o.state === 'READY_FOR_PICKUP';
 
           return (

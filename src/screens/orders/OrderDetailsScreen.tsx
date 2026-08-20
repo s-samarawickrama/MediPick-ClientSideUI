@@ -9,7 +9,7 @@ import { FONTS } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { useOrders } from '../../context/OrderContext';
 import { useCart } from '../../context/CartContext';
-import { MOCK_ORDERS, MOCK_MEDICINES } from '../../mock/demoData';
+
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Button } from '../../components/common/Button';
 import { RateExperienceScreen } from '../../components/common/RateExperienceScreen';
@@ -76,8 +76,7 @@ export const OrderDetailsScreen = () => {
 
     if (order.items && order.items.length > 0) {
       order.items.forEach((oi) => {
-        const medIdToMatch = oi.medicine?.id || (oi as any).medicineId;
-        const fullMed = MOCK_MEDICINES.find((m) => m.id === medIdToMatch);
+        const fullMed = oi.medicine;
         if (fullMed) {
           const isAvailableAtPharmacy = fullMed.availableAtPharmacyIds?.includes(order.pharmacy!.id) ?? true;
           const isOutOfStockAtPharmacy = fullMed.outOfStockPharmacyIds?.includes(order.pharmacy!.id) ?? false;
@@ -414,8 +413,8 @@ export const OrderDetailsScreen = () => {
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
-                        color={star <= (order.rating?.overall ?? order.rating?.value ?? 0) ? '#F59E0B' : colors.borderSoft}
-                        fill={star <= (order.rating?.overall ?? order.rating?.value ?? 0) ? '#F59E0B' : 'transparent'}
+                        color={star <= (order.rating?.overall ?? 0) ? '#F59E0B' : colors.borderSoft}
+                        fill={star <= (order.rating?.overall ?? 0) ? '#F59E0B' : 'transparent'}
                         size={18}
                         strokeWidth={2}
                       />
@@ -430,7 +429,7 @@ export const OrderDetailsScreen = () => {
 
                 {/* Sub Ratings (if they exist) */}
                 {order.rating.service !== undefined && (
-                  <View style={{ marginTop: 8, padding: 12, backgroundColor: colors.background, borderRadius: 8, gap: 8 }}>
+                  <View style={{ marginTop: 8, padding: 12, backgroundColor: colors.surfaceSubtle, borderRadius: 8, gap: 8 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text style={{ fontFamily: FONTS.regular, fontSize: 13, color: colors.textSecondary }}>Pharmacy Service</Text>
                       <View style={{ flexDirection: 'row', gap: 2 }}>

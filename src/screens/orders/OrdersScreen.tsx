@@ -13,7 +13,7 @@ import { useCart } from '../../context/CartContext';
 import { MainStackParamList } from '../../navigation/MainNavigator';
 import { Order } from '../../types';
 import { Loader2 } from 'lucide-react-native';
-import { MOCK_MEDICINES } from '../../mock/demoData';
+
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
@@ -271,9 +271,8 @@ export const OrdersScreen = () => {
     let hasOutOfStock = false;
 
     if (order.items && order.items.length > 0) {
-      order.items.forEach((oi) => {
-        const medIdToMatch = oi.medicine?.id || (oi as any).medicineId;
-        const fullMed = MOCK_MEDICINES.find((m: any) => m.id === medIdToMatch);
+      order.items.forEach((oi: any) => {
+        const fullMed = oi.medicine;
         if (fullMed) {
           const isAvailableAtPharmacy = fullMed.availableAtPharmacyIds?.includes(order.pharmacy!.id) ?? true;
           const isOutOfStockAtPharmacy = fullMed.outOfStockPharmacyIds?.includes(order.pharmacy!.id) ?? false;

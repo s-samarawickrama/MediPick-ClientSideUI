@@ -9,7 +9,7 @@ import { ShoppingCart, Plus, Minus, ChevronLeft, Store, CreditCard, Trash2, Chec
 import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { MOCK_PHARMACIES, MOCK_MEDICINES, MOCK_ORDERS } from '../../mock/demoData';
+
 import { PaymentMethodSelector } from '../../components/common/PaymentMethodSelector';
 import { StripePaymentModal } from '../../components/common/StripePaymentModal';
 import { MainStackParamList } from '../../navigation/MainNavigator';

@@ -7,24 +7,12 @@
  * - On refresh failure → clears SecureStore and throws AUTH_EXPIRED error
  *   (the AuthContext will catch this and redirect to Login)
  *
- * ─── MOCK MODE ────────────────────────────────────────────────────────────────
- * When MOCK_MODE = true, all API requests are intercepted by the mock engine
- * (src/mock/engine.ts) instead of making real network calls.
- * The mock engine enforces real JWT expiry, token rotation, and session logic.
- *
- * To switch to the real backend: set MOCK_MODE = false.
- * Zero changes needed in screens or API modules — this is the only line to change.
- * ─────────────────────────────────────────────────────────────────────────────
- *
  * Source of truth: MediPick_API_Design_Document.md v3.0 — Section 1
  */
 
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-
-// ─── 🔧 Toggle this to switch between mock and real backend ───────────────────
-export const MOCK_MODE = true;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -202,43 +190,6 @@ export async function apiRequest<T>(
 
   // Log outgoing request
   logApiRequest(method, path, parsedBody, headers);
-
-  // ── Mock Mode: intercept and route to mock engine ─────────────────────────
-  if (MOCK_MODE) {
-    const { dispatchMockRequest } = await import('../mock/engine');
-
-    const mockResult = await dispatchMockRequest(
-      `${API_BASE_URL}${path}`,
-      API_BASE_URL,
-      method,
-      headers as Record<string, string | null>,
-      parsedBody,
-    );
-
-    const duration = Date.now() - startTime;
-
-    // Handle 401 with silent refresh (same flow as real network)
-    if (mockResult.status === 401 && !isRetry) {
-      logApiError(method, path, 401, duration, { reason: 'Unauthorized - attempting token refresh' });
-      try {
-        await silentRefresh();
-        return apiRequest<T>(path, options, true);
-      } catch {
-        await clearTokens();
-        throw new AuthExpiredError();
-      }
-    }
-
-    const body = mockResult.body as ApiSuccessResponse<T> | ApiErrorResponse;
-    if (mockResult.status < 200 || mockResult.status >= 300 || !body.success) {
-      const err = body as ApiErrorResponse;
-      logApiError(method, path, mockResult.status, duration, err);
-      throw new ApiError(err.error ?? 'UNKNOWN_ERROR', mockResult.status, err.message ?? 'An error occurred.');
-    }
-
-    logApiResponse(method, path, mockResult.status, duration, body);
-    return body as ApiSuccessResponse<T>;
-  }
 
   // ── Real Network Mode ─────────────────────────────────────────────────────
   let response: Response;

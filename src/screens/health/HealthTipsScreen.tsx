@@ -6,7 +6,7 @@ import { MainStackParamList } from '../../navigation/MainNavigator';
 import { useTheme } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { ChevronLeft } from 'lucide-react-native';
-import { HEALTH_TIPS } from '../../mock/demoData';
+
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -17,9 +17,7 @@ export const HealthTipsScreen = () => {
   const { colors, isDark } = useTheme();
   const [activeCategory, setActiveCategory] = useState('All');
 
-  const filteredTips = activeCategory === 'All' 
-    ? HEALTH_TIPS 
-    : HEALTH_TIPS.filter(t => t.category === activeCategory);
+  const filteredTips: any[] = [];
 
   const s = StyleSheet.create({
     screen: {

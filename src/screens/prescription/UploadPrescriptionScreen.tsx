@@ -15,7 +15,7 @@ import { Button } from '../../components/common/Button';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
 import { MainStackParamList } from '../../navigation/MainNavigator';
-import { MOCK_MEDICINES } from '../../mock/demoData';
+
 import { useCart } from '../../context/CartContext';
 import { MedicineItem } from '../../types';
 
@@ -62,21 +62,6 @@ export const UploadPrescriptionScreen = () => {
   // OTC Catalog items for extra requested items
   const catalogList = [
     ...customItems,
-    ...MOCK_MEDICINES
-      .filter((m) => {
-        if (m.isRxRequired) return false;
-        if (targetPharmacyId && m.availableAtPharmacyIds && !m.availableAtPharmacyIds.includes(targetPharmacyId)) return false;
-        return true;
-      })
-      .map((m) => ({
-        id: m.id,
-        name: m.name,
-        dosage: m.dosage,
-        category: m.category,
-        description: m.description || 'Quality health & wellness supply.',
-        price: `LKR ${m.pharmacyPrice}`,
-        image: m.image,
-      })),
   ];
 
   const filteredCatalog = catalogList.filter((item) =>

@@ -20,7 +20,7 @@ import { MainStackParamList } from '../../navigation/MainNavigator';
 import { useOrders } from '../../context/OrderContext';
 import { getMessages, sendMessage as sendApiMessage } from '../../api/messagesApi';
 import { subscribeToOrderChat, OrderSubscription } from '../../api/websocketApi';
-import { MOCK_PHARMACIES } from '../../mock/demoData';
+
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 type ChatRouteProp = RouteProp<MainStackParamList, 'PharmacyChat'>;
@@ -39,7 +39,6 @@ export const PharmacyChatScreen = () => {
   const [input, setInput] = useState('');
   const scrollRef = useRef<ScrollView>(null);
 
-  const pharmacy = MOCK_PHARMACIES[0];
 
   useEffect(() => {
     let sub: OrderSubscription | null = null;
@@ -108,13 +107,9 @@ export const PharmacyChatScreen = () => {
           <ChevronLeft color={colors.midTeal} size={20} strokeWidth={2.5} />
         </TouchableOpacity>
         <View style={s.headerCenter}>
-          {pharmacy?.image ? (
-            <Image source={typeof pharmacy.image === 'string' ? { uri: pharmacy.image } : pharmacy.image} style={s.pharmacyAvatarImg} />
-          ) : (
-            <View style={s.pharmacyAvatar}>
-              <Text style={s.avatarInitial}>M</Text>
-            </View>
-          )}
+          <View style={s.pharmacyAvatar}>
+            <Text style={s.avatarInitial}>M</Text>
+          </View>
           <View style={{ flex: 1 }}>
             <View style={s.pharmacyTitleRow}>
               <Text style={s.pharmacyName} numberOfLines={1}>MediCare Central</Text>

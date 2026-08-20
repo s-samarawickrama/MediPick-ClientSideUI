@@ -13,7 +13,7 @@ import {
 } from 'lucide-react-native';
 import { useTheme, ThemeColors } from '../../context/ThemeContext';
 import { FONTS } from '../../theme/typography';
-import { MOCK_PHARMACIES } from '../../mock/demoData';
+const MOCK_PHARMACIES: any[] = [];
 import { MainStackParamList } from '../../navigation/MainNavigator';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
