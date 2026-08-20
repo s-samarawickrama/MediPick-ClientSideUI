@@ -278,7 +278,7 @@ export const OrderDetailsScreen = () => {
           </View>
           <View style={s.pharmacyRow}>
             {order.pharmacy?.image ? (
-              <Image source={order.pharmacy.image} style={s.pharmAvatar} />
+              <Image source={typeof order.pharmacy.image === 'string' ? { uri: order.pharmacy.image } : order.pharmacy.image} style={s.pharmAvatar} />
             ) : (
               <View style={[s.pharmAvatar, { backgroundColor: colors.limeWhisper }]} />
             )}

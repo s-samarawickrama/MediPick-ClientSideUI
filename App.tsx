@@ -22,6 +22,20 @@ import { AuthProvider } from './src/context/AuthContext';
 import { OrderProvider } from './src/context/OrderContext';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { ErrorBoundary } from './src/components/common/ErrorBoundary';
+import { Platform } from 'react-native';
+
+if (Platform.OS === 'web') {
+  const style = document.createElement('style');
+  style.textContent = `
+    * {
+      -webkit-tap-highlight-color: transparent !important;
+    }
+    [role="button"], a, button, input, textarea {
+      outline: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

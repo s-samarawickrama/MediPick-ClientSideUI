@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Modal,
@@ -133,7 +134,7 @@ export const SelectPharmacyScreen = () => {
                 <View style={s.cardTop}>
                   <View style={s.logoBox}>
                     {p.image ? (
-                      <Image source={p.image} style={s.logoImg} resizeMode="cover" />
+                      <Image source={typeof p.image === 'string' ? { uri: p.image } : p.image} style={s.logoImg} resizeMode="cover" />
                     ) : (
                       <Text style={s.logoText}>{p.name.charAt(0)}</Text>
                     )}

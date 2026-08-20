@@ -42,7 +42,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
       <View style={s.productImgBox}>
         <View style={{ width: '100%', height: '100%', borderRadius: 8, overflow: 'hidden', justifyContent: 'center', alignItems: 'center' }}>
           {med.image ? (
-            <Image source={med.image} style={{ width: '100%', height: '100%', transform: [{ scale: 1.25 }] }} resizeMode="cover" />
+            <Image source={typeof med.image === 'string' ? { uri: med.image } : med.image} style={{ width: '100%', height: '100%', transform: [{ scale: 1.25 }] }} resizeMode="cover" />
           ) : (
             <ShoppingBag color={colors.midTeal} size={28} strokeWidth={2} />
           )}

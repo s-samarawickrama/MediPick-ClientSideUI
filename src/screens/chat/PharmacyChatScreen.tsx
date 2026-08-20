@@ -109,7 +109,7 @@ export const PharmacyChatScreen = () => {
         </TouchableOpacity>
         <View style={s.headerCenter}>
           {pharmacy?.image ? (
-            <Image source={pharmacy.image} style={s.pharmacyAvatarImg} />
+            <Image source={typeof pharmacy.image === 'string' ? { uri: pharmacy.image } : pharmacy.image} style={s.pharmacyAvatarImg} />
           ) : (
             <View style={s.pharmacyAvatar}>
               <Text style={s.avatarInitial}>M</Text>

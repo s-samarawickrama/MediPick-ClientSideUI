@@ -225,7 +225,7 @@ export const QuotationScreen = () => {
           <View style={s.offerHeaderRow}>
             <View style={s.pharmacyLogoWrap}>
               {pharmacyImage ? (
-                <Image source={pharmacyImage} style={s.pharmacyLogo} />
+                <Image source={typeof pharmacyImage === 'string' ? { uri: pharmacyImage } : pharmacyImage} style={s.pharmacyLogo} />
               ) : (
                 <View style={s.pharmacyLogoFallback}>
                   <Text style={s.pharmacyLogoFallbackText}>{offer.name.charAt(0)}</Text>
@@ -317,6 +317,15 @@ export const QuotationScreen = () => {
               </View>
             </View>
           ))}
+
+          {order?.allowGenericSubstitutions && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 12, padding: 12, backgroundColor: isDark ? colors.plumLight : colors.limeWhisper, borderRadius: 8 }}>
+              <CheckCircle2 color={colors.midTeal} size={16} strokeWidth={2.5} />
+              <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textDark }}>
+                Generic substitutions allowed by you
+              </Text>
+            </View>
+          )}
 
           <View style={s.totalRow}>
             <Text style={s.totalAmount}>LKR {offer.totalOffered}</Text>

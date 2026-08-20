@@ -120,6 +120,9 @@ export const BrowseOTCScreen = () => {
         setActiveStore(null);
       } else if (initialMode) {
         setMode(initialMode);
+        setActiveStore(null);
+      } else {
+        setActiveStore(null);
       }
 
       if (medId) {
@@ -132,6 +135,8 @@ export const BrowseOTCScreen = () => {
             }
           }
         }).catch(console.error);
+      } else {
+        setSelectedMedForStores(null);
       }
     }, [route.params])
   );
@@ -164,9 +169,15 @@ export const BrowseOTCScreen = () => {
         if (selectedMedForStores) {
           data = data.filter(p => selectedMedForStores.availableAtPharmacyIds?.includes(p.id));
         }
+        // Safe distance parser: extracts numeric part from strings like "0.8 km" or "500 m"
+        const parseDist = (d: any) => {
+          if (!d || typeof d !== 'string') return typeof d === 'number' ? d : 9999;
+          const n = parseFloat(d);
+          return isNaN(n) ? 9999 : (d.includes(' m') && !d.includes('km') ? n / 1000 : n);
+        };
         setPharmacies(data.sort((a, b) => {
-          if (pharmacySort === 'distance') return parseFloat(a.distance) - parseFloat(b.distance);
-          return (b.popularity || b.rating) - (a.popularity || a.rating);
+          if (pharmacySort === 'distance') return parseDist(a.distance) - parseDist(b.distance);
+          return ((b as any).popularity || b.rating) - ((a as any).popularity || a.rating);
         }));
       } catch (e) {
         console.error(e);
@@ -390,7 +401,7 @@ export const BrowseOTCScreen = () => {
           {/* Uber Eats Full-Bleed Store Cover Image */}
           <View style={s.storeCoverHero}>
             {activeStore.image ? (
-              <Image source={activeStore.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              <Image source={typeof activeStore.image === 'string' ? { uri: activeStore.image } : activeStore.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             ) : (
               <View style={s.mapGridGraphic}>
                 <Store color={colors.midTeal} size={40} strokeWidth={2.5} />
@@ -623,7 +634,7 @@ export const BrowseOTCScreen = () => {
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
                   <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: colors.limeWhisper, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
                     {activeStore.image ? (
-                      <Image source={activeStore.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                      <Image source={typeof activeStore.image === 'string' ? { uri: activeStore.image } : activeStore.image} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                     ) : (
                       <Text style={{ fontSize: 18, fontFamily: FONTS.black, color: colors.midTeal }}>{activeStore.name.charAt(0)}</Text>
                     )}
@@ -1401,7 +1412,7 @@ const BrowsePharmacyCard = ({ p, onPress, s, colors }: any) => {
     >
       <View style={s.pharmAvatar}>
         {p.image ? (
-          <Image source={p.image} style={{ width: '100%', height: '100%', borderRadius: 14 }} resizeMode="cover" />
+          <Image source={typeof p.image === 'string' ? { uri: p.image } : p.image} style={{ width: '100%', height: '100%', borderRadius: 14 }} resizeMode="cover" />
         ) : (
           <Text style={s.pharmInitial}>{p.name[0]}</Text>
         )}
@@ -1420,7 +1431,7 @@ const BrowsePharmacyCard = ({ p, onPress, s, colors }: any) => {
         </View>
       </View>
 
-      <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', height: '100%' }}>
+      <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', alignSelf: 'stretch' }}>
         <TouchableOpacity 
           onPress={handleFavorite} 
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}

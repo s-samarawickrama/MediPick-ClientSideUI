@@ -35,6 +35,32 @@ export const MultiStoreCartScreen = () => {
 
   const { cartItems, attachedPrescription, updateQuantity, removeFromCart, clearCart, removeStoreFromCart, setAttachedPrescription } = useCart();
 
+  // Sync allowGenericSubs state with attachedPrescription preference when loaded or updated
+  useEffect(() => {
+    if (attachedPrescription) {
+      setAllowGenericSubs(prev => {
+        if (prev[attachedPrescription.pharmacyId] === undefined) {
+          return {
+            ...prev,
+            [attachedPrescription.pharmacyId]: !!attachedPrescription.allowGenericSubstitutions
+          };
+        }
+        return prev;
+      });
+    }
+  }, [attachedPrescription]);
+
+  const handleToggleAllowGeneric = (pharmacyId: string) => {
+    const newValue = !allowGenericSubs[pharmacyId];
+    setAllowGenericSubs(prev => ({ ...prev, [pharmacyId]: newValue }));
+    if (attachedPrescription && attachedPrescription.pharmacyId === pharmacyId) {
+      setAttachedPrescription({
+        ...attachedPrescription,
+        allowGenericSubstitutions: newValue
+      });
+    }
+  };
+
   // Group cart items dynamically by pharmacy
   const cartStoresMap: Record<string, {
     pharmacy: CartPharmacy;
@@ -177,7 +203,7 @@ export const MultiStoreCartScreen = () => {
           medicineId: item.id,
           quantity: item.qty
         })),
-        allowGenericSubstitutions: !!(allowGenericSubs[storeGroup.pharmacy.id] || (hasRx && attachedPrescription?.allowGenericSubstitutions)),
+        allowGenericSubstitutions: !!allowGenericSubs[storeGroup.pharmacy.id],
         prescriptionId: hasRx && attachedPrescription ? attachedPrescription.image : undefined,
       });
 
@@ -286,7 +312,7 @@ export const MultiStoreCartScreen = () => {
                 >
                   {storeGroup.pharmacy.image ? (
                     <Image 
-                      source={storeGroup.pharmacy.image} 
+                      source={typeof storeGroup.pharmacy.image === 'string' ? { uri: storeGroup.pharmacy.image } : storeGroup.pharmacy.image} 
                       style={s.storeAvatarImage} 
                     />
                   ) : (
@@ -341,7 +367,7 @@ export const MultiStoreCartScreen = () => {
                       <TouchableOpacity
                         activeOpacity={0.8}
                         style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 4, padding: 10, backgroundColor: allowGenericSubs[storeGroup.pharmacy.id] ? colors.limeWhisper : colors.bgWarm, borderRadius: 10, borderWidth: 1, borderColor: allowGenericSubs[storeGroup.pharmacy.id] ? '#8BC34A' : colors.borderSoft }}
-                        onPress={() => setAllowGenericSubs(prev => ({ ...prev, [storeGroup.pharmacy.id]: !prev[storeGroup.pharmacy.id] }))}
+                        onPress={() => handleToggleAllowGeneric(storeGroup.pharmacy.id)}
                       >
                         <View style={{ marginTop: 1 }}>
                           {allowGenericSubs[storeGroup.pharmacy.id]

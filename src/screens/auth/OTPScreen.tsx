@@ -131,6 +131,8 @@ export const OTPScreen: React.FC<Props> = ({ navigation, route }) => {
             }}
             editable={!isLocked && !loading}
             autoFocus
+            caretHidden
+            selectionColor="transparent"
           />
         </View>
         {!!otpErr && <Text style={s.errorText}>{otpErr}</Text>}

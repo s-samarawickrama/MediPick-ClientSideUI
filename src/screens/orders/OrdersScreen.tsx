@@ -100,7 +100,7 @@ const ActiveOrderCard = ({
       <View style={s.activeCardHeaderRow}>
         <View style={s.pharmAvatar}>
           {order.pharmacy?.image ? (
-            <Image source={order.pharmacy.image} style={s.pharmAvatarImage} />
+            <Image source={typeof order.pharmacy.image === 'string' ? { uri: order.pharmacy.image } : order.pharmacy.image} style={s.pharmAvatarImage} />
           ) : (
             <Store color={colors.midTeal} size={20} strokeWidth={2} />
           )}

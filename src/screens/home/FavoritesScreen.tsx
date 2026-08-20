@@ -68,7 +68,7 @@ export const FavoritesScreen = () => {
             >
               <View style={s.storeHeroBanner}>
                 {p.image ? (
-                  <Image source={p.image} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }} resizeMode="cover" />
+                  <Image source={typeof p.image === 'string' ? { uri: p.image } : p.image} style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }} resizeMode="cover" />
                 ) : (
                   <Store color={colors.midTeal} size={32} strokeWidth={2} />
                 )}

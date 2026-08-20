@@ -338,59 +338,61 @@ export const UploadPrescriptionScreen = () => {
           </>
         )}
 
-        {/* Prescription Instructions / Notes Card */}
-        <View style={s.noteContainer}>
-          <View style={s.noteHeaderRow}>
-            <MessageSquare color={colors.midTeal} size={16} strokeWidth={2.2} />
-            <Text style={s.noteTitle}>Prescription Instructions for Pharmacist</Text>
-          </View>
-          <TextInput
-            style={s.noteInput}
-            placeholder="E.g. Only need the first 2 items listed, or 1-week supply..."
-            placeholderTextColor={colors.textMuted}
-            multiline
-            numberOfLines={2}
-            textAlignVertical="top"
-            value={note}
-            onChangeText={setNote}
-          />
-        </View>
+        {!!image && (
+          <>
+            {/* Prescription Instructions / Notes Card */}
+            <View style={s.noteContainer}>
+              <View style={s.noteHeaderRow}>
+                <MessageSquare color={colors.midTeal} size={16} strokeWidth={2.2} />
+                <Text style={s.noteTitle}>Prescription Instructions for Pharmacist</Text>
+              </View>
+              <TextInput
+                style={s.noteInput}
+                placeholder="E.g. Only need the first 2 items listed, or 1-week supply..."
+                placeholderTextColor={colors.textMuted}
+                multiline
+                numberOfLines={2}
+                textAlignVertical="top"
+                value={note}
+                onChangeText={setNote}
+              />
+            </View>
 
-        {/* Generic Substitution Toggle — Rx-only */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'flex-start',
-            gap: 12,
-            backgroundColor: allowGenericSubstitutions
-              ? (isDark ? '#1A2E1A' : colors.limeWhisper)
-              : colors.surfaceWhite,
-            borderRadius: 14,
-            padding: 14,
-            borderWidth: 1,
-            borderColor: allowGenericSubstitutions ? '#8BC34A' : colors.borderSoft,
-          }}
-          onPress={() => setAllowGenericSubstitutions(v => !v)}
-        >
-          <View style={{ marginTop: 2 }}>
-            {allowGenericSubstitutions
-              ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
-              : <Square color={colors.borderSoft} size={22} strokeWidth={2.5} />}
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark }}>
-              Allow Generic Substitutions
-            </Text>
-            <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 3, lineHeight: 16 }}>
-              If a prescribed medicine is unavailable, the pharmacist may suggest a clinically equivalent generic alternative.{'\n'}
-              <Text style={{ fontFamily: FONTS.bold, color: colors.warning }}>⚠ Price may differ</Text>
-              {' '}— the pharmacy will quote before you pay.
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Extra OTC Items Card */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                gap: 12,
+                backgroundColor: allowGenericSubstitutions
+                  ? (isDark ? '#1A2E1A' : colors.limeWhisper)
+                  : colors.surfaceWhite,
+                borderRadius: 14,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: allowGenericSubstitutions ? '#8BC34A' : colors.borderSoft,
+                marginBottom: 16,
+              }}
+              onPress={() => setAllowGenericSubstitutions(v => !v)}
+            >
+              <View style={{ marginTop: 2 }}>
+                {allowGenericSubstitutions
+                  ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
+                  : <Square color={colors.borderSoft} size={22} strokeWidth={2.5} />}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: colors.textDark }}>
+                  Allow Generic Substitutions
+                </Text>
+                <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: colors.textMuted, marginTop: 3, lineHeight: 16 }}>
+                  If a prescribed medicine is unavailable, the pharmacist may suggest a clinically equivalent generic alternative.{'\n'}
+                  <Text style={{ fontFamily: FONTS.bold, color: colors.warning }}>⚠ Price may differ</Text>
+                  {' '}— the pharmacy will quote before you pay.
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </>
+        )}
         <View style={s.extraItemsContainer}>
           <View style={s.extraHeaderBanner}>
             <View style={{ width: 56, height: 56, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent', overflow: 'visible' }}>
@@ -549,30 +551,12 @@ export const UploadPrescriptionScreen = () => {
             )}
           </View>
 
-        <TouchableOpacity 
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, backgroundColor: colors.surfaceWhite, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.borderSoft }}
-          activeOpacity={0.7}
-          onPress={() => setAllowGenericSubstitutions(!allowGenericSubstitutions)}
-        >
-          <View style={{ marginRight: 12 }}>
-            {allowGenericSubstitutions 
-              ? <CheckSquare color={colors.midTeal} size={22} strokeWidth={2.5} />
-              : <Square color="#CBD5E1" size={22} strokeWidth={2.5} />}
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: FONTS.bold, fontSize: 14, color: colors.textDark }}>Allow Generic Substitutes</Text>
-            <Text style={{ fontFamily: FONTS.medium, fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-              If an item is out of stock, the pharmacist can swap it for an equivalent generic version.
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <Button
-          title="Continue to Quality Check"
-          onPress={proceed}
-          disabled={!image}
-          style={{ marginTop: 4 }}
-        />
+          <Button
+            title="Continue to Quality Check"
+            onPress={proceed}
+            disabled={!image}
+            style={{ marginTop: 4 }}
+          />
       </Animated.ScrollView>
 
       {/* Product Details Modal */}
