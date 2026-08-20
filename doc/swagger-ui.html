@@ -109,8 +109,8 @@
         paths: {
           "/auth/otp/request": {
             post: {
-              tags: ["A1 Auth"],
-              summary: "Request OTP Code (A1.1)",
+              tags: ["Auth"],
+              summary: "Request OTP Code",
               security: [],
               requestBody: {
                 required: true,
@@ -154,8 +154,8 @@
           },
           "/auth/otp/verify": {
             post: {
-              tags: ["A1 Auth"],
-              summary: "Verify OTP Code (A1.2)",
+              tags: ["Auth"],
+              summary: "Verify OTP Code",
               security: [],
               requestBody: {
                 required: true,
@@ -214,8 +214,8 @@
           },
           "/auth/otp/resend": {
             post: {
-              tags: ["A1 Auth"],
-              summary: "Resend OTP Code (A1.3)",
+              tags: ["Auth"],
+              summary: "Resend OTP Code",
               security: [],
               requestBody: {
                 required: true,
@@ -241,8 +241,8 @@
           },
           "/auth/token/refresh": {
             post: {
-              tags: ["A1 Auth"],
-              summary: "Refresh Access Token (A1.4)",
+              tags: ["Auth"],
+              summary: "Refresh Access Token",
               security: [],
               requestBody: {
                 required: true,
@@ -270,8 +270,8 @@
           },
           "/auth/logout": {
             post: {
-              tags: ["A1 Auth"],
-              summary: "Logout User Session (A1.5)",
+              tags: ["Auth"],
+              summary: "Logout User Session",
               responses: {
                 200: {
                   description: "Successfully logged out"
@@ -281,8 +281,8 @@
           },
           "/auth/token/validate": {
             get: {
-              tags: ["A1 Auth"],
-              summary: "Validate Bearer Access Token (A1.6)",
+              tags: ["Auth"],
+              summary: "Validate Bearer Access Token",
               responses: {
                 200: {
                   description: "Token is active and valid"
@@ -295,8 +295,8 @@
           },
           "/users/me": {
             get: {
-              tags: ["A2 Users"],
-              summary: "Fetch Customer Profile (A2.1)",
+              tags: ["Users"],
+              summary: "Fetch Customer Profile",
               responses: {
                 200: {
                   description: "Profile record returned"
@@ -304,8 +304,8 @@
               }
             },
             patch: {
-              tags: ["A2 Users"],
-              summary: "Update Profile Info (A2.2)",
+              tags: ["Users"],
+              summary: "Update Profile Info",
               requestBody: {
                 content: {
                   "application/json": {
@@ -328,8 +328,8 @@
           },
           "/users/me/preferences": {
             patch: {
-              tags: ["A2 Users"],
-              summary: "Update Preferences (A2.3)",
+              tags: ["Users"],
+              summary: "Update Preferences",
               requestBody: {
                 content: {
                   "application/json": {
@@ -352,8 +352,8 @@
           },
           "/users/me/phone": {
             patch: {
-              tags: ["A2 Users"],
-              summary: "Initiate Phone Change (A2.4)",
+              tags: ["Users"],
+              summary: "Initiate Phone Change",
               requestBody: {
                 content: {
                   "application/json": {
@@ -376,8 +376,8 @@
           },
           "/users/me/phone/verify": {
             post: {
-              tags: ["A2 Users"],
-              summary: "Verify and Confirm Phone Change (A2.5)",
+              tags: ["Users"],
+              summary: "Verify and Confirm Phone Change",
               requestBody: {
                 content: {
                   "application/json": {
@@ -401,8 +401,8 @@
           },
           "/users/me/push-token": {
             post: {
-              tags: ["A2 Users"],
-              summary: "Register Expo Push Token (A2.6)",
+              tags: ["Users"],
+              summary: "Register Expo Push Token",
               requestBody: {
                 content: {
                   "application/json": {
@@ -425,8 +425,8 @@
           },
           "/pharmacies": {
             get: {
-              tags: ["A3 Pharmacies"],
-              summary: "List and Filter Pharmacies (A3.1)",
+              tags: ["Pharmacies"],
+              summary: "List and Filter Pharmacies",
               security: [],
               parameters: [
                 { name: "search", in: "query", schema: { type: "string" } },
@@ -444,8 +444,8 @@
           },
           "/pharmacies/{id}": {
             get: {
-              tags: ["A3 Pharmacies"],
-              summary: "Get Pharmacy by ID (A3.2)",
+              tags: ["Pharmacies"],
+              summary: "Get Pharmacy by ID",
               security: [],
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
@@ -459,8 +459,8 @@
           },
           "/pharmacies/favorites": {
             get: {
-              tags: ["A3 Pharmacies"],
-              summary: "List Favorite Pharmacies (A3.3)",
+              tags: ["Pharmacies"],
+              summary: "List Favorite Pharmacies",
               responses: {
                 200: {
                   description: "Favorites list returned"
@@ -470,8 +470,8 @@
           },
           "/pharmacies/{id}/favorites": {
             post: {
-              tags: ["A3 Pharmacies"],
-              summary: "Add Pharmacy to Favorites (A3.4)",
+              tags: ["Pharmacies"],
+              summary: "Add Pharmacy to Favorites",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -484,8 +484,8 @@
           },
           "/pharmacies/{id}/favorites/{favoriteId}": {
             delete: {
-              tags: ["A3 Pharmacies"],
-              summary: "Remove Pharmacy from Favorites (A3.5)",
+              tags: ["Pharmacies"],
+              summary: "Remove Pharmacy from Favorites",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } },
                 { name: "favoriteId", in: "path", required: true, schema: { type: "string" } }
@@ -499,8 +499,8 @@
           },
           "/medicines": {
             get: {
-              tags: ["A4 Medicines"],
-              summary: "List and Filter Medicines (A4.1)",
+              tags: ["Medicines"],
+              summary: "List and Filter Medicines",
               security: [],
               parameters: [
                 { name: "search", in: "query", schema: { type: "string" } },
@@ -518,8 +518,8 @@
           },
           "/medicines/{id}": {
             get: {
-              tags: ["A4 Medicines"],
-              summary: "Get Medicine by ID (A4.2)",
+              tags: ["Medicines"],
+              summary: "Get Medicine by ID",
               security: [],
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
@@ -533,8 +533,8 @@
           },
           "/orders": {
             get: {
-              tags: ["A5 Orders"],
-              summary: "List Customer Orders (A5.1)",
+              tags: ["Orders"],
+              summary: "List Customer Orders",
               parameters: [
                 { name: "state", in: "query", schema: { type: "string" }, description: "Comma separated statuses" }
               ],
@@ -545,8 +545,8 @@
               }
             },
             post: {
-              tags: ["A5 Orders"],
-              summary: "Create New Order (A5.2)",
+              tags: ["Orders"],
+              summary: "Create New Order",
               requestBody: {
                 content: {
                   "application/json": {
@@ -567,7 +567,8 @@
                             }
                           }
                         },
-                        paymentMethod: { type: "string", enum: ["ONLINE", "CASH"], example: "ONLINE" }
+                        paymentMethod: { type: "string", enum: ["ONLINE", "CASH"], example: "ONLINE" },
+                        allowGenericSubstitutions: { type: "boolean", example: true }
                       }
                     }
                   }
@@ -582,8 +583,8 @@
           },
           "/orders/{id}": {
             get: {
-              tags: ["A5 Orders"],
-              summary: "Get Order Details (A5.3)",
+              tags: ["Orders"],
+              summary: "Get Order Details",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -596,8 +597,8 @@
           },
           "/orders/{id}/cancel": {
             post: {
-              tags: ["A5 Orders"],
-              summary: "Cancel Order (A5.4)",
+              tags: ["Orders"],
+              summary: "Cancel Order",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -610,8 +611,8 @@
           },
           "/orders/{id}/reorder": {
             post: {
-              tags: ["A5 Orders"],
-              summary: "Reorder Past Order (A5.5)",
+              tags: ["Orders"],
+              summary: "Reorder Past Order",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -624,8 +625,8 @@
           },
           "/orders/{id}/ratings": {
             post: {
-              tags: ["A5 Orders"],
-              summary: "Submit Rating & Review (A5.6)",
+              tags: ["Orders"],
+              summary: "Submit Rating & Review",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -652,8 +653,8 @@
           },
           "/orders/{id}/pickup/extension-requests": {
             post: {
-              tags: ["A5 Orders"],
-              summary: "Request Pickup Deadline Extension (A5.7)",
+              tags: ["Orders"],
+              summary: "Request Pickup Deadline Extension",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -666,8 +667,8 @@
           },
           "/prescriptions/upload-url": {
             get: {
-              tags: ["A6 Prescriptions"],
-              summary: "Get Pre-Signed Upload S3 URL (A6.1)",
+              tags: ["Prescriptions"],
+              summary: "Get Pre-Signed Upload S3 URL",
               responses: {
                 200: {
                   description: "Temporary pre-signed S3 URL generated"
@@ -677,8 +678,8 @@
           },
           "/prescriptions": {
             get: {
-              tags: ["A6 Prescriptions"],
-              summary: "List Registered Prescriptions (A6.3)",
+              tags: ["Prescriptions"],
+              summary: "List Registered Prescriptions",
               responses: {
                 200: {
                   description: "List of upload histories"
@@ -686,8 +687,8 @@
               }
             },
             post: {
-              tags: ["A6 Prescriptions"],
-              summary: "Register Uploaded Prescription (A6.2)",
+              tags: ["Prescriptions"],
+              summary: "Register Uploaded Prescription",
               requestBody: {
                 content: {
                   "application/json": {
@@ -710,8 +711,8 @@
           },
           "/prescriptions/{id}": {
             get: {
-              tags: ["A6 Prescriptions"],
-              summary: "Get Prescription by ID (A6.4)",
+              tags: ["Prescriptions"],
+              summary: "Get Prescription by ID",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -724,8 +725,8 @@
           },
           "/prescriptions/{id}/status": {
             get: {
-              tags: ["A6 Prescriptions"],
-              summary: "Get Prescription AI Status (A6.5)",
+              tags: ["Prescriptions"],
+              summary: "Get Prescription AI Status",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -738,8 +739,8 @@
           },
           "/orders/{orderId}/quotes/current": {
             get: {
-              tags: ["A7 Quotes"],
-              summary: "Get Current Quotation (A7.1)",
+              tags: ["Quotes"],
+              summary: "Get Current Quotation",
               parameters: [
                 { name: "orderId", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -755,8 +756,8 @@
           },
           "/orders/{orderId}/quotes/current/accept": {
             post: {
-              tags: ["A7 Quotes"],
-              summary: "Accept Pharmacist Quote (A7.2)",
+              tags: ["Quotes"],
+              summary: "Accept Pharmacist Quote",
               parameters: [
                 { name: "orderId", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -769,8 +770,8 @@
           },
           "/orders/{orderId}/quotes/current/decline": {
             post: {
-              tags: ["A7 Quotes"],
-              summary: "Decline Pharmacist Quote (A7.3)",
+              tags: ["Quotes"],
+              summary: "Decline Pharmacist Quote",
               parameters: [
                 { name: "orderId", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -783,8 +784,8 @@
           },
           "/payments/intents": {
             post: {
-              tags: ["A8 Payments"],
-              summary: "Generate Stripe Checkout Intent (A8.1)",
+              tags: ["Payments"],
+              summary: "Generate Stripe Checkout Intent",
               requestBody: {
                 content: {
                   "application/json": {
@@ -807,8 +808,8 @@
           },
           "/orders/{orderId}/messages": {
             get: {
-              tags: ["A9 Messages — Chat"],
-              summary: "Retrieve Chat History (A9.1)",
+              tags: ["Messages & Chat"],
+              summary: "Retrieve Chat History",
               parameters: [
                 { name: "orderId", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -819,8 +820,8 @@
               }
             },
             post: {
-              tags: ["A9 Messages — Chat"],
-              summary: "Send Chat Message (A9.2)",
+              tags: ["Messages & Chat"],
+              summary: "Send Chat Message",
               parameters: [
                 { name: "orderId", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -846,8 +847,8 @@
           },
           "/notifications": {
             get: {
-              tags: ["A10 Notifications"],
-              summary: "Get Notifications List (A10.1)",
+              tags: ["Notifications"],
+              summary: "Get Notifications List",
               responses: {
                 200: {
                   description: "Notifications list returned"
@@ -857,8 +858,8 @@
           },
           "/notifications/{id}": {
             patch: {
-              tags: ["A10 Notifications"],
-              summary: "Mark Notification Read (A10.2)",
+              tags: ["Notifications"],
+              summary: "Mark Notification Read",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],
@@ -871,8 +872,8 @@
           },
           "/notifications/read-all": {
             post: {
-              tags: ["A10 Notifications"],
-              summary: "Mark All Read (A10.3)",
+              tags: ["Notifications"],
+              summary: "Mark All Read",
               responses: {
                 200: {
                   description: "All notifications marked read"
@@ -882,8 +883,8 @@
           },
           "/health-tips": {
             get: {
-              tags: ["A11 Health Tips"],
-              summary: "List Published Tips (A11.1)",
+              tags: ["Health Tips"],
+              summary: "List Published Tips",
               security: [],
               parameters: [
                 { name: "category", in: "query", schema: { type: "string" } }
@@ -897,8 +898,8 @@
           },
           "/health-tips/{id}": {
             get: {
-              tags: ["A11 Health Tips"],
-              summary: "Get Tip by ID (A11.2)",
+              tags: ["Health Tips"],
+              summary: "Get Tip by ID",
               security: [],
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
@@ -912,8 +913,8 @@
           },
           "/issues": {
             get: {
-              tags: ["A12 Issues"],
-              summary: "List Reported Disputes (A12.1)",
+              tags: ["Issues"],
+              summary: "List Reported Disputes",
               responses: {
                 200: {
                   description: "Dispute logs for authenticated customer"
@@ -921,8 +922,8 @@
               }
             },
             post: {
-              tags: ["A12 Issues"],
-              summary: "File Post-Pickup Issue (A12.2)",
+              tags: ["Issues"],
+              summary: "File Post-Pickup Issue",
               requestBody: {
                 content: {
                   "application/json": {
@@ -951,8 +952,8 @@
           },
           "/issues/{id}": {
             get: {
-              tags: ["A12 Issues"],
-              summary: "Get Ticket by ID (A12.3)",
+              tags: ["Issues"],
+              summary: "Get Ticket by ID",
               parameters: [
                 { name: "id", in: "path", required: true, schema: { type: "string" } }
               ],

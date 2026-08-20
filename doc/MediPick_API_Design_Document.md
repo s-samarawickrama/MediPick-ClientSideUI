@@ -849,7 +849,9 @@ Terminal states: CANCELLED, REJECTED, CLOSED, RESOLVED
           "image":       "https://cdn.medipick.lk/medicines/med_01j4.jpg"
         },
         "quantity": 2,
-        "price":    100
+        "price":    100,
+        "isSubstitute": true,
+        "originalPrescribed": "Tylenol 500mg"
       }
     ],
     "quotes":             [],
@@ -859,6 +861,7 @@ Terminal states: CANCELLED, REJECTED, CLOSED, RESOLVED
     "savings":            100,
     "paymentMethod":      "ONLINE",
     "isPaid":             true,
+    "allowGenericSubstitutions": true,
     "rejectReason":       null,
     "refundStatus":       null,
     "pickupOtp":          "849201",
